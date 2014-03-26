@@ -210,14 +210,14 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 
   DATA_CHANNEL eX;
   eX = DATA_CHANNEL_DISTANCE;
-/*
+
   static set<int> i_Smoothed_LapId_X;	//	Tracker for which laps we have done smoothing on for X, Y, Z Acceleration data
   i_Smoothed_LapId_X.begin();
   static set<int> i_Smoothed_LapId_Y;	//	Tracker for which laps we have done smoothing on for X, Y, Z Acceleration data
   i_Smoothed_LapId_Y.begin();
   static set<int> i_Smoothed_LapId_Z;	//	Tracker for which laps we have done smoothing on for X, Y, Z Acceleration data
   i_Smoothed_LapId_Z.begin();
-*/
+
   set<DATA_CHANNEL> setY;
   map<DATA_CHANNEL,float> mapMinY, mapMinYTemp;
   map<DATA_CHANNEL,float> mapMaxY, mapMaxYTemp;
@@ -478,14 +478,14 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
       CExtendedLap* pLap = lstLaps[x];
       const IDataChannel* pDataX = pLap->GetChannel(m_pLapSupplier->GetXChannel());
       const IDataChannel* pDataY = pLap->GetChannel(*i);
-/*      //	If Traction Circle window is active, pull and smooth that data
+      //	If we are dealing with accelerometer data, pull and smooth that data
 	  IDataChannel* pDataX_ACCEL;
 	  IDataChannel* pDataY_ACCEL;
 	  IDataChannel* pDataZ_ACCEL;
 	  pDataX_ACCEL = (IDataChannel*) pLap->GetChannel(DATA_CHANNEL_X_ACCEL);
 	  pDataY_ACCEL = (IDataChannel*) pLap->GetChannel(DATA_CHANNEL_Y_ACCEL);
 	  pDataZ_ACCEL = (IDataChannel*) pLap->GetChannel(DATA_CHANNEL_Z_ACCEL);
-*/
+
 	  float r;
 	  float g;
 	  float b;
@@ -503,170 +503,112 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 	  if(pDataX && pDataY)
 	  {
 		// tracking what we want to highlight
-//		static bool bSmoothFlagX, bSmoothFlagY, bSmoothFlagZ;		// Flag for checking if smooth has been done or not. False = smoothing not yet done
+		int w = 4;	// * Default setting. w is the size of the smoothing window, taken on each side of sample
         float dBestLength = -1;
         float dTimeToHighlight = -1;
-		const vector<DataPoint> &lstPointsX = (vector<DataPoint>&) pDataX->GetData();
+/*		const vector<DataPoint> &lstPointsX = (vector<DataPoint>&) pDataX->GetData();
         const vector<DataPoint> &lstPointsY = (vector<DataPoint>&) pDataY->GetData();
-/*		//	Changed to non-constant as we want to smooth the data sometimes
+*/		//	Changed to non-constant as we want to smooth the data sometimes
 		vector<DataPoint> &lstPointsX = (vector<DataPoint>&) pDataX->GetData();
         vector<DataPoint> &lstPointsY = (vector<DataPoint>&) pDataY->GetData();
 		vector<DataPoint> lstPointsX_Accel;
-		vector<DataPoint> &p_lstPointsX_Accel = (vector<DataPoint>&) lstPointsX_Accel; 
+		lstPointsX_Accel.begin();
 		vector<DataPoint> lstPointsY_Accel;
-		vector<DataPoint> &p_lstPointsY_Accel = (vector<DataPoint>&) lstPointsY_Accel; 
+		lstPointsY_Accel.begin();
 		vector<DataPoint> lstPointsZ_Accel;
-		vector<DataPoint> &p_lstPointsZ_Accel = (vector<DataPoint>&) lstPointsZ_Accel; 
-		for(set<DATA_CHANNEL>::iterator q = setY.begin(); q != setY.end(); q++)
+		lstPointsZ_Accel.begin();
+
+		if ( eX == DATA_CHANNEL_X_ACCEL )
 		{
-			if ( *q == DATA_CHANNEL_X_ACCEL && bSmoothFlagX == false )
-			{
-				lstPointsX_Accel.clear();
-				lstPointsX_Accel = pDataX_ACCEL->GetData();	//	pDataY->GetData()
-			}
-			if ( *q == DATA_CHANNEL_Y_ACCEL && bSmoothFlagY == false )
-			{
-				lstPointsY_Accel.clear();
-				lstPointsY_Accel = pDataY_ACCEL->GetData();	//	pDataY->GetData()
-			}
-			if ( *q == DATA_CHANNEL_Z_ACCEL && bSmoothFlagZ == false )
-			{
-				lstPointsZ_Accel.clear();
-				lstPointsZ_Accel = pDataZ_ACCEL->GetData();	//	pDataY->GetData()
-			}
+			lstPointsX_Accel.clear();
+			lstPointsX_Accel = pDataX_ACCEL->GetData();	//	pDataY->GetData()
+			w = lstPointsX_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
 		}
-		int w = 8;	// * w is the size of the smoothing window, taken on each side of sample
-		//	If Accel X or Traction Circle are to be displayed, smooth the Accelerometer data
-		if ( m_pLapSupplier->GetXChannel() == DATA_CHANNEL_X_ACCEL ||  *i == DATA_CHANNEL_X_ACCEL || sfLapOpts.bTractionCircle )
+		if ( eX == DATA_CHANNEL_Y_ACCEL )
 		{
-			//	Smooth the data if the X-axis is displaying ACCEL type data
-			if ( i_Smoothed_LapId_X.size() )
-			{
-				bSmoothFlagX = false;	//	Assume that we need to smooth the Accel data, then check if this lap has already been smoothed
-				for(set<int>::iterator t = i_Smoothed_LapId_X.begin(); t != i_Smoothed_LapId_X.end(); t++)
-				{
-					if ( pLap->GetLap()->GetLapId() == *t ) //	Lap has already been marked as smoothed, so abort
-					{
-						bSmoothFlagX = true;	//	Otherwise smooth the Accel data
-						break;
-					}
-				}
-			}
+			lstPointsY_Accel.clear();
+			lstPointsY_Accel = pDataY_ACCEL->GetData();	//	pDataY->GetData()
+			w = lstPointsY_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
+		}
+		if ( eX == DATA_CHANNEL_Z_ACCEL )
+		{
+			lstPointsZ_Accel.clear();
+			lstPointsZ_Accel = pDataZ_ACCEL->GetData();	//	pDataY->GetData()
+			w = lstPointsZ_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
 		}
 
-		//	If Accel Y or Traction Circle are to be displayed, smooth the Accelerometer data
-		if ( m_pLapSupplier->GetXChannel() == DATA_CHANNEL_Y_ACCEL || *i == DATA_CHANNEL_Y_ACCEL || sfLapOpts.bTractionCircle )
+		if ( pDataY->GetChannelType() == DATA_CHANNEL_X_ACCEL )
 		{
-			//	Smooth the data if the X-axis is displaying ACCEL type data
-			if ( i_Smoothed_LapId_X.size() )
-			{
-				bSmoothFlagY = false;	//	Assume that we need to smooth the Accel data, then check if this lap has already been smoothed
-				for(set<int>::iterator t = i_Smoothed_LapId_Y.begin(); t != i_Smoothed_LapId_Y.end(); t++)
-				{
-					if ( pLap->GetLap()->GetLapId() == *t ) //	Lap has already been marked as smoothed, so abort
-					{
-						bSmoothFlagY = true;	//	Otherwise smooth the Accel data
-						break;
-					}
-				}
-			}
+			lstPointsX_Accel.clear();
+			lstPointsX_Accel = pDataX_ACCEL->GetData();	//	pDataY->GetData()
+			w = lstPointsX_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
 		}
-
-		//	If Accel Z is to be displayed, smooth the Accelerometer data
-		if ( m_pLapSupplier->GetXChannel() == DATA_CHANNEL_Z_ACCEL || *i == DATA_CHANNEL_Z_ACCEL )
+		if ( pDataY->GetChannelType() == DATA_CHANNEL_Y_ACCEL )
 		{
-			//	Smooth the data if the X-axis is displaying ACCEL type data
-			if ( i_Smoothed_LapId_Z.size() )
-			{
-				bSmoothFlagZ = false;	//	Assume that we need to smooth the Accel data, then check if this lap has already been smoothed
-				for(set<int>::iterator t = i_Smoothed_LapId_Z.begin(); t != i_Smoothed_LapId_Z.end(); t++)
-				{
-					if ( pLap->GetLap()->GetLapId() == *t ) //	Lap has already been marked as smoothed, so abort
-					{
-						bSmoothFlagZ = true;	//	Otherwise smooth the Accel data
-						break;
-					}
-				}
-			}
+			lstPointsY_Accel.clear();
+			lstPointsY_Accel = pDataY_ACCEL->GetData();	//	pDataY->GetData()
+			w = lstPointsY_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
+		}
+		if ( pDataY->GetChannelType() == DATA_CHANNEL_Z_ACCEL )
+		{
+			lstPointsZ_Accel.clear();
+			lstPointsZ_Accel = pDataZ_ACCEL->GetData();	//	pDataY->GetData()
+			w = lstPointsZ_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
 		}
 
 		vector<DataPoint>& lstSmoothPts = (vector<DataPoint>) pDataX->GetData();
-		if( (eX == DATA_CHANNEL_X_ACCEL || eX == DATA_CHANNEL_Y_ACCEL || eX == DATA_CHANNEL_Z_ACCEL) || sfLapOpts.bTractionCircle )
+		if( (eX == DATA_CHANNEL_X_ACCEL || eX == DATA_CHANNEL_Y_ACCEL || eX == DATA_CHANNEL_Z_ACCEL) )
 		{
 			//	Smooth out the accerlometer data for all axes before displaying them on the X/Y-axes or in the Traction Circle display
 			if (lstPointsX_Accel.size() ) 
 			{
 				lstSmoothPts.clear();
-				lstSmoothPts = (vector<DataPoint>) pDataX_ACCEL->GetData();
-				fBoxMovingAvg( lstPointsX_Accel.size(), lstPointsX_Accel, w, lstSmoothPts, bSmoothFlagX );
-//				lstPointsX_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
-				lstPointsX = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
+				fBoxMovingAvg( lstPointsX_Accel.size(), lstPointsX_Accel, w, lstSmoothPts, false );
+				lstPointsX_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
 				lstSmoothPts.clear();
-				bSmoothFlagX = true;		//	Set switch so that no more smoothing is done
-				i_Smoothed_LapId_X.insert( pLap->GetLap()->GetLapId() );	//	Add the name of this lap to the set of smoothed laps
 			}
 			if (lstPointsY_Accel.size() ) 
 			{
 				lstSmoothPts.clear();
-				lstSmoothPts = (vector<DataPoint>) pDataY_ACCEL->GetData();	//	Now do the same for the Y_ACCEL data
-				fBoxMovingAvg( lstPointsY_Accel.size(), lstPointsY_Accel, w, lstSmoothPts, bSmoothFlagY );
-//				lstPointsY_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
-				lstPointsX = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
+				fBoxMovingAvg( lstPointsY_Accel.size(), lstPointsY_Accel, w, lstSmoothPts, false );
+				lstPointsY_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
 				lstSmoothPts.clear();
-				bSmoothFlagY = true;		//	Set switch so that no more smoothing is done
-				i_Smoothed_LapId_Y.insert( pLap->GetLap()->GetLapId() );	//	Add the name of this lap to the set of smoothed laps
 			}
 			if (lstPointsZ_Accel.size() ) 
 			{
 				lstSmoothPts.clear();
-				lstSmoothPts = (vector<DataPoint>) pDataZ_ACCEL->GetData();	//	Now do the same for the Z_ACCEL data
-				fBoxMovingAvg( lstPointsZ_Accel.size(), lstPointsZ_Accel, w, lstSmoothPts, bSmoothFlagZ );
-//				lstPointsZ_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
-				lstPointsX = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
+				fBoxMovingAvg( lstPointsZ_Accel.size(), lstPointsZ_Accel, w, lstSmoothPts, false );
+				lstPointsZ_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
 				lstSmoothPts.clear();
-				bSmoothFlagZ = true;		//	Set switch so that no more smoothing is done
-				i_Smoothed_LapId_Z.insert( pLap->GetLap()->GetLapId() );	//	Add the name of this lap to the set of smoothed laps
 			}
         }
 
-		if( (*i == DATA_CHANNEL_X_ACCEL || *i == DATA_CHANNEL_Y_ACCEL || *i == DATA_CHANNEL_Z_ACCEL) || sfLapOpts.bTractionCircle )
+		if( (*i == DATA_CHANNEL_X_ACCEL || *i == DATA_CHANNEL_Y_ACCEL || *i == DATA_CHANNEL_Z_ACCEL) )
 		{
 			//	Smooth out the accerlometer data for all axes before displaying them on the X/Y-axes or in the Traction Circle display
 			if (lstPointsX_Accel.size() ) 
 			{
 				lstSmoothPts.clear();
-				lstSmoothPts = (vector<DataPoint>) pDataX_ACCEL->GetData();
-				fBoxMovingAvg( lstPointsX_Accel.size(), lstPointsX_Accel, w, lstSmoothPts, bSmoothFlagX );
-//				lstPointsX_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
-				lstPointsY = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
+				fBoxMovingAvg( lstPointsX_Accel.size(), lstPointsX_Accel, w, lstSmoothPts, false );
+				lstPointsX_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
 				lstSmoothPts.clear();
-				bSmoothFlagX = true;		//	Set switch so that no more smoothing is done
-				i_Smoothed_LapId_X.insert( pLap->GetLap()->GetLapId() );	//	Add the name of this lap to the set of smoothed laps
 			}
 			if (lstPointsY_Accel.size() ) 
 			{
 				lstSmoothPts.clear();
-				lstSmoothPts = (vector<DataPoint>) pDataY_ACCEL->GetData();	//	Now do the same for the Y_ACCEL data
-				fBoxMovingAvg( lstPointsY_Accel.size(), lstPointsY_Accel, w, lstSmoothPts, bSmoothFlagY );
-//				lstPointsY_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
-				lstPointsY = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
+				fBoxMovingAvg( lstPointsY_Accel.size(), lstPointsY_Accel, w, lstSmoothPts, false );
+				lstPointsY_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
 				lstSmoothPts.clear();
-				bSmoothFlagY = true;		//	Set switch so that no more smoothing is done
-				i_Smoothed_LapId_Y.insert( pLap->GetLap()->GetLapId() );	//	Add the name of this lap to the set of smoothed laps
 			}
 			if (lstPointsZ_Accel.size() ) 
 			{
 				lstSmoothPts.clear();
-				lstSmoothPts = (vector<DataPoint>) pDataZ_ACCEL->GetData();	//	Now do the same for the Z_ACCEL data
-				fBoxMovingAvg( lstPointsZ_Accel.size(), lstPointsZ_Accel, w, lstSmoothPts, bSmoothFlagZ );
-//				lstPointsZ_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
-				lstPointsY = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
+				fBoxMovingAvg( lstPointsZ_Accel.size(), lstPointsZ_Accel, w, lstSmoothPts, false );
+				lstPointsZ_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
 				lstSmoothPts.clear();
-				bSmoothFlagZ = true;		//	Set switch so that no more smoothing is done
-				i_Smoothed_LapId_Z.insert( pLap->GetLap()->GetLapId() );	//	Add the name of this lap to the set of smoothed laps
 			}
         }
-*/
+
 		glEnable(GL_LINE_STIPPLE);
 		glLineStipple(factor, pattern);	//	Set the line dash/dot characteristics
 		if(sfLapOpts.fDrawLines == false)
@@ -686,10 +628,46 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 			glBegin(GL_LINE_STRIP);
 		}
 
-		vector<DataPoint>::const_iterator iX = lstPointsX.begin();
-		vector<DataPoint>::const_iterator iXend = lstPointsX.end();
-        vector<DataPoint>::const_iterator iY = lstPointsY.begin();
-		vector<DataPoint>::const_iterator iYend = lstPointsY.end();
+		vector<DataPoint>::const_iterator iX ;
+		if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+			iX = lstPointsX_Accel.begin(); 
+		else if ( eX == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+			iX = lstPointsY_Accel.begin(); 
+		else if ( eX == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+			iX = lstPointsZ_Accel.begin(); 
+		else 
+			iX = lstPointsX.begin();
+
+		vector<DataPoint>::const_iterator iXend;
+		if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+			iXend = lstPointsX_Accel.end(); 
+		else if ( eX == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+			iXend = lstPointsY_Accel.end(); 
+		else if ( eX == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+			iXend = lstPointsZ_Accel.end(); 
+		else 
+			iXend = lstPointsX.end();
+
+		vector<DataPoint>::const_iterator iY;
+		if ( *i == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+			iY = lstPointsX_Accel.begin();
+		else if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+			iY = lstPointsY_Accel.begin(); 
+		else if ( *i == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+			iY = lstPointsZ_Accel.begin();
+		else 
+			iY = lstPointsY.begin();
+
+		vector<DataPoint>::const_iterator  iYend;
+		if ( *i == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+			iYend = lstPointsX_Accel.end(); 
+		else if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+			iYend = lstPointsY_Accel.end();
+		else if ( *i == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+			iYend = lstPointsZ_Accel.end();
+		else 
+			iYend = lstPointsY.end();
+
 		while(iX != iXend && iY != iYend)
         {
           float dX;
@@ -701,12 +679,93 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
           {
             iTimeUsed = ptX.iTimeMs;
             dX = ptX.flValue;
-            dY = pDataY->GetValue(ptX.iTimeMs, iY);
+				if ( *i == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+				{
+					for(vector<DataPoint>::iterator t = lstPointsX_Accel.begin(); t != lstPointsX_Accel.end(); t++)
+					{
+						DataPoint& ptTemp = *t;
+						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
+						{
+							dY = ptTemp.flValue;
+							break;
+						}
+					}
+				}
+
+				else if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+				{
+					for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
+					{
+						DataPoint& ptTemp = *t;
+						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
+						{
+							dY = ptTemp.flValue;
+							break;
+						}
+					}
+				}
+
+				else if ( *i == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+				{
+					for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
+					{
+						DataPoint& ptTemp = *t;
+						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
+						{
+							dY = ptTemp.flValue;
+							break;
+						}
+					}
+				}
+
+				else 
+			dY = pDataY->GetValue(ptX.iTimeMs, iY);
             iX++;
           }
           else if(ptX.iTimeMs > ptY.iTimeMs)
           {
             iTimeUsed = ptY.iTimeMs;
+
+				if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+				{
+					for(vector<DataPoint>::iterator t = lstPointsX_Accel.begin(); t != lstPointsX_Accel.end(); t++)
+					{
+						DataPoint& ptTemp = *t;
+						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
+						{
+							dX = ptTemp.flValue;
+							break;
+						}
+					}
+				}
+
+				else if ( eX == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+				{
+					for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
+					{
+						DataPoint& ptTemp = *t;
+						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
+						{
+							dX = ptTemp.flValue;
+							break;
+						}
+					}
+				}
+
+				else if ( eX == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+				{
+					for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
+					{
+						DataPoint& ptTemp = *t;
+						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
+						{
+							dX = ptTemp.flValue;
+							break;
+						}
+					}
+				}
+			
+				else 
             dX = pDataX->GetValue(ptY.iTimeMs, iX);
             dY = ptY.flValue;
             iY++;
@@ -1580,6 +1639,9 @@ void CLapPainter::fBoxMovingAvg( int n, vector<DataPoint>& lstPoints, int w, vec
 		if (a < 0) aTemp = 0; else if (a >= n) aTemp = n - 1; else aTemp = a;
 		t += lstPoints[aTemp].flValue;
     }
-	lstSmoothPts[s].flValue = t / ( 2 * w + 1 );
+	DataPoint tempDataPoint;
+	tempDataPoint.flValue = (t / ( 2 * w + 1 ));
+	tempDataPoint.iTimeMs = lstPoints[s].iTimeMs;
+	lstSmoothPts.push_back( tempDataPoint );
   }
 }

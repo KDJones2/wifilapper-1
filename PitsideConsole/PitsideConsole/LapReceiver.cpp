@@ -132,7 +132,21 @@ float CDataChannel::GetValue(int iTime) const
   int iEnd = cSize;
 
 
-  const DataPoint* pData = lstData.data();
+  DataPoint* pData = NULL;
+  vector<DataPoint>& lstPoints = lstData;
+  vector<DataPoint> lstSmoothPts;
+  lstSmoothPts.begin();
+  vector<DataPoint>& p_lstSmoothPts = (vector<DataPoint>&) lstSmoothPts;
+  if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
+  {
+	  lstSmoothPts.clear();
+	  SmoothedFilter().fBoxMovingAvg( lstPoints.size(), lstPoints, 4, p_lstSmoothPts );
+	  pData = p_lstSmoothPts.data();
+  }
+  else
+  {
+	  pData = lstData.data();
+  }
   // this binary search will find the first and second points that we should use for interpolation.
   const DataPoint* dataFirst = NULL;
   const DataPoint* dataSecond = NULL;
@@ -183,18 +197,50 @@ float CDataChannel::GetValue(int iTime) const
       const float flFirst = dataFirst->flValue;
       const float flNext = dataSecond->flValue;
       const float flOffset = iTime - dataFirst->iTimeMs;
-      const float flWidth = dataSecond->iTimeMs - dataFirst->iTimeMs;
-      if(flWidth == 0) return flFirst;
-      const float flPct = flOffset / flWidth;
-      return (1-flPct)*flFirst + (flPct)*flNext;
+	  const float flWidth = dataSecond->iTimeMs - dataFirst->iTimeMs;
+	  if(flWidth == 0)
+	  {
+	      if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
+		  {
+			  return SmoothedFilter().ApplyTo(flFirst);	//	Returns the first value, transformed Y-value for this data channel
+		  }
+		  else
+		  {
+			  if(flWidth == 0) return flFirst;	//	Returns the first value for the Y-value for this data channel
+		  }
+	  }
+	  const float flPct = flOffset / flWidth;
+//	  if (&CDataChannel::m_pFilter != NULL)
+      if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
+	  {
+		  return SmoothedFilter().ApplyTo( (1-flPct)*flFirst + (flPct)*flNext );	//	Returns the transformed Y-value for this data channel
+      }
+      else
+      {
+		  return (1-flPct)*flFirst + (flPct)*flNext;	//	Returns the interpolated Y-value for this data channel
+      }
     }
     else
     {
-      return pData[iCheck].flValue;
+      if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
+	  {
+	      return SmoothedFilter().ApplyTo( pData[iCheck].flValue );	//	Returns the last value for the Y-value for this data channel
+	  }
+	  else
+	  {
+	      return pData[iCheck].flValue;	//	Returns the last value for the Y-value for this data channel
+	  }
     }
   }
   return 0;
 }
+
+CDataChannelFilter* CDataChannel::m_pFilter()
+{
+   CDataChannelFilter* Temp = NULL;
+   return Temp;
+}
+
 float CDataChannel::GetValue(int iTime, const vector<DataPoint>::const_iterator& i) const
 {
   CheckLazyLoad();
@@ -208,13 +254,30 @@ float CDataChannel::GetValue(int iTime, const vector<DataPoint>::const_iterator&
     vector<DataPoint>::const_iterator iBack = i;
     iBack--;
     const DataPoint& dataLast = *iBack;
-    if(dataLast.iTimeMs == data.iTimeMs) return dataLast.flValue;
+    if(dataLast.iTimeMs == data.iTimeMs)
+	{
+		if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
+		{
+			return SmoothedFilter().ApplyTo( dataLast.flValue );	//	Returns the last value for the Y-value for this data channel
+		}
+		else
+		{
+			return dataLast.flValue;
+		}
+	}
 
     float flWidth = data.iTimeMs - dataLast.iTimeMs;
     float flOffset = iTime - dataLast.iTimeMs;
     float flPct = flOffset / flWidth;
     DASSERT(flPct >= 0.0f && flPct <= 1.0f);
-    return (1-flPct)*dataLast.flValue + flPct * data.flValue;
+    if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
+	{
+	    return SmoothedFilter().ApplyTo( (1-flPct)*dataLast.flValue + flPct * data.flValue );	//	Returns the last value for the Y-value for this data channel
+	}
+	else
+	{
+		return (1-flPct)*dataLast.flValue + flPct * data.flValue;
+	}
   }
   else
   {
@@ -898,5 +961,31 @@ void LoadFromSQLite
   {
     ArtShowDialog<IDD_PROGRESS>(&dlgProgress);
     WaitForSingleObject(hThread, INFINITE);
+  }
+}
+
+// * Moving average function
+// * n is the number of input samples
+// * v is an array of values of size n
+// * w is the size of the window, taken on each side of sample
+// * out is output array of size n
+// *
+//
+void SmoothedFilter::fBoxMovingAvg( int n, vector<DataPoint>& lstPoints, int w, vector<DataPoint>& lstSmoothPts )
+{
+  int s;
+  for(s=0; s < n; s++)
+  {
+    float t = 0.0;
+	int aTemp = 0;
+    for ( int a = s - w; a <= s + w; a++ )
+    {
+		if (a < 0) aTemp = 0; else if (a >= n) aTemp = n - 1; else aTemp = a;
+		t += lstPoints[aTemp].flValue;
+    }
+	DataPoint tempDataPoint;
+	tempDataPoint.flValue = (t / ( 2 * w + 1 ));
+	tempDataPoint.iTimeMs = lstPoints[s].iTimeMs;
+	lstSmoothPts.push_back( tempDataPoint );
   }
 }
