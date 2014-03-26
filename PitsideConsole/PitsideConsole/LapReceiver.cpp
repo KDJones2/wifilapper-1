@@ -140,7 +140,7 @@ float CDataChannel::GetValue(int iTime) const
   if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
   {
 	  lstSmoothPts.clear();
-	  SmoothedFilter().fBoxMovingAvg( lstPoints.size(), lstPoints, 4, p_lstSmoothPts );
+	  SmoothedFilter().fBoxMovingAvg( lstPoints.size(), lstPoints, (int) lstPoints.size() / 400, p_lstSmoothPts );
 	  pData = p_lstSmoothPts.data();
   }
   else

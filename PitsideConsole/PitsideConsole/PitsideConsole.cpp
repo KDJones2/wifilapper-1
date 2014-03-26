@@ -43,7 +43,6 @@
 #include <CommCtrl.h>	//	For Listview sorting routines
 #include "DlgSelectSessions.h"
 #include "DlgTimingScoring.h"
-#include "DlgTractionCircle.h"
 
 //#pragma comment(lib,"sdl.lib")
 using namespace std;
@@ -901,17 +900,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		  {
             m_fShowTractionCircle = !m_fShowTractionCircle;
 			m_sfLapOpts.bTractionCircle = m_fShowTractionCircle;
-/*			TRACTIONCIRCLEDLG_RESULT sfResult;
-//			CTractionCircleDlg dlgTractionCircle(g_pLapDB, m_pReferenceLap,  &sfResult, m_iRaceId[0], &m_sfLapOpts);
-//			ArtShowDialog<IDD_TRACTIONCIRCLE>(&dlgTractionCircle);
-
-			if(!sfResult.fCancelled)
-            {
-			  UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_DASHBOARD | UPDATE_VALUES);
-//			  UpdateUI(UPDATE_ALL | UPDATE_VALUES);
-			  return TRUE;
-			}
-*/			UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_TRACTIONCIRCLE);
+			UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_TRACTIONCIRCLE);
             return TRUE;
 		  }		
 		  //	Nested loop for the following functions
