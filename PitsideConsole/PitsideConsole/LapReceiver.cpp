@@ -136,12 +136,11 @@ float CDataChannel::GetValue(int iTime) const
   vector<DataPoint>& lstPoints = lstData;
   vector<DataPoint> lstSmoothPts;
   lstSmoothPts.begin();
-  vector<DataPoint>& p_lstSmoothPts = (vector<DataPoint>&) lstSmoothPts;
   if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
   {
 	  lstSmoothPts.clear();
-	  SmoothedFilter().fBoxMovingAvg( lstPoints.size(), lstPoints, (int) lstPoints.size() / 400, p_lstSmoothPts );
-	  pData = p_lstSmoothPts.data();
+	  SmoothedFilter().fBoxMovingAvg( lstPoints.size(), lstPoints, (int) lstPoints.size() / 400, lstSmoothPts );
+	  pData = lstSmoothPts.data();
   }
   else
   {
