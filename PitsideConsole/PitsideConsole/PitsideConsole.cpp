@@ -1252,7 +1252,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				CDlgSelectSessions dlgRace(g_pLapDB, &sfResult);
 				ArtShowDialog<IDD_SELECTSESSIONS>(&dlgRace);
 
-				if(!sfResult.fCancelled && sfResult.m_RaceId[0] != -1)
+				if(!sfResult.fCancelled /*&& sfResult.m_RaceId[0] != -1 */)	//	Allow the user to show the menu and start a race, even if no data has been collected from the racers yet
 				{
 					// Now display the T&S page and pass these RaceID's to this class
 					TS_RESULT ts_sfResult;

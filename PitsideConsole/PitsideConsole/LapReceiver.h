@@ -144,7 +144,6 @@ public:
   // it also sorts the vector
   virtual void Lock() = 0;
   virtual bool IsLocked() const = 0;
-  virtual CDataChannelFilter* m_pFilter() = 0;   //   Added by KDJ
 };
 class CDataChannel : public IDataChannel
 {
@@ -168,8 +167,7 @@ public:
   float GetMax() const override;
   int GetEndTimeMs() const override;
   int GetStartTimeMs() const override;
-  CDataChannelFilter* m_pFilter() override;   //   Added by KDJ
-
+  
   const vector<DataPoint>& GetData() const override {return lstData;}
 
   void AddPoint(int iTime, float flValue) override; // iTime must be in milliseconds since the phone app started.  flValue can be whatever you want
@@ -427,8 +425,9 @@ class SmoothedFilter : public CDataChannelFilter // Smoothes the data channel fo
 public:
   virtual float ApplyTo(float flValue) const override 
   {
-	  return flValue * 1.0f;
+	  return flValue;
   }
-  void fBoxMovingAvg( int n, vector<DataPoint>& lstPoints, int w, vector<DataPoint>& lstSmoothPts );
 };
+
+void fBoxMovingAvg( int n, vector<DataPoint>& lstPoints, int w, vector<DataPoint>& lstSmoothPts );
 

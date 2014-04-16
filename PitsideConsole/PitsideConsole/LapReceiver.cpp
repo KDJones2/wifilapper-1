@@ -136,16 +136,18 @@ float CDataChannel::GetValue(int iTime) const
   vector<DataPoint>& lstPoints = lstData;
   vector<DataPoint> lstSmoothPts;
   lstSmoothPts.begin();
+  //	If data is an Accelerometer channel, first let's smooth out the data channel before returning the data value
   if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
   {
 	  lstSmoothPts.clear();
-	  SmoothedFilter().fBoxMovingAvg( lstPoints.size(), lstPoints, (int) lstPoints.size() / 400, lstSmoothPts );
+	  fBoxMovingAvg( lstPoints.size(), lstPoints, (int) lstPoints.size() / 400, lstSmoothPts );
 	  pData = lstSmoothPts.data();
   }
   else
   {
 	  pData = lstData.data();
   }
+
   // this binary search will find the first and second points that we should use for interpolation.
   const DataPoint* dataFirst = NULL;
   const DataPoint* dataSecond = NULL;
@@ -205,11 +207,11 @@ float CDataChannel::GetValue(int iTime) const
 		  }
 		  else
 		  {
-			  if(flWidth == 0) return flFirst;	//	Returns the first value for the Y-value for this data channel
+			  return flFirst;	//	Returns the first value for the Y-value for this data channel
 		  }
 	  }
+
 	  const float flPct = flOffset / flWidth;
-//	  if (&CDataChannel::m_pFilter != NULL)
       if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
 	  {
 		  return SmoothedFilter().ApplyTo( (1-flPct)*flFirst + (flPct)*flNext );	//	Returns the transformed Y-value for this data channel
@@ -232,12 +234,6 @@ float CDataChannel::GetValue(int iTime) const
     }
   }
   return 0;
-}
-
-CDataChannelFilter* CDataChannel::m_pFilter()
-{
-   CDataChannelFilter* Temp = NULL;
-   return Temp;
 }
 
 float CDataChannel::GetValue(int iTime, const vector<DataPoint>::const_iterator& i) const
@@ -281,7 +277,14 @@ float CDataChannel::GetValue(int iTime, const vector<DataPoint>::const_iterator&
   else
   {
     // this iterator is actually the first element in our vector, so just return it's value
-    return data.flValue;
+    if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
+	{
+		return SmoothedFilter().ApplyTo( data.flValue );
+	}
+	else
+	{
+		return data.flValue;
+	}
   }
 }
 float CDataChannel::GetMin() const
@@ -970,7 +973,7 @@ void LoadFromSQLite
 // * out is output array of size n
 // *
 //
-void SmoothedFilter::fBoxMovingAvg( int n, vector<DataPoint>& lstPoints, int w, vector<DataPoint>& lstSmoothPts )
+void fBoxMovingAvg( int n, vector<DataPoint>& lstPoints, int w, vector<DataPoint>& lstSmoothPts )
 {
   int s;
   for(s=0; s < n; s++)

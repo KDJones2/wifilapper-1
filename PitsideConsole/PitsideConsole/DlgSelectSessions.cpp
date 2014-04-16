@@ -66,7 +66,13 @@ LRESULT CDlgSelectSessions::DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
           else
           {
 			//	Do nothing, no race sessions chosen
-			MessageBox(NULL,L"No race sessions selected\n\nSelect some race sessions and try again",L"", MB_OK);
+			int iRet = MessageBox(NULL,L"No race sessions selected\n\nDo you want to start a race without any racers?\n\n(Do this if you want to capture the Start and End time markers\nfor Re-Running the race scenario once all data is collected)",L"", MB_YESNO);
+			if(iRet == IDYES)
+			{
+				m_pResults->m_RaceId[0] = -1;	//	No Race_Id stored, so let's just save the start/end markers
+				m_pResults->fCancelled = false;
+				EndDialog(hWnd,0);
+			}
           }
           return TRUE;
         }
