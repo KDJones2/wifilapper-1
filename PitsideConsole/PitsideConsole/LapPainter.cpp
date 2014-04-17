@@ -678,47 +678,49 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
           if(ptX.iTimeMs < ptY.iTimeMs)
           {
             iTimeUsed = ptX.iTimeMs;
-            dX = ptX.flValue;
-				if ( *i == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+			if ( *i == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+			{
+				for(vector<DataPoint>::iterator t = lstPointsX_Accel.begin(); t != lstPointsX_Accel.end(); t++)
 				{
-					for(vector<DataPoint>::iterator t = lstPointsX_Accel.begin(); t != lstPointsX_Accel.end(); t++)
+					DataPoint& ptTemp = *t;
+					if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
 					{
-						DataPoint& ptTemp = *t;
-						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
-						{
-							dY = ptTemp.flValue;
-							break;
-						}
+						dY = ptTemp.flValue;
+						break;
 					}
 				}
+			}
 
-				else if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+			else if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+			{
+				for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
 				{
-					for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
+					DataPoint& ptTemp = *t;
+					if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
 					{
-						DataPoint& ptTemp = *t;
-						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
-						{
-							dY = ptTemp.flValue;
-							break;
-						}
+						dY = ptTemp.flValue;
+						break;
 					}
 				}
+			}
 
-				else if ( *i == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+			else if ( *i == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+			{
+				for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
 				{
-					for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
+					DataPoint& ptTemp = *t;
+					if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
 					{
-						DataPoint& ptTemp = *t;
-						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
-						{
-							dY = ptTemp.flValue;
-							break;
-						}
+						dY = ptTemp.flValue;
+						break;
 					}
 				}
+			}
 
-				else 
+			else
+			{
+	            dX = ptX.flValue;
+			}
 			dY = pDataY->GetValue(ptX.iTimeMs, iY);
             iX++;
           }
@@ -726,47 +728,49 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
           {
             iTimeUsed = ptY.iTimeMs;
 
-				if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+			if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+			{
+				for(vector<DataPoint>::iterator t = lstPointsX_Accel.begin(); t != lstPointsX_Accel.end(); t++)
 				{
-					for(vector<DataPoint>::iterator t = lstPointsX_Accel.begin(); t != lstPointsX_Accel.end(); t++)
+					DataPoint& ptTemp = *t;
+					if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
 					{
-						DataPoint& ptTemp = *t;
-						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
-						{
-							dX = ptTemp.flValue;
-							break;
-						}
+						dX = ptTemp.flValue;
+						break;
 					}
 				}
+			}
 
-				else if ( eX == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+			else if ( eX == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+			{
+				for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
 				{
-					for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
+					DataPoint& ptTemp = *t;
+					if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
 					{
-						DataPoint& ptTemp = *t;
-						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
-						{
-							dX = ptTemp.flValue;
-							break;
-						}
+						dX = ptTemp.flValue;
+						break;
 					}
 				}
+			}
 
-				else if ( eX == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+			else if ( eX == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+			{
+				for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
 				{
-					for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
+					DataPoint& ptTemp = *t;
+					if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
 					{
-						DataPoint& ptTemp = *t;
-						if ( ptTemp.iTimeMs >= ptX.iTimeMs ) //	Found smoothed point, let's load the Y value
-						{
-							dX = ptTemp.flValue;
-							break;
-						}
+						dX = ptTemp.flValue;
+						break;
 					}
 				}
+			}
 			
-				else 
-            dX = pDataX->GetValue(ptY.iTimeMs, iX);
+			else 
+			{
+				dX = pDataX->GetValue(ptY.iTimeMs, iX);
+			}
             dY = ptY.flValue;
             iY++;
           }
