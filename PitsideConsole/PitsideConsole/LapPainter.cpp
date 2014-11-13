@@ -279,31 +279,43 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 					break;
 				}
 			}
-      if(mapMinYTemp.find(eType) == mapMinYTemp.end())
+      /*if(mapMinYTemp.find(eType) == mapMinYTemp.end())
         {
           mapMinYTemp[eType] = min(pChannel->GetMin(),m_pLapSupplier->GetDataHardcodedMin(eType));
           mapMaxYTemp[eType] = max(pChannel->GetMax(),m_pLapSupplier->GetDataHardcodedMax(eType));
         }
-        else
+        else	*/
         {
           mapMinYTemp[eType] = min(pChannel->GetMin(),mapMinYTemp[eType]);
           mapMaxYTemp[eType] = max(pChannel->GetMax(),mapMaxYTemp[eType]);
 		}
 ////////////////////////////////
 		//	Adding transformation functions here for Min/MaxY
-		if (b_TransformY == true && sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue < 0)
+	  //	This needs to be fixed, NOT CORRECT FOR SETTING THE BOUNDS
+//		if (b_TransformY == true && mapMinYTemp[eType] > (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue))
+		if (b_TransformY == true && (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue) > (float)PolynomialFilter(mapMaxYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue))		
 		{
-			mapMaxY[eType] = (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue);
 			mapMinY[eType] = (float)PolynomialFilter(mapMaxYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue);
 		}
 		else if (b_TransformY == true)
 		{
 			mapMinY[eType] = (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue);
-			mapMaxY[eType] = (float)PolynomialFilter(mapMaxYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue);
 		}
 		else
 		{
 			mapMinY[eType] = mapMinYTemp[eType];
+		}
+
+		if (b_TransformY == true && (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue) > (float)PolynomialFilter(mapMaxYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue))
+		{
+			mapMaxY[eType] = (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue);
+		}
+		else if (b_TransformY == true)
+		{
+			mapMaxY[eType] = (float)PolynomialFilter(mapMaxYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue);
+		}
+		else
+		{
 			mapMaxY[eType] = mapMaxYTemp[eType];
 		}
 ////////////////////////////////
@@ -787,12 +799,13 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 		  //	Can add transformation function here for Y
 		  if (sfLapOpts.m_PlotPrefs[y].iTransformYesNo == true)
 		  {
-			  dY = PolynomialFilter(ptY.flValue, sfLapOpts.m_PlotPrefs[y].fTransAValue, sfLapOpts.m_PlotPrefs[y].fTransBValue, sfLapOpts.m_PlotPrefs[y].fTransCValue);
+//			  dY = PolynomialFilter(ptY.flValue, sfLapOpts.m_PlotPrefs[y].fTransAValue, sfLapOpts.m_PlotPrefs[y].fTransBValue, sfLapOpts.m_PlotPrefs[y].fTransCValue);
+			  dY = PolynomialFilter(dY, sfLapOpts.m_PlotPrefs[y].fTransAValue, sfLapOpts.m_PlotPrefs[y].fTransBValue, sfLapOpts.m_PlotPrefs[y].fTransCValue);
 		  }
-		  else
-		  {
-			  dY = ptY.flValue;
-		  }
+//		  else
+//		  {
+//			  dY = ptY.flValue;
+//		  }
 //////////////////////////////////////////
           glVertex2f(dX,dY);
 
@@ -840,6 +853,7 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
         const POINT& ptWindow = lstMousePointsToDraw[x].m_ptWindow;	// <-- gets info about where in the window we want to draw the box
         const IDataChannel* pDataX = lstMousePointsToDraw[x].m_pDataX;	//  <-- gets the x channel data
         const IDataChannel* pDataY = lstMousePointsToDraw[x].m_pDataY;	// <-- gets the y channel data
+				POINT Temp_ptWindow;	//	Point for transforming Y values in highlight loop
 
 		float r;
 		float g;
@@ -869,10 +883,15 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 			if (sfLapOpts.m_PlotPrefs[y].iTransformYesNo == true)
 			{
 				TempY = PolynomialFilter(pDataY->GetValue(dTimeToHighlight), sfLapOpts.m_PlotPrefs[y].fTransAValue, sfLapOpts.m_PlotPrefs[y].fTransBValue, sfLapOpts.m_PlotPrefs[y].fTransCValue);
+				//	Transform highlight points into OpenGL space
+				GLdouble winx,winy,winz;
+				gluProject(0, (GLdouble)TempY, 0, rgModelviewMatrix, rgProjMatrix, rgViewport, &winx, &winy, &winz);
+				Temp_ptWindow.y = (int)winy;
 			}
 			else
 			{
 				TempY = pDataY->GetValue(dTimeToHighlight);
+				Temp_ptWindow.y = ptWindow.y;
 			}
 //////////////////////////////////////////
 			GetChannelString(lstMousePointsToDraw[x].m_eChannelY, sfLapOpts.eUnitPreference, TempY, szYString, NUMCHARS(szYString));
@@ -889,7 +908,8 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 			DrawText(100.0,(x+2)*GetWindowFontSize(),szText);	// <-- draws the text from the bottom of the window, working upwards
 
 			// we also want to draw a highlighted square
-			DrawGLFilledSquare(ptWindow.x, ptWindow.y, 3);	// <-- draws the stupid little box at ptWindow.x.
+//			DrawGLFilledSquare(ptWindow.x, ptWindow.y, 3);	// <-- draws the stupid little box at ptWindow.x.
+			DrawGLFilledSquare(ptWindow.x, Temp_ptWindow.y, 3);	// <-- draws the stupid little box at ptWindow.x.
 			// we also want to draw a highlighted LINE for that individual lap/graph combination
 			glLineWidth(1);								// Added by KDJ. Skinny line for Distance markers.
 			glBegin(GL_LINE_STRIP);						// Added by KDJ
@@ -1138,12 +1158,13 @@ void CLapPainter::DrawTractionCircle(const LAPSUPPLIEROPTIONS& sfLapOpts, bool f
 		  //	Can add transformation function here for Y
 		  if (sfLapOpts.m_PlotPrefs[y].iTransformYesNo == true)
 		  {
-			  dY = PolynomialFilter(ptY.flValue, sfLapOpts.m_PlotPrefs[y].fTransAValue, sfLapOpts.m_PlotPrefs[y].fTransBValue, sfLapOpts.m_PlotPrefs[y].fTransCValue);
+//			  dY = PolynomialFilter(ptY.flValue, sfLapOpts.m_PlotPrefs[y].fTransAValue, sfLapOpts.m_PlotPrefs[y].fTransBValue, sfLapOpts.m_PlotPrefs[y].fTransCValue);
+			  dY = PolynomialFilter(dY, sfLapOpts.m_PlotPrefs[y].fTransAValue, sfLapOpts.m_PlotPrefs[y].fTransBValue, sfLapOpts.m_PlotPrefs[y].fTransCValue);
 		  }
-		  else
-		  {
-			  dY = ptY.flValue;
-		  }
+//		  else
+//		  {
+//			  dY = ptY.flValue;
+//		  }
 //////////////////////////////////////////
           glVertex2f(dX,dY);
 
