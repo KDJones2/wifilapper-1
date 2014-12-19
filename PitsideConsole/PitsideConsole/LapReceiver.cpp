@@ -242,7 +242,7 @@ float CDataChannel::GetValue(int iTime, const vector<DataPoint>::const_iterator&
   DASSERT(fLocked); // you should only be getting data after the channel is all loaded up!
   const DataPoint& data = (*i);
   DASSERT(data.iTimeMs >= iTime);
-  if(i != lstData.begin())
+  if(i != lstData.begin() && (eChannelType != DATA_CHANNEL_X_ACCEL || eChannelType != DATA_CHANNEL_Y_ACCEL || eChannelType != DATA_CHANNEL_Z_ACCEL ) )
   {
     // this iterator has been moved forward from the start of the vector.
     // back up one from it, then interpolate between those two points
