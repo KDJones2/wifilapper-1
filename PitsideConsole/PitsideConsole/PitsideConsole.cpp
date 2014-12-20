@@ -275,6 +275,7 @@ public:
       m_sfTractionDisplay(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_TRACTIONCIRCLEDISPLAY), 
       m_eLapDisplayStyle(LAPDISPLAYSTYLE_PLOT),		//	Make data plot the default initial view
       m_fShowTractionCircle(false),
+	  m_fSmooth(false),
 	  m_fShowBests(false), 
       m_fShowDriverBests(false),
 	  m_fShowReferenceLap(true),
@@ -900,6 +901,13 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		  {
             m_fShowTractionCircle = !m_fShowTractionCircle;
 			m_sfLapOpts.bTractionCircle = m_fShowTractionCircle;
+			UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_TRACTIONCIRCLE);
+            return TRUE;
+		  }		
+          case ID_OPTIONS_SMOOTH:
+		  {
+            m_fSmooth = !m_fSmooth;
+			m_sfLapOpts.bSmoothYesNo = m_fSmooth;
 			UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_TRACTIONCIRCLE);
             return TRUE;
 		  }		
@@ -2204,6 +2212,7 @@ void UpdateValues()
     CheckMenuHelper(hSubMenu, ID_OPTIONS_SHOWDRIVERBESTS, m_fShowDriverBests);
 	CheckMenuHelper(hSubMenu, ID_OPTIONS_SHOWREFERENCELAP, m_fShowReferenceLap);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_DRAWLINES, m_sfLapOpts.fDrawLines);
+	CheckMenuHelper(hSubMenu, ID_OPTIONS_SMOOTH, m_sfLapOpts.bSmoothYesNo);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_BACKGROUND, m_sfLapOpts.fColorScheme);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_IOIO5VSCALE, m_sfLapOpts.fIOIOHardcoded);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_ELAPSEDTIME, m_sfLapOpts.fElapsedTime);
@@ -2773,6 +2782,7 @@ private:
   DATA_CHANNEL m_eXChannel;
 //  vector<DATA_CHANNEL> m_lstYChannels;
   bool m_fShowTractionCircle;
+  bool m_fSmooth;
   bool m_fShowBests;
   bool m_fShowDriverBests;
   bool m_fShowReferenceLap;
@@ -2844,6 +2854,7 @@ void LoadPitsideSettings(PITSIDE_SETTINGS* pSettings)
       in>>pSettings->iVelocity;
       in>>pSettings->iMapLines;
 	  in>>pSettings->iColorScheme;
+	  in>>pSettings->bSmoothYesNo;
       in.close();
     }
   }
@@ -3030,6 +3041,19 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   default:
           {
             x_sfLapOpts.fColorScheme = false;	//	Grey background as a default, true = black
+          }
+  }
+  switch (sfSettings.bSmoothYesNo)
+  {
+  case 0:
+  case 1:
+          {
+            x_sfLapOpts.bSmoothYesNo = sfSettings.bSmoothYesNo;	//	Assign smoothing setting from Settings.txt file
+			break;
+          }
+  default:
+          {
+            x_sfLapOpts.bSmoothYesNo = false;	//	Grey background as a default, true = black
           }
   }
   x_sfLapOpts.eSortPreference = SORTSTYLE_BYTIMEOFRACE;		//	Default sort Lap List by time of lap

@@ -137,11 +137,12 @@ float CDataChannel::GetValue(int iTime) const
   vector<DataPoint> lstSmoothPts;
   lstSmoothPts.begin();
   //	If data is an Accelerometer channel, first let's smooth out the data channel before returning the data value
-  if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
+//  if ( ( eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL ) && sfLapOpts.bSmoothYesNo == true )
+  if ( ( eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL ) )
   {
-	  lstSmoothPts.clear();
-	  fBoxMovingAvg( lstPoints.size(), lstPoints, (int) lstPoints.size() / 400, lstSmoothPts );
-	  pData = lstSmoothPts.data();
+	lstSmoothPts.clear();
+	fBoxMovingAvg( lstPoints.size(), lstPoints, (int) lstPoints.size() / 400, lstSmoothPts );
+	pData = lstSmoothPts.data();
   }
   else
   {
@@ -201,7 +202,8 @@ float CDataChannel::GetValue(int iTime) const
 	  const float flWidth = dataSecond->iTimeMs - dataFirst->iTimeMs;
 	  if(flWidth == 0)
 	  {
-	      if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
+//	      if ( ( eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL ) && sfLapOpts.bSmoothYesNo == true ) )
+	      if ( (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL ) )
 		  {
 			  return SmoothedFilter().ApplyTo(flFirst);	//	Returns the first value, transformed Y-value for this data channel
 		  }
@@ -212,7 +214,8 @@ float CDataChannel::GetValue(int iTime) const
 	  }
 
 	  const float flPct = flOffset / flWidth;
-      if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
+//      if ( (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL ) && sfLapOpts.bSmoothYesNo == true )
+	  if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
 	  {
 		  return SmoothedFilter().ApplyTo( (1-flPct)*flFirst + (flPct)*flNext );	//	Returns the transformed Y-value for this data channel
       }
@@ -223,6 +226,7 @@ float CDataChannel::GetValue(int iTime) const
     }
     else
     {
+//      if ( (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL ) && sfLapOpts.bSmoothYesNo == true )
       if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
 	  {
 	      return SmoothedFilter().ApplyTo( pData[iCheck].flValue );	//	Returns the last value for the Y-value for this data channel
@@ -242,7 +246,8 @@ float CDataChannel::GetValue(int iTime, const vector<DataPoint>::const_iterator&
   DASSERT(fLocked); // you should only be getting data after the channel is all loaded up!
   const DataPoint& data = (*i);
   DASSERT(data.iTimeMs >= iTime);
-  if(i != lstData.begin() && (eChannelType != DATA_CHANNEL_X_ACCEL || eChannelType != DATA_CHANNEL_Y_ACCEL || eChannelType != DATA_CHANNEL_Z_ACCEL ) )
+    if(i != lstData.begin() )
+  //  if(i != lstData.begin() && (eChannelType != DATA_CHANNEL_X_ACCEL || eChannelType != DATA_CHANNEL_Y_ACCEL || eChannelType != DATA_CHANNEL_Z_ACCEL ) && sfLapOpts.bSmoothYesNo == true )
   {
     // this iterator has been moved forward from the start of the vector.
     // back up one from it, then interpolate between those two points
@@ -251,7 +256,8 @@ float CDataChannel::GetValue(int iTime, const vector<DataPoint>::const_iterator&
     const DataPoint& dataLast = *iBack;
     if(dataLast.iTimeMs == data.iTimeMs)
 	{
-		if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
+//		if ( (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL ) && sfLapOpts.bSmoothYesNo == true )
+		if ( (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL ) )
 		{
 			return SmoothedFilter().ApplyTo( dataLast.flValue );	//	Returns the last value for the Y-value for this data channel
 		}
@@ -265,6 +271,7 @@ float CDataChannel::GetValue(int iTime, const vector<DataPoint>::const_iterator&
     float flOffset = iTime - dataLast.iTimeMs;
     float flPct = flOffset / flWidth;
     DASSERT(flPct >= 0.0f && flPct <= 1.0f);
+//    if ( (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL ) && sfLapOpts.bSmoothYesNo == true )
     if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
 	{
 	    return SmoothedFilter().ApplyTo( (1-flPct)*dataLast.flValue + flPct * data.flValue );	//	Returns the last value for the Y-value for this data channel
@@ -277,6 +284,7 @@ float CDataChannel::GetValue(int iTime, const vector<DataPoint>::const_iterator&
   else
   {
     // this iterator is actually the first element in our vector, so just return it's value
+//    if ( (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL ) && sfLapOpts.bSmoothYesNo == true )
     if (eChannelType == DATA_CHANNEL_X_ACCEL || eChannelType == DATA_CHANNEL_Y_ACCEL || eChannelType == DATA_CHANNEL_Z_ACCEL )
 	{
 		return SmoothedFilter().ApplyTo( data.flValue );

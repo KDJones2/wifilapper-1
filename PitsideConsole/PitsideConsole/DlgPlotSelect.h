@@ -40,6 +40,7 @@ struct PITSIDE_SETTINGS
 	iVelocity = 1;
 	iMapLines = 1;
 	iColorScheme = 0;
+	bSmoothYesNo = false;
   }
 
   int fRunHTTP;
@@ -47,6 +48,7 @@ struct PITSIDE_SETTINGS
   int iVelocity;
   int iMapLines;
   int iColorScheme;
+  bool bSmoothYesNo;
 };
 
 struct TRANSFORMATION
@@ -95,6 +97,7 @@ public:
   HWND hWndLap[50];
   LAPSORTSTYLE eSortPreference;
   bool bTractionCircle;		//	Whether or not to display the Traction Circle display
+  bool bSmoothYesNo;	//	Whether or not to smooth the accelerometer graphs
 };
 
 

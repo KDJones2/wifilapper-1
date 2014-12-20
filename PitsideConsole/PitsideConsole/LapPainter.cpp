@@ -529,39 +529,38 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 		lstPointsY_Accel.begin();
 		vector<DataPoint> lstPointsZ_Accel;
 		lstPointsZ_Accel.begin();
-
-		if ( eX == DATA_CHANNEL_X_ACCEL )
+		if ( eX == DATA_CHANNEL_X_ACCEL && sfLapOpts.bSmoothYesNo == true )
 		{
 			lstPointsX_Accel.clear();
 			lstPointsX_Accel = pDataX_ACCEL->GetData();	//	pDataY->GetData()
 			w = lstPointsX_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
 		}
-		if ( eX == DATA_CHANNEL_Y_ACCEL )
+		if ( eX == DATA_CHANNEL_Y_ACCEL && sfLapOpts.bSmoothYesNo == true )
 		{
 			lstPointsY_Accel.clear();
 			lstPointsY_Accel = pDataY_ACCEL->GetData();	//	pDataY->GetData()
 			w = lstPointsY_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
 		}
-		if ( eX == DATA_CHANNEL_Z_ACCEL )
+		if ( eX == DATA_CHANNEL_Z_ACCEL && sfLapOpts.bSmoothYesNo == true )
 		{
 			lstPointsZ_Accel.clear();
 			lstPointsZ_Accel = pDataZ_ACCEL->GetData();	//	pDataY->GetData()
 			w = lstPointsZ_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
 		}
 
-		if ( pDataY->GetChannelType() == DATA_CHANNEL_X_ACCEL )
+		if ( pDataY->GetChannelType() == DATA_CHANNEL_X_ACCEL && sfLapOpts.bSmoothYesNo == true )
 		{
 			lstPointsX_Accel.clear();
 			lstPointsX_Accel = pDataX_ACCEL->GetData();	//	pDataY->GetData()
 			w = lstPointsX_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
 		}
-		if ( pDataY->GetChannelType() == DATA_CHANNEL_Y_ACCEL )
+		if ( pDataY->GetChannelType() == DATA_CHANNEL_Y_ACCEL && sfLapOpts.bSmoothYesNo == true )
 		{
 			lstPointsY_Accel.clear();
 			lstPointsY_Accel = pDataY_ACCEL->GetData();	//	pDataY->GetData()
 			w = lstPointsY_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
 		}
-		if ( pDataY->GetChannelType() == DATA_CHANNEL_Z_ACCEL )
+		if ( pDataY->GetChannelType() == DATA_CHANNEL_Z_ACCEL && sfLapOpts.bSmoothYesNo == true )
 		{
 			lstPointsZ_Accel.clear();
 			lstPointsZ_Accel = pDataZ_ACCEL->GetData();	//	pDataY->GetData()
@@ -569,7 +568,7 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 		}
 
 		vector<DataPoint>& lstSmoothPts = (vector<DataPoint>) pDataX->GetData();
-		if( (eX == DATA_CHANNEL_X_ACCEL || eX == DATA_CHANNEL_Y_ACCEL || eX == DATA_CHANNEL_Z_ACCEL) )
+		if( (eX == DATA_CHANNEL_X_ACCEL || eX == DATA_CHANNEL_Y_ACCEL || eX == DATA_CHANNEL_Z_ACCEL) && sfLapOpts.bSmoothYesNo == true )
 		{
 			//	Smooth out the accerlometer data for all axes before displaying them on the X/Y-axes or in the Traction Circle display
 			if (lstPointsX_Accel.size() ) 
@@ -593,9 +592,9 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 				lstPointsZ_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
 				lstSmoothPts.clear();
 			}
-        }
+		}
 
-		if( (*i == DATA_CHANNEL_X_ACCEL || *i == DATA_CHANNEL_Y_ACCEL || *i == DATA_CHANNEL_Z_ACCEL) )
+		if( (*i == DATA_CHANNEL_X_ACCEL || *i == DATA_CHANNEL_Y_ACCEL || *i == DATA_CHANNEL_Z_ACCEL) && sfLapOpts.bSmoothYesNo == true )
 		{
 			//	Smooth out the accerlometer data for all axes before displaying them on the X/Y-axes or in the Traction Circle display
 			if (lstPointsX_Accel.size() ) 
@@ -619,7 +618,7 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 				lstPointsZ_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
 				lstSmoothPts.clear();
 			}
-        }
+	    }
 
 		glEnable(GL_LINE_STIPPLE);
 		glLineStipple(factor, pattern);	//	Set the line dash/dot characteristics
@@ -641,43 +640,43 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 		}
 
 		vector<DataPoint>::const_iterator iX ;
-		if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+		if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iX = lstPointsX_Accel.begin(); 
-		else if ( eX == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+		else if ( eX == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iX = lstPointsY_Accel.begin(); 
-		else if ( eX == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+		else if ( eX == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iX = lstPointsZ_Accel.begin(); 
-		else 
+		else
 			iX = lstPointsX.begin();
 
 		vector<DataPoint>::const_iterator iXend;
-		if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+		if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iXend = lstPointsX_Accel.end(); 
-		else if ( eX == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+		else if ( eX == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iXend = lstPointsY_Accel.end(); 
-		else if ( eX == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+		else if ( eX == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iXend = lstPointsZ_Accel.end(); 
-		else 
+		else
 			iXend = lstPointsX.end();
 
 		vector<DataPoint>::const_iterator iY;
-		if ( *i == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+		if ( *i == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iY = lstPointsX_Accel.begin();
-		else if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+		else if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iY = lstPointsY_Accel.begin(); 
-		else if ( *i == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+		else if ( *i == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iY = lstPointsZ_Accel.begin();
-		else 
+		else
 			iY = lstPointsY.begin();
 
 		vector<DataPoint>::const_iterator  iYend;
-		if ( *i == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+		if ( *i == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iYend = lstPointsX_Accel.end(); 
-		else if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+		else if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iYend = lstPointsY_Accel.end();
-		else if ( *i == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+		else if ( *i == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			iYend = lstPointsZ_Accel.end();
-		else 
+		else
 			iYend = lstPointsY.end();
 
 		while(iX != iXend && iY != iYend)
@@ -690,7 +689,7 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
           if(ptX.iTimeMs < ptY.iTimeMs)
           {
             iTimeUsed = ptX.iTimeMs;
-			if ( *i == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+			if ( *i == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			{
 				for(vector<DataPoint>::iterator t = lstPointsX_Accel.begin(); t != lstPointsX_Accel.end(); t++)
 				{
@@ -703,7 +702,7 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 				}
 			}
 
-			else if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+			else if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			{
 				for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
 				{
@@ -716,7 +715,7 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 				}
 			}
 
-			else if ( *i == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+			else if ( *i == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			{
 				for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
 				{
@@ -728,7 +727,6 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 					}
 				}
 			}
-
 			else
 			{
 	            dX = ptX.flValue;
@@ -740,7 +738,7 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
           {
             iTimeUsed = ptY.iTimeMs;
 
-			if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() ) 
+			if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			{
 				for(vector<DataPoint>::iterator t = lstPointsX_Accel.begin(); t != lstPointsX_Accel.end(); t++)
 				{
@@ -753,7 +751,7 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 				}
 			}
 
-			else if ( eX == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() ) 
+			else if ( eX == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			{
 				for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
 				{
@@ -766,7 +764,7 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 				}
 			}
 
-			else if ( eX == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() ) 
+			else if ( eX == DATA_CHANNEL_Z_ACCEL && lstPointsZ_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
 			{
 				for(vector<DataPoint>::iterator t = lstPointsY_Accel.begin(); t != lstPointsY_Accel.end(); t++)
 				{
@@ -778,8 +776,7 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 					}
 				}
 			}
-			
-			else 
+			else
 			{
 				dX = pDataX->GetValue(ptY.iTimeMs, iX);
 			}
