@@ -799,7 +799,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			
 				CRaceSelectDlg dlgRace(g_pLapDB, &sfResult);
 				ArtShowDialog<IDD_SELECTRACE>(&dlgRace);
-				bSwitchSession = false;
 
 				if(!sfResult.fCancelled)
 				{
@@ -813,39 +812,60 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				  //	Just loaded a new session. Let's reset the timer
 				  tmLast = timeGetTime();	//	Save last time lap was received
 				}
-				return TRUE;
+				bSwitchSession = false;
 			  }
+			  return TRUE;
           }
           case ID_DATA_EDITSESSION:
           {
             RACESELECTEDIT_RESULT sfResult;
-            CRaceSelectEditDlg dlgRace(g_pLapDB, &sfResult);
-            ArtShowDialog<IDD_SELECTRACEEDIT>(&dlgRace);
+            static bool bEditSessions;	//	Flag to prevent multiple windows from being opened
+			if (!bEditSessions)
+			{
+				bEditSessions = true;
+				CRaceSelectEditDlg dlgRace(g_pLapDB, &sfResult);
+				ArtShowDialog<IDD_SELECTRACEEDIT>(&dlgRace);
 
-            if(!sfResult.fCancelled)
-            {
-              m_iRaceId[0] = sfResult.iRaceId;
-              ClearUILaps();
-              LoadLaps(g_pLapDB);
-              UpdateUI(UPDATE_ALL);
-            }
+				if(!sfResult.fCancelled)
+				{
+				  m_iRaceId[0] = sfResult.iRaceId;
+				  ClearUILaps();
+				  LoadLaps(g_pLapDB);
+				  UpdateUI(UPDATE_ALL);
+				}
+				bEditSessions = false;
+			}
             return TRUE;
           }
 		  case ID_OPTIONS_PLOTPREFS:
 		  {
+			bool static bSetPlot;
 			PLOTSELECT_RESULT sfResult;
-			CPlotSelectDlg dlgPlot(g_pLapDB, &sfResult, m_iRaceId[0], &m_sfLapOpts);
-			ArtShowDialog<IDD_PLOTPREFS>(&dlgPlot);
-
-			UpdateUI(UPDATE_ALL | UPDATE_VALUES);
-					
+			if (!bSetPlot)	//	Prevent duplicate windows from appearing
+			{
+				bSetPlot = true;
+				CPlotSelectDlg dlgPlot(g_pLapDB, &sfResult, m_iRaceId[0], &m_sfLapOpts);
+				ArtShowDialog<IDD_PLOTPREFS>(&dlgPlot);
+				bSetPlot = false;
+				UpdateUI(UPDATE_ALL | UPDATE_VALUES);
+			}
 			return TRUE;
 		  }		
 		  case ID_OPTIONS_SETSPLITS:
 		  {
+			bool static bSetSplits;
 			SETSPLITSDLG_RESULT sfResult;
-			CSetSplitsDlg dlgSetSplits(g_pLapDB, m_pReferenceLap,  &sfResult, m_iRaceId[0], &m_sfLapOpts);
-			ArtShowDialog<IDD_SETSPLITPOINTS>(&dlgSetSplits);
+			if (!bSetSplits)	//	Prevent duplicate windows from appearing
+			{
+				bSetSplits = true;
+				CSetSplitsDlg dlgSetSplits(g_pLapDB, m_pReferenceLap,  &sfResult, m_iRaceId[0], &m_sfLapOpts);
+				ArtShowDialog<IDD_SETSPLITPOINTS>(&dlgSetSplits);
+				bSetSplits = false;
+			}
+			else
+			{
+				return TRUE;
+			}
 
 			static HWND ShowSplitsHandle;
 			const int cSectors = 9;	//	Maximum numbers of Split Times
@@ -875,7 +895,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			if(!sfResult.fCancelled)
             {
 			  UpdateUI(UPDATE_ALL | UPDATE_VALUES);
-			  return TRUE;
 			}
             return TRUE;
 		  }		
@@ -1261,16 +1280,21 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				//	Let's set up for displaying the T&S page
 				int m_RaceId[50] = {NULL};
 				// Show the race-selection dialog and let the User pick which ones to use on T&S page
-				SELECTSESSIONS_RESULT sfResult;
-				CDlgSelectSessions dlgRace(g_pLapDB, &sfResult);
-				ArtShowDialog<IDD_SELECTSESSIONS>(&dlgRace);
-
-				if(!sfResult.fCancelled /*&& sfResult.m_RaceId[0] != -1 */)	//	Allow the user to show the menu and start a race, even if no data has been collected from the racers yet
+				static bool bSelectSessions;
+				if (!bSelectSessions)	//	Prevent duplicate windows
 				{
-					// Now display the T&S page and pass these RaceID's to this class
-					TS_RESULT ts_sfResult;
-					CDlgTimingScoring dlgTS(g_pLapDB, &ts_sfResult, m_szPath, &sfResult);
-					ArtShowDialog<IDD_TIMINGSCORING>(&dlgTS);
+					bSelectSessions = true;
+					SELECTSESSIONS_RESULT sfResult;
+					CDlgSelectSessions dlgRace(g_pLapDB, &sfResult);
+					ArtShowDialog<IDD_SELECTSESSIONS>(&dlgRace);
+					if(!sfResult.fCancelled /*&& sfResult.m_RaceId[0] != -1 */)	//	Allow the user to show the menu and start a race, even if no data has been collected from the racers yet
+					{
+						// Now display the T&S page and pass these RaceID's to this class
+						TS_RESULT ts_sfResult;
+						CDlgTimingScoring dlgTS(g_pLapDB, &ts_sfResult, m_szPath, &sfResult);
+						ArtShowDialog<IDD_TIMINGSCORING>(&dlgTS);
+					}
+					bSelectSessions = false;
 				}
 				return TRUE;
 		  }
