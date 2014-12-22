@@ -785,31 +785,36 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           }
           case ID_DATA_SWITCHSESSION:
           {
-            RACESELECT_RESULT sfResult;
-
-			//	Zero out the Race ID's before selecting them
-			for (int z = 0; z < 50; z++)
-			{
-				m_iRaceId[z] = -1;	
-				sfResult.iRaceId[z] = -1;
-			}
-			
-			CRaceSelectDlg dlgRace(g_pLapDB, &sfResult);
-            ArtShowDialog<IDD_SELECTRACE>(&dlgRace);
-
-            if(!sfResult.fCancelled)
-            {
-              for (int z = 0; z < 50; z++)
+              static bool bSwitchSession;	//	Flag to prevent multiple windows from being opened
+			  if (!bSwitchSession)
 			  {
-				m_iRaceId[z] = sfResult.iRaceId[z];	//	Load all of the race sessions chosen
+				RACESELECT_RESULT sfResult;
+				bSwitchSession = true;
+				//	Zero out the Race ID's before selecting them
+				for (int z = 0; z < 50; z++)
+				{
+					m_iRaceId[z] = -1;	
+					sfResult.iRaceId[z] = -1;
+				}
+			
+				CRaceSelectDlg dlgRace(g_pLapDB, &sfResult);
+				ArtShowDialog<IDD_SELECTRACE>(&dlgRace);
+				bSwitchSession = false;
+
+				if(!sfResult.fCancelled)
+				{
+				  for (int z = 0; z < 50; z++)
+				  {
+					m_iRaceId[z] = sfResult.iRaceId[z];	//	Load all of the race sessions chosen
+				  }
+				  ClearUILaps();
+				  LoadLaps(g_pLapDB);
+				  UpdateUI(UPDATE_ALL);
+				  //	Just loaded a new session. Let's reset the timer
+				  tmLast = timeGetTime();	//	Save last time lap was received
+				}
+				return TRUE;
 			  }
-              ClearUILaps();
-              LoadLaps(g_pLapDB);
-              UpdateUI(UPDATE_ALL);
-			  //	Just loaded a new session. Let's reset the timer
-			  tmLast = timeGetTime();	//	Save last time lap was received
-            }
-            return TRUE;
           }
           case ID_DATA_EDITSESSION:
           {
@@ -2171,7 +2176,7 @@ void UpdateValues()
 	  }
 		if (m_Warning)	//	Pop up dialog saying the alarm has been triggered
 		{
-			static bool fWarnedOnce = false;
+			static bool fWarnedOnce;	//	Prevent multiple windows from appearing
 			if(!fWarnedOnce)
 			{
 				//	Display a warning dialog box about an alarm being triggered.
