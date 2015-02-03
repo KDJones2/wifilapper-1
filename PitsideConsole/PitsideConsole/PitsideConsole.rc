@@ -456,8 +456,6 @@ POPUP "&Edit"
     BEGIN
         MENUITEM "Copy", ID_EDIT_COPY
 		MENUITEM "Save Image",  IDM_SAVE_BM
-		MENUITEM SEPARATOR
-		MENUITEM "Plotting Options...",ID_OPTIONS_PLOTPREFS
     END
 POPUP "&Options"
     BEGIN
@@ -481,7 +479,8 @@ POPUP "&Options"
         MENUITEM "Use dark background for plots",ID_OPTIONS_BACKGROUND
         MENUITEM SEPARATOR
         MENUITEM "Force plotted data to fixed scales",ID_OPTIONS_IOIO5VSCALE
-
+		MENUITEM SEPARATOR
+		MENUITEM "Plotting Options...",ID_OPTIONS_PLOTPREFS
     END
 	POPUP "&Timing"
     BEGIN
