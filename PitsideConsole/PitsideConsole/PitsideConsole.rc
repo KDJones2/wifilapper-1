@@ -11,6 +11,7 @@ CAPTION "Pitside"
 FONT 8, "MS Shell Dlg"
 MENU IDM_OPTIONS
 BEGIN
+//	CONTROL         "", IDC_LAPS, WC_LISTVIEWEX, WS_TABSTOP | WS_BORDER | LVS_ALIGNLEFT | LVS_REPORT | LVS_SHOWSELALWAYS, 0,150,150,200
     CONTROL         "", IDC_LAPS, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_ALIGNLEFT | LVS_REPORT | LVS_SHOWSELALWAYS, 0,150,150,200
     LTEXT           "",IDC_DISPLAY,155,63,590,282
 //    LTEXT           "",IDC_SUBDISPLAY,520,0,150,63
@@ -190,7 +191,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About Pitside Console"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	CTEXT			"Pitside Console for Wifilapper\n\nVersion 2.003.0031\n\nThis is an Open Source project. If you want to contribute\n\n",IDC_LBLMESSAGE5,5,5,245,40
+	CTEXT			"Pitside Console for Wifilapper\n\nVersion 2.003.0032\n\nThis is an Open Source project. If you want to contribute\n\n",IDC_LBLMESSAGE5,5,5,245,40
 	CTEXT			"https://sites.google.com/site/wifilapper",IDC_LBLMESSAGE6,5,60,245,20
     PUSHBUTTON      "OK", IDOK, 5,100,240,24
 END
@@ -441,19 +442,31 @@ IDM_OPTIONS MENU
 BEGIN
 POPUP "&File"
     BEGIN
-		MENUITEM "Save Image",  IDM_SAVE_BM
+        MENUITEM "Open .wflp DB", ID_DATA_OPENDB
+        MENUITEM "Switch Race Session", ID_DATA_SWITCHSESSION
+		MENUITEM "Edit/Merge Race Sessions", ID_DATA_EDITSESSION
+		MENUITEM SEPARATOR
 		MENUITEM "Print...", IDM_PRINT_BM
+        MENUITEM SEPARATOR
+		MENUITEM "Export selected laps to CSV format", ID_DATA_DASHWARE
+		MENUITEM SEPARATOR
         MENUITEM "Exit", ID_FILE_EXIT
     END
 POPUP "&Edit"
     BEGIN
         MENUITEM "Copy", ID_EDIT_COPY
+		MENUITEM "Save Image",  IDM_SAVE_BM
+		MENUITEM SEPARATOR
+		MENUITEM "Plotting Options...",ID_OPTIONS_PLOTPREFS
     END
 POPUP "&Options"
     BEGIN
         MENUITEM "Km/h", ID_OPTIONS_KMH
         MENUITEM "MPH", ID_OPTIONS_MPH
         MENUITEM "m/s", ID_OPTIONS_MS
+		MENUITEM SEPARATOR
+        MENUITEM "X-Axis in KM", ID_OPTIONS_XAXIS_KM
+        MENUITEM "X-Axis in LAT", ID_OPTIONS_XAXIS_LAT
 		MENUITEM SEPARATOR
 		MENUITEM "Set Split Points", ID_OPTIONS_SETSPLITS
 		MENUITEM SEPARATOR
@@ -468,17 +481,7 @@ POPUP "&Options"
         MENUITEM "Use dark background for plots",ID_OPTIONS_BACKGROUND
         MENUITEM SEPARATOR
         MENUITEM "Force plotted data to fixed scales",ID_OPTIONS_IOIO5VSCALE
-        MENUITEM SEPARATOR
-		MENUITEM "Plotting Options...",ID_OPTIONS_PLOTPREFS
 
-
-    END
-    POPUP "&Data"
-    BEGIN
-        MENUITEM "Switch Race Session", ID_DATA_SWITCHSESSION
-        MENUITEM "Open .wflp DB", ID_DATA_OPENDB
-		MENUITEM "Edit/Merge Race Sessions", ID_DATA_EDITSESSION
-		MENUITEM "Export selected laps to CSV format", ID_DATA_DASHWARE
     END
 	POPUP "&Timing"
     BEGIN

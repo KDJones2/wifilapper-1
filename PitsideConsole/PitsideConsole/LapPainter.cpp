@@ -518,9 +518,9 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 		int w = 4;	// * Default setting. w is the size of the smoothing window, taken on each side of sample
         float dBestLength = -1;
         float dTimeToHighlight = -1;
-/*		const vector<DataPoint> &lstPointsX = (vector<DataPoint>&) pDataX->GetData();
-        const vector<DataPoint> &lstPointsY = (vector<DataPoint>&) pDataY->GetData();
-*/		//	Changed to non-constant as we want to smooth the data sometimes
+//		const vector<DataPoint> &lstPointsX = (vector<DataPoint>&) pDataX->GetData();
+//      const vector<DataPoint> &lstPointsY = (vector<DataPoint>&) pDataY->GetData();
+		//	Changed to non-constant as we want to smooth the data sometimes
 		vector<DataPoint> &lstPointsX = (vector<DataPoint>&) pDataX->GetData();
         vector<DataPoint> &lstPointsY = (vector<DataPoint>&) pDataY->GetData();
 		vector<DataPoint> lstPointsX_Accel;
@@ -840,17 +840,15 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
       glPushMatrix(); // <-- pushes a matrix onto the opengl matrix stack.
       glLoadIdentity();	//  <-- makes it so that the matrix stack just converts all our coordinates directly to window coordinates
       glOrtho(0, RECT_WIDTH(&rcSpot),0, RECT_HEIGHT(&rcSpot),-1.0,1.0);
-	  /*  <-- tells OpenGL that it should show us the part of the openGL "world" that corresponds to 
-	  (0...window width, 0 ... window height).  This completes the "hey opengl, just draw where we 
-	  tell you to plz" part of the function */
-
+	  //  <-- tells OpenGL that it should show us the part of the openGL "world" that corresponds to (0...window width, 0 ... window height).  
+	  //	This completes the "hey opengl, just draw where we tell you to plz" part of the function
       for(int x = 0; x < lstMousePointsToDraw.size(); x++)	// <-- loops through all the stupid boxes/lines we want to draw
       {
         const CExtendedLap* pLap = lstMousePointsToDraw[x].m_pLap;	//  <-- gets the lap data we want to draw
         const POINT& ptWindow = lstMousePointsToDraw[x].m_ptWindow;	// <-- gets info about where in the window we want to draw the box
         const IDataChannel* pDataX = lstMousePointsToDraw[x].m_pDataX;	//  <-- gets the x channel data
         const IDataChannel* pDataY = lstMousePointsToDraw[x].m_pDataY;	// <-- gets the y channel data
-				POINT Temp_ptWindow;	//	Point for transforming Y values in highlight loop
+		POINT Temp_ptWindow;	//	Point for transforming Y values in highlight loop
 
 		float r;
 		float g;
@@ -906,17 +904,17 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 
 			// we also want to draw a highlighted square
 //			DrawGLFilledSquare(ptWindow.x, ptWindow.y, 3);	// <-- draws the stupid little box at ptWindow.x.
-			DrawGLFilledSquare(ptWindow.x, Temp_ptWindow.y, 3);	// <-- draws the stupid little box at ptWindow.x.
+			DrawGLFilledSquare((double)ptWindow.x, (double)(Temp_ptWindow.y - rcSpot.top), 3);	// <-- draws the stupid little box at ptWindow.x.
 			// we also want to draw a highlighted LINE for that individual lap/graph combination
-			glLineWidth(1);								// Added by KDJ. Skinny line for Distance markers.
-			glBegin(GL_LINE_STRIP);						// Added by KDJ
-			glVertex3f(ptWindow.x, 0, 0);				// Added by KDJ, modified by Chas
-			glVertex3f(ptWindow.x,rcSpot.bottom,0);		// Added by KDJ
-			glEnd();									// Added by KDJ
+			glLineWidth(1);								// Skinny vertical line for mouse location markers.
+			glBegin(GL_LINE_STRIP);
+			glVertex3f(ptWindow.x, 0, 0);
+			glVertex3f(ptWindow.x,rcSpot.bottom,0);
+			glEnd();
 		}
 	  }
       glPopMatrix();
-      glPopMatrix();	//	Should there be two of these here?
+      glPopMatrix();	//	Pops us out of windows space to OGL space
     }
     rcSpot.top += iSegmentHeight;
     rcSpot.bottom += iSegmentHeight;

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "LapData.h"
 #include "PitsideConsole.h"
+#include "dlgPlotSelect.h"
 
 
 struct PIDDATA
@@ -287,6 +288,19 @@ void GetDataChannelName(DATA_CHANNEL eDC, LPTSTR lpszName, int cch)
     _snwprintf(lpszName, cch, lpszDataName);
     return;
   }
+}
+
+bool bXAxisUnits(XAXIS_PREFERENCE xConvertTo)
+{
+  
+  switch(xConvertTo)
+  {
+  case XAXIS_PREFERENCE_LAT: return false;
+  case XAXIS_PREFERENCE_KM: return true;
+  }
+  CASSERT(UNIT_PREFERENCE_COUNT == 3);
+
+  return false;
 }
 
 float ConvertSpeed(UNIT_PREFERENCE eConvertTo, float flValueInMetersPerSecond)
@@ -861,21 +875,12 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
 	  pLapTime->AddPoint(p.iTime, (double)iElapsedTime);
       const double dX = p.flX - ptLast.flX;
       const double dY = p.flY - ptLast.flY;
-/*		  // Converting from LONG/LAT to distance in meters
-		  double rad = 6371.0f;  // earth's mean radius in km 
-		  double dLat, dLon, R, lat1, lat2, lon1, lon2;
-		  R = rad;
-		  lat1 = p.flY * 0.0174532925199433;	// Convert from degrees to radians
-		  lon1 = p.flX * 0.0174532925199433;
-		  lat2 = ptLast.flY * 0.0174532925199433;
-		  lon2 = ptLast.flX * 0.0174532925199433;
-		  dLat = (lat2 - lat1);
-		  dLon = (lon2 - lon1);
-		  double a = sin(dLat/2) * sin(dLat/2) + cos(lat1) * cos(lat2) * sin(dLon/2) * sin(dLon/2);
-		  double c = 2 * atan2(sqrt(a), sqrt(1-a));
-		  const double d = R * c * 1000;	// Return the distance in meters	*/
-	  const double d = sqrt (dY*dY + dX*dX);	// Return distance in Theta of Long/Lat. Needed until Jason fixes web-side GUI
-      dDistance += d;
+	  double d;
+//	  if ( p_sfLapOpts )
+//	  	d = fReturnDistanceInMeters (p, ptLast);	// Return the distance in meters
+//	  else
+	  	d = sqrt (dY*dY + dX*dX);	// Return distance in Theta of Long/Lat. Needed until Jason fixes web-side GUI
+	  dDistance += d;
       m_lstPoints.push_back(TimePoint2D(p));
       ptLast = p;
 
@@ -913,6 +918,24 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
     }
 
   }
+}
+
+const double fReturnDistanceInMeters (const TimePoint2D& p, TimePoint2D ptLast)
+{
+		  // Converting from LONG/LAT to distance in meters
+		  double rad = 6371.0f;  // earth's mean radius in km 
+		  double dLat, dLon, R, lat1, lat2, lon1, lon2;
+		  R = rad;
+		  lat1 = p.flY * 0.0174532925199433;	// Convert from degrees to radians
+		  lon1 = p.flX * 0.0174532925199433;
+		  lat2 = ptLast.flY * 0.0174532925199433;
+		  lon2 = ptLast.flX * 0.0174532925199433;
+		  dLat = (lat2 - lat1);
+		  dLon = (lon2 - lon1);
+		  double a = sin(dLat/2) * sin(dLat/2) + cos(lat1) * cos(lat2) * sin(dLon/2) * sin(dLon/2);
+		  double c = 2 * atan2(sqrt(a), sqrt(1-a));
+		  const double d = R * c * 1000;	// Return the distance in meters
+		  return d;
 }
 
 const TimePoint2D GetPointAtTime(const vector<TimePoint2D>& lstPoints, int iTimeMs)

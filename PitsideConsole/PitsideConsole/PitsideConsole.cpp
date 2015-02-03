@@ -747,6 +747,22 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
             UpdateUI(UPDATE_MAP | UPDATE_MENU);
             return TRUE;
           }
+          case ID_OPTIONS_XAXIS_KM:
+          {
+            m_sfLapOpts.bXAxis_KM = XAXIS_PREFERENCE_KM;
+			bXAxisUnits ( XAXIS_PREFERENCE_KM );
+			MessageBox(hWnd, L"X-Axis will be displayed in KM's\n\nYou need to re-load the Race Session for this change to take effect!",L"NOTICE", MB_OK);
+            UpdateUI(UPDATE_MAP | UPDATE_MENU);
+            return TRUE;
+          }
+          case ID_OPTIONS_XAXIS_LAT:
+          {
+            m_sfLapOpts.bXAxis_KM = XAXIS_PREFERENCE_LAT;
+			bXAxisUnits ( XAXIS_PREFERENCE_LAT );
+			MessageBox(hWnd, L"X-Axis will be displayed in Latitude/Longitudinal degrees\n\nYou need to re-load the Race Session for this change to take effect!",L"NOTICE", MB_OK);
+            UpdateUI(UPDATE_MAP | UPDATE_MENU);
+            return TRUE;
+          }
           case ID_OPTIONS_SHOWBESTS:
           {
             m_fShowBests = !m_fShowBests;
@@ -2236,6 +2252,8 @@ void UpdateValues()
     CheckMenuHelper(hSubMenu, ID_OPTIONS_KMH, m_sfLapOpts.eUnitPreference == UNIT_PREFERENCE_KMH);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_MPH, m_sfLapOpts.eUnitPreference == UNIT_PREFERENCE_MPH);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_MS, m_sfLapOpts.eUnitPreference == UNIT_PREFERENCE_MS);
+    CheckMenuHelper(hSubMenu, ID_OPTIONS_XAXIS_KM, m_sfLapOpts.bXAxis_KM == XAXIS_PREFERENCE_KM);
+    CheckMenuHelper(hSubMenu, ID_OPTIONS_XAXIS_LAT, m_sfLapOpts.bXAxis_KM == XAXIS_PREFERENCE_LAT);
 	CheckMenuHelper(hSubMenu, ID_OPTIONS_TRACTIONCIRCLE, m_sfLapOpts.bTractionCircle);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_SHOWBESTS, m_fShowBests);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_SHOWDRIVERBESTS, m_fShowDriverBests);
@@ -2599,9 +2617,10 @@ void UpdateValues()
 		  if(flSpread < 0.050) return 0.0050f;		
 		  if(flSpread < 1.000) return 0.1000f;
 		  if(flSpread < 10.00) return 1.0000f;
-		  if(flSpread < 1000) return 50.0f;
-		  if(flSpread < 5000) return 100.0f;
-		  if(flSpread < 10000) return 500.0f;
+		  if(flSpread < 500) return 50.0f;
+		  if(flSpread < 1000) return 100.0f;
+		  if(flSpread < 5000) return 500.0f;
+		  if(flSpread < 10000) return 1000.0f;
 		  if(flSpread < 50000) return 2500.0f;
 		  if(flSpread < 110000) return 5000.0f;
 		  if(flSpread < 1100000) return 10000.0f;
@@ -2884,6 +2903,7 @@ void LoadPitsideSettings(PITSIDE_SETTINGS* pSettings)
       in>>pSettings->iMapLines;
 	  in>>pSettings->iColorScheme;
 	  in>>pSettings->bSmoothYesNo;
+	  in>>pSettings->bXAxis_KM;
       in.close();
     }
   }
@@ -3080,9 +3100,14 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             x_sfLapOpts.bSmoothYesNo = sfSettings.bSmoothYesNo;	//	Assign smoothing setting from Settings.txt file
 			break;
           }
-  default:
+  }
+  switch (sfSettings.bXAxis_KM)
+  {
+  case 0:
+  case 1:
           {
-            x_sfLapOpts.bSmoothYesNo = false;	//	Grey background as a default, true = black
+            x_sfLapOpts.bXAxis_KM = sfSettings.bXAxis_KM;	//	Assign choice of LAT or KM for X-Axis setting from Settings.txt file
+			break;
           }
   }
   x_sfLapOpts.eSortPreference = SORTSTYLE_BYTIMEOFRACE;		//	Default sort Lap List by time of lap

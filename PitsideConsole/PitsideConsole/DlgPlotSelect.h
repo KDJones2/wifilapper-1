@@ -41,6 +41,7 @@ struct PITSIDE_SETTINGS
 	iMapLines = 1;
 	iColorScheme = 0;
 	bSmoothYesNo = false;
+	bXAxis_KM = false;
   }
 
   int fRunHTTP;
@@ -49,6 +50,7 @@ struct PITSIDE_SETTINGS
   int iMapLines;
   int iColorScheme;
   bool bSmoothYesNo;
+  bool bXAxis_KM;
 };
 
 struct TRANSFORMATION
@@ -68,7 +70,16 @@ struct TRANSFORMATION
 	float f_CoeffC;
 	bool b_LoadTrans;
 };
+/*
+enum UNIT_PREFERENCE
+{
+  UNIT_PREFERENCE_KMH,
+  UNIT_PREFERENCE_MPH,
+  UNIT_PREFERENCE_MS,
 
+  UNIT_PREFERENCE_COUNT,
+};
+*/
 enum LAPSORTSTYLE
 {
 	SORTSTYLE_BYTIMEOFRACE, // sort by the time the lap was done: 2:31pm comes before 4:45pm (well... on the same day)
@@ -78,10 +89,11 @@ enum LAPSORTSTYLE
 struct LAPSUPPLIEROPTIONS
 {
 public:
-  LAPSUPPLIEROPTIONS() : eUnitPreference(UNIT_PREFERENCE_MPH),fDrawSplitPoints(false),fDrawGuides(true),fDrawLines(true),fColorScheme(false),fIOIOHardcoded(true),flWindowShiftX(0),flWindowShiftY(0),iZoomLevels(0),bTractionCircle(false)
+  LAPSUPPLIEROPTIONS() : eUnitPreference(UNIT_PREFERENCE_MPH),bXAxis_KM(false),fDrawSplitPoints(false),fDrawGuides(true),fDrawLines(true),fColorScheme(false),fIOIOHardcoded(true),flWindowShiftX(0),flWindowShiftY(0),iZoomLevels(0),bTractionCircle(false)
   {
   }
   UNIT_PREFERENCE eUnitPreference;
+  bool bXAxis_KM;
   bool fDrawSplitPoints;
   bool fDrawGuides;
   bool fDrawLines; // whether to draw lines between data points
