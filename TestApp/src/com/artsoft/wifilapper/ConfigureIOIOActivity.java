@@ -108,12 +108,19 @@ public class ConfigureIOIOActivity extends Activity implements OnCheckedChangeLi
 		    	CharSequence c = (CharSequence)spnPin.getItemAtPosition(x);
 		    	if(("" + iSelectedPin).equals(c))
 		    	{
-		    		spnPin.setSelection(x);
+		    		spnPin.setSelection(x,true);
 		    		break;
 		    	}
 		    }
 		}
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+	            this, R.array.ioiocustomnames, android.R.layout.simple_spinner_item);
+		TextView txtCurrentFilter2 = (TextView)findViewById(R.id.lblCurrentFilter2);
+		int arrayIndex = (m_iLastCustomType==0) ? 0 : m_iLastCustomType - LapAccumulator.DataChannel.CHANNEL_IOIOCUSTOM_START;
 		
+		txtCurrentFilter2.setText("'" + adapter.getItem(arrayIndex) + "'");
+		txtCurrentFilter2.invalidate();
+	
 	    SeekBar seek = (SeekBar)findViewById(R.id.seekSampleRate);
 		CheckBox chk = (CheckBox)findViewById(R.id.chkIOIO);
 		CheckBox chkClicker = (CheckBox)findViewById(R.id.chkClicker);
@@ -180,7 +187,7 @@ public class ConfigureIOIOActivity extends Activity implements OnCheckedChangeLi
 	    			long lPinNumber = Long.parseLong(objSelected.toString());
 	    			if(lPinNumber == pin.iPin)
 	    			{
-	    				spnPin.setSelection(x);
+	    				spnPin.setSelection(x,true);
 	    				break;
 	    			}
 	    		}
@@ -196,8 +203,15 @@ public class ConfigureIOIOActivity extends Activity implements OnCheckedChangeLi
 			
 	    	TextView txtCurrentFilter = (TextView)findViewById(R.id.lblCurrentFilter);
 			txtCurrentFilter.setText("Filter: " + PinParams.BuildDesc(pin.iFilterType, pin.dParam1, pin.dParam2, pin.dParam3, true));
-			
 			txtCurrentFilter.invalidate();
+
+			ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+		            this, R.array.ioiocustomnames, android.R.layout.simple_spinner_item);
+			TextView txtCurrentFilter2 = (TextView)findViewById(R.id.lblCurrentFilter2);
+			int arrayIndex = (m_iLastCustomType==0) ? 0 : m_iLastCustomType - LapAccumulator.DataChannel.CHANNEL_IOIOCUSTOM_START;
+			
+			txtCurrentFilter2.setText("'" + adapter.getItem(arrayIndex) + "'");
+			txtCurrentFilter2.invalidate();
 	    }
 	}
 	// builds a view to put in the list of pins
@@ -222,6 +236,14 @@ public class ConfigureIOIOActivity extends Activity implements OnCheckedChangeLi
 		TextView txtFilter = new TextView(this);
 		txtFilter.setText(PinParams.BuildDesc(pin.iFilterType,pin.dParam1,pin.dParam2, pin.dParam3, true));
 		
+		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(
+	            this, R.array.ioiocustomnames, android.R.layout.simple_spinner_item);
+		int arrayIndex = (pin.iCustomType==0) ? 0 : pin.iCustomType - LapAccumulator.DataChannel.CHANNEL_IOIOCUSTOM_START;
+
+		TextView txtCustomName = new TextView(this);
+		txtCustomName.setText(adapter.getItem(arrayIndex));
+		txtCustomName.setLayoutParams(layout);
+
 		Button btn = new Button(this);
 		btn.setText("Delete");
 		btn.setId(pin.iPin);
@@ -233,6 +255,7 @@ public class ConfigureIOIOActivity extends Activity implements OnCheckedChangeLi
 		tr.addView(txtName);
 		tr.addView(txtPin);
 		tr.addView(txtRate);
+		tr.addView(txtCustomName);
 		tr.addView(txtFilter);
 		tr.addView(btn);
 		return tr;
@@ -288,7 +311,7 @@ public class ConfigureIOIOActivity extends Activity implements OnCheckedChangeLi
 		
 		boolean fIOIOEnabled = chkIOIO.isChecked();
 		
-		edit = edit.putBoolean(Prefs.PREF_USEACCEL_BOOLEAN, fIOIOEnabled);
+		edit = edit.putBoolean(Prefs.PREF_USEIOIO_BOOLEAN, fIOIOEnabled);
 
 		edit = Prefs.SavePins(edit,lstAnalPins,lstPulsePins);
 		
@@ -315,8 +338,8 @@ public class ConfigureIOIOActivity extends Activity implements OnCheckedChangeLi
 			double dSeek = (double)seek.getProgress() / (double)seek.getMax();
 			
 			
-			// we need seek(0) = 100, seek(0.5) = 1000, and seek(1.0) = 10000.  This does the trick
-			double dPeriod = 10000*Math.pow(Math.E, -4.605*dSeek);
+			// we need seek(0) = 10000, and seek(1.0) = 50.  This does the trick
+			double dPeriod = 10000*Math.pow(10, -2.30103*dSeek);
 			int iPin = Integer.parseInt(spnPin.getSelectedItem().toString());
 			
 			boolean fAlreadyPresent = false;
@@ -331,7 +354,7 @@ public class ConfigureIOIOActivity extends Activity implements OnCheckedChangeLi
 			{
 				if(fPermitted)
 				{
-					IOIOManager.PinParams pin = new IOIOManager.PinParams(iPin,(int)dPeriod, m_iLastFilterType, m_dLastParam1, m_dLastParam2, m_dLastParam3, m_iLastCustomType);
+					IOIOManager.PinParams pin = new IOIOManager.PinParams(iPin,(int)Math.round(dPeriod), m_iLastFilterType, m_dLastParam1, m_dLastParam2, m_dLastParam3, m_iLastCustomType);
 					if(rg.getCheckedRadioButtonId() == R.id.rbAnalog)
 					{
 						lstAnalPins.add(pin);
@@ -395,8 +418,8 @@ public class ConfigureIOIOActivity extends Activity implements OnCheckedChangeLi
 		TextView txtRate = (TextView)findViewById(R.id.txtSampleRate);
 		double dSeek = (double)arg0.getProgress() / (double)arg0.getMax();
 		
-		// we need seek(0) = 100, seek(0.5) = 1000, and seek(1.0) = 10000.  This does the trick
-		double dPeriod = 10000*Math.pow(Math.E, -4.605*dSeek); // how many milliseconds between samples
+		// we need seek(0) = 10000, and seek(1.0) = 50.  This does the trick
+		double dPeriod = 10000*Math.pow(10, -2.30103*dSeek);
 		double dRate = 1000 / dPeriod;
 		txtRate.setText("Sample Rate (" + Utility.FormatFloat((float)dRate, 1) + "hz):");
 	}
