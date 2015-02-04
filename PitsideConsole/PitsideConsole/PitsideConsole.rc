@@ -191,7 +191,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "About Pitside Console"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	CTEXT			"Pitside Console for Wifilapper\n\nVersion 2.003.0032\n\nThis is an Open Source project. If you want to contribute\n\n",IDC_LBLMESSAGE5,5,5,245,40
+	CTEXT			"Pitside Console for Wifilapper\n\nVersion 2.003.0033\n\nThis is an Open Source project. If you want to contribute\n\n",IDC_LBLMESSAGE5,5,5,245,40
 	CTEXT			"https://sites.google.com/site/wifilapper",IDC_LBLMESSAGE6,5,60,245,20
     PUSHBUTTON      "OK", IDOK, 5,100,240,24
 END
@@ -457,7 +457,7 @@ POPUP "&Edit"
         MENUITEM "Copy", ID_EDIT_COPY
 		MENUITEM "Save Image",  IDM_SAVE_BM
     END
-POPUP "&Graphing"
+POPUP "&Options"
     BEGIN
         MENUITEM "Km/h", ID_OPTIONS_KMH
         MENUITEM "MPH", ID_OPTIONS_MPH
