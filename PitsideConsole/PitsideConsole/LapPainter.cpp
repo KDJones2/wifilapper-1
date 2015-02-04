@@ -211,13 +211,6 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
   DATA_CHANNEL eX;
   eX = DATA_CHANNEL_DISTANCE;
 
-  static set<int> i_Smoothed_LapId_X;	//	Tracker for which laps we have done smoothing on for X, Y, Z Acceleration data
-  i_Smoothed_LapId_X.begin();
-  static set<int> i_Smoothed_LapId_Y;	//	Tracker for which laps we have done smoothing on for X, Y, Z Acceleration data
-  i_Smoothed_LapId_Y.begin();
-  static set<int> i_Smoothed_LapId_Z;	//	Tracker for which laps we have done smoothing on for X, Y, Z Acceleration data
-  i_Smoothed_LapId_Z.begin();
-
   set<DATA_CHANNEL> setY;
   map<DATA_CHANNEL,float> mapMinY, mapMinYTemp;
   map<DATA_CHANNEL,float> mapMaxY, mapMaxYTemp;
@@ -279,12 +272,6 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 					break;
 				}
 			}
-      /*if(mapMinYTemp.find(eType) == mapMinYTemp.end())
-        {
-          mapMinYTemp[eType] = min(pChannel->GetMin(),m_pLapSupplier->GetDataHardcodedMin(eType));
-          mapMaxYTemp[eType] = max(pChannel->GetMax(),m_pLapSupplier->GetDataHardcodedMax(eType));
-        }
-        else	*/
         {
           mapMinYTemp[eType] = min(pChannel->GetMin(),mapMinYTemp[eType]);
           mapMaxYTemp[eType] = max(pChannel->GetMax(),mapMaxYTemp[eType]);
@@ -1050,7 +1037,7 @@ void CLapPainter::DrawTractionCircle(const LAPSUPPLIEROPTIONS& sfLapOpts, bool f
 	// now we have the bounds of all the laps we've looked at, so let's draw them
     glPushMatrix();
     glLoadIdentity();
-    glScalef(1.0f, 0.90f, 1.0f);	// Let's scale it so that graphs don't touch each other.
+    glScalef(1.0f, 1.0f, 1.0f);	// Let's scale it so that graphs don't touch each other.
     glOrtho(dMinX, dMaxX, mapMinY[*i], mapMaxY[*i], -1.0, 1.0);
 
 	//	Set up the non-zoomed/panned view for the map
@@ -1077,14 +1064,6 @@ void CLapPainter::DrawTractionCircle(const LAPSUPPLIEROPTIONS& sfLapOpts, bool f
 	}
 
     Vector2D ptHighlight; // the (x,y) coords in unit-space that we want to highlight.  Example: for a speed-distance graph, x would be in distance units, y in velocities.
-    POINT ptMouse;
-    if(GetMouse(&ptMouse) && m_pLapSupplier->IsHighlightSource(m_iSupplierId))
-    {
-      //		The mouse is in our window... we make our own highlighter, ignoring anything that got sent to us
-      GLdouble dX,dY,dZ;
-      gluUnProject(ptMouse.x, ptMouse.y, 0, rgModelviewMatrix, rgProjMatrix, rgViewport, &dX, &dY, &dZ);
-      ptHighlight = V2D(dX,0);
-    }
     for(int x = 0; x < lstLaps.size(); x++)
     {
       CExtendedLap* pLap = lstLaps[x];
@@ -1094,11 +1073,19 @@ void CLapPainter::DrawTractionCircle(const LAPSUPPLIEROPTIONS& sfLapOpts, bool f
 	  if(pDataX && pDataY)
 	  {
 		  // tracking what we want to highlight
+		int w = 4;	// * Default setting. w is the size of the smoothing window, taken on each side of sample
         float dBestLength = -1;
         float dTimeToHighlight = -1;
         //	Changed to non-constant as we want to smooth the data sometimes
 		vector<DataPoint>& lstPointsX = (vector<DataPoint>&) pDataX->GetData();
         vector<DataPoint>& lstPointsY = (vector<DataPoint>&) pDataY->GetData();
+		//	If we are dealing with accelerometer data, pull and smooth that data
+		IDataChannel* pDataX_ACCEL;
+		IDataChannel* pDataY_ACCEL;
+		IDataChannel* pDataZ_ACCEL;
+		pDataX_ACCEL = (IDataChannel*) pLap->GetChannel(DATA_CHANNEL_X_ACCEL);
+		pDataY_ACCEL = (IDataChannel*) pLap->GetChannel(DATA_CHANNEL_Y_ACCEL);
+		pDataZ_ACCEL = (IDataChannel*) pLap->GetChannel(DATA_CHANNEL_Z_ACCEL);
 
 		float r;
 		float g;
@@ -1115,10 +1102,64 @@ void CLapPainter::DrawTractionCircle(const LAPSUPPLIEROPTIONS& sfLapOpts, bool f
 		glPointSize(2.0f);
 		glBegin(GL_POINTS);
 		
-		vector<DataPoint>::const_iterator iX = lstPointsX.begin();
-		vector<DataPoint>::const_iterator iXend = lstPointsX.end();
-        vector<DataPoint>::const_iterator iY = lstPointsY.begin();
-		vector<DataPoint>::const_iterator iYend = lstPointsY.end();
+		vector<DataPoint> lstPointsX_Accel;
+		lstPointsX_Accel.begin();
+		vector<DataPoint> lstPointsY_Accel;
+		lstPointsY_Accel.begin();
+		vector<DataPoint> lstPointsZ_Accel;
+		lstPointsZ_Accel.begin();
+		if ( eX == DATA_CHANNEL_X_ACCEL && sfLapOpts.bSmoothYesNo == true )
+		{
+			lstPointsX_Accel.clear();
+			lstPointsX_Accel = pDataX_ACCEL->GetData();	//	pDataY->GetData()
+			w = lstPointsX_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
+		}
+		if ( pDataY->GetChannelType() == DATA_CHANNEL_Y_ACCEL && sfLapOpts.bSmoothYesNo == true )
+		{
+			lstPointsY_Accel.clear();
+			lstPointsY_Accel = pDataY_ACCEL->GetData();	//	pDataY->GetData()
+			w = lstPointsY_Accel.size() / 400;	//	Sets the BoxAverage smoothing width, based upon the number of data points
+		}
+		vector<DataPoint>& lstSmoothPts = (vector<DataPoint>) pDataX->GetData();
+		//	Smooth out the accerlometer data for X-Axis before displaying them on the Traction Circle display
+		if (lstPointsX_Accel.size() ) 
+		{
+			lstSmoothPts.clear();
+			fBoxMovingAvg( lstPointsX_Accel.size(), lstPointsX_Accel, w, lstSmoothPts, false );
+			lstPointsX_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
+			lstSmoothPts.clear();
+		}
+		if (lstPointsY_Accel.size() ) 
+		{
+			lstSmoothPts.clear();
+			fBoxMovingAvg( lstPointsY_Accel.size(), lstPointsY_Accel, w, lstSmoothPts, false );
+			lstPointsY_Accel = lstSmoothPts;	//	Copy the smoothed data points over to the original data set
+			lstSmoothPts.clear();
+		}
+		vector<DataPoint>::const_iterator iX ;
+		if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
+			iX = lstPointsX_Accel.begin(); 
+		else
+			iX = lstPointsX.begin();
+
+		vector<DataPoint>::const_iterator iXend;
+		if ( eX == DATA_CHANNEL_X_ACCEL && lstPointsX_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
+			iXend = lstPointsX_Accel.end(); 
+		else
+			iXend = lstPointsX.end();
+
+		vector<DataPoint>::const_iterator iY;
+		if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
+			iY = lstPointsY_Accel.begin(); 
+		else
+			iY = lstPointsY.begin();
+
+		vector<DataPoint>::const_iterator  iYend;
+		if ( *i == DATA_CHANNEL_Y_ACCEL && lstPointsY_Accel.size() && sfLapOpts.bSmoothYesNo == true ) 
+			iYend = lstPointsY_Accel.end();
+		else
+			iYend = lstPointsY.end();
+
 		while(iX != iXend && iY != iYend)
         {
           float dX;
@@ -1153,27 +1194,10 @@ void CLapPainter::DrawTractionCircle(const LAPSUPPLIEROPTIONS& sfLapOpts, bool f
 		  //	Can add transformation function here for Y
 		  if (sfLapOpts.m_PlotPrefs[y].iTransformYesNo == true)
 		  {
-//			  dY = PolynomialFilter(ptY.flValue, sfLapOpts.m_PlotPrefs[y].fTransAValue, sfLapOpts.m_PlotPrefs[y].fTransBValue, sfLapOpts.m_PlotPrefs[y].fTransCValue);
 			  dY = PolynomialFilter(dY, sfLapOpts.m_PlotPrefs[y].fTransAValue, sfLapOpts.m_PlotPrefs[y].fTransBValue, sfLapOpts.m_PlotPrefs[y].fTransCValue);
 		  }
-//		  else
-//		  {
-//			  dY = ptY.flValue;
-//		  }
 //////////////////////////////////////////
           glVertex2f(dX,dY);
-
-          // if we're a highlight source, try to figure out the closest point for this lap
-          if(m_pLapSupplier->IsHighlightSource(m_iSupplierId))
-          {
-            Vector2D vPt = V2D(dX,0);
-            Vector2D vDiff = vPt - ptHighlight;
-            if(vDiff.Length() < dBestLength || dBestLength < 0)
-            {
-              dBestLength = vDiff.Length();
-              dTimeToHighlight = iTimeUsed;
-            }
-          }
         }
 		glEnd();
         // for each lap, draw an indicator of the closest thing to the mouse
@@ -1188,9 +1212,9 @@ void CLapPainter::DrawTractionCircle(const LAPSUPPLIEROPTIONS& sfLapOpts, bool f
       glPushMatrix(); // <-- pushes a matrix onto the opengl matrix stack.
       glLoadIdentity();	//  <-- makes it so that the matrix stack just converts all our coordinates directly to window coordinates
       glOrtho(0, RECT_WIDTH(&rcSpot),0, RECT_HEIGHT(&rcSpot),-1.0,1.0);
-	  /*  <-- tells OpenGL that it should show us the part of the openGL "world" that corresponds to 
-	  (0...window width, 0 ... window height).  This completes the "hey opengl, just draw where we 
-	  tell you to plz" part of the function */
+//	  <-- tells OpenGL that it should show us the part of the openGL "world" that corresponds to 
+//	  (0...window width, 0 ... window height).  This completes the "hey opengl, just draw where we 
+//	  tell you to plz" part of the function
 
       for(int x = 0; x < lstMousePointsToDraw.size(); x++)	// <-- loops through all the stupid boxes/lines we want to draw
       {

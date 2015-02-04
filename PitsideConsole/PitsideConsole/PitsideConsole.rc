@@ -457,7 +457,7 @@ POPUP "&Edit"
         MENUITEM "Copy", ID_EDIT_COPY
 		MENUITEM "Save Image",  IDM_SAVE_BM
     END
-POPUP "&Options"
+POPUP "&Graphing"
     BEGIN
         MENUITEM "Km/h", ID_OPTIONS_KMH
         MENUITEM "MPH", ID_OPTIONS_MPH
