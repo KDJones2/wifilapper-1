@@ -724,6 +724,7 @@ DWORD* CDlgTimingScoring::TimingScoringProc(LPVOID pv, HWND hWnd)
 			TCHAR szRaceName[300] = {NULL};
 			TCHAR szComment[300] = {NULL};
 			TCHAR szLap[300] = {NULL};
+			//	Load up all of the HL vectors with data from the database
 			while(sfQuery.Next())
 			{
 			  float flLapTime = 0;
@@ -768,8 +769,8 @@ DWORD* CDlgTimingScoring::TimingScoringProc(LPVOID pv, HWND hWnd)
 				std::wstring strRace(lstRaceName[nItem]);
 				result = (LPWSTR)strRace.c_str();		  
 				//From TCHAR to DWORD.
-				DWORD dwSomeNum;
-				dwSomeNum = wcstod(result, _T('\0'));
+//				DWORD dwSomeNum;
+//				dwSomeNum = wcstod(result, _T('\0'));
 //				p_HLlvi.lParam = (LPARAM) dwSomeNum;	//	Try this for LPARAM
 				p_HLlvi.lParam = nItem;
 				p_HLlvi.pszText = result;
@@ -780,7 +781,7 @@ DWORD* CDlgTimingScoring::TimingScoringProc(LPVOID pv, HWND hWnd)
 				std::wstring strComment(lstComment[nItem]);
 				result = (LPWSTR)strComment.c_str();		  
 				//From TCHAR to DWORD.
-				dwSomeNum = wcstod(result, _T('\0'));
+//				dwSomeNum = wcstod(result, _T('\0'));
 //				p_HLlvi.lParam = (LPARAM) dwSomeNum;	//	Try this for LPARAM
 				p_HLlvi.lParam = nItem;
 				p_HLlvi.pszText = result;
@@ -792,7 +793,7 @@ DWORD* CDlgTimingScoring::TimingScoringProc(LPVOID pv, HWND hWnd)
 				std::wstring strLapTimes(lstLapTimes[nItem]);
 				result = (LPWSTR)strLapTimes.c_str();		  
 				//From TCHAR to DWORD.
-				dwSomeNum = wcstod(result, _T('\0'));
+//				dwSomeNum = wcstod(result, _T('\0'));
 //				p_HLlvi.lParam = (LPARAM) dwSomeNum;	//	Try this for LPARAM
 				p_HLlvi.lParam = nItem;
 				p_HLlvi.pszText = result;

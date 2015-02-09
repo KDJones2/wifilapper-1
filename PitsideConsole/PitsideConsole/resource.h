@@ -362,4 +362,7 @@
 #define IDC_PLOTTYPE_LOAD18 458
 #define IDC_PLOTTYPE_LOAD19 459
 #define IDC_PLOTTYPE_LOAD20 460
+
+#define IDD_ALLDATADISPLAY 480
+#define IDC_ALLDATADISPLAY 481
 // don't put anything below this

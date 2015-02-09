@@ -273,7 +273,8 @@ public:
     : m_sfLapPainter(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_MAINDISPLAY), 
       m_sfSubDisplay(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_SUBDISPLAY), 
       m_sfTractionDisplay(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_TRACTIONCIRCLEDISPLAY), 
-      m_eLapDisplayStyle(LAPDISPLAYSTYLE_PLOT),		//	Make data plot the default initial view
+      m_sfAllDataDisplay(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_ALLDATADISPLAY), 
+	  m_eLapDisplayStyle(LAPDISPLAYSTYLE_PLOT),		//	Make data plot the default initial view
       m_fShowTractionCircle(false),
 	  m_fSmooth(false),
 	  m_fShowBests(false), 
@@ -490,6 +491,103 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 }
 ///////////////////////////////////////////////////////////////////////////////////////
 
+HWND hWnd_AllData;			//	AllData window control handle
+HWND AD_hWnd;				//	AllData listview control handle
+LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
+
+//	Routines for sorting list views by column headers
+int CALLBACK CompareADListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
+{
+    // Get the text of the list items for comparison
+	LVITEM pitem1 = {NULL};
+	LVITEM pitem2 = {NULL};
+	TCHAR sz_Result1[512] = {NULL};
+	TCHAR sz_Result2[512] = {NULL};
+	BOOL result;
+	BOOL b_TextResult;
+	BOOL bSortAscending = (lParamSort > 0);	//	Determines which way to sort the column
+    int nColumn = abs(lParamSort) - 1;	//	Then pulls the column number from the same variable
+
+	if ( AD_hWnd )	//	Hot Laps listview
+	{
+		//	Get the text value for the given items and compare them
+		p_ADlvi.iItem = lParam1;
+		p_ADlvi.iSubItem =nColumn;
+		ListView_GetItem(AD_hWnd, (LVITEM*)&p_ADlvi);
+		swprintf(sz_Result1, p_ADlvi.cchTextMax, L"%s", p_ADlvi.pszText);
+		p_ADlvi.iItem = lParam2;
+		p_ADlvi.iSubItem = nColumn;
+		ListView_GetItem(AD_hWnd, (LVITEM*)&p_ADlvi);
+		swprintf(sz_Result2, p_ADlvi.cchTextMax, L"%s", p_ADlvi.pszText);
+	}
+
+//	b_TextResult = wcscmp(sz_Result2, sz_Result1);
+	b_TextResult = wcscmp(sz_Result1, sz_Result2);
+	if (bSortAscending > 0 && b_TextResult < 0)
+//	if (bSortAscending && b_TextResult < 0)
+	{
+		result = -1 * abs((lParam1 - lParam2));
+//		result = (lParam2 - lParam1);
+	}
+	else if (bSortAscending > 0 && b_TextResult >= 0)
+//	else if (bSortAscending && b_TextResult >= 0)
+	{
+		result = 1 * abs((lParam1 - lParam2));
+//		result = (lParam1 - lParam2);
+	}
+	else if (b_TextResult < 0)
+//	else if (b_TextResult < 0)
+	{
+		result = 1 * abs(lParam2 - lParam1);
+//		result = (lParam1 - lParam2);
+	}
+	else
+	{
+		result = -1 * abs(lParam2 - lParam1);
+//		result = (lParam2 - lParam1);
+	}
+
+//	result = (bSortAscending && b_TextResult < 0) ? -1 : 1;
+	if (nColumn == 0) 
+	{
+		result = bSortAscending ? (lParam1 - lParam2) : (lParam2 - lParam1);
+	}
+	return result;
+}
+
+void OnColumnClick2(LPNMLISTVIEW pLVInfo, HWND hWnd)
+{
+    static int nSortColumn = 0;
+    static BOOL bSortAscending = TRUE;
+    LPARAM lParamSort;
+
+    // get new sort parameters
+    if (pLVInfo->iSubItem == nSortColumn)
+        bSortAscending = !bSortAscending;
+    else
+    {
+        nSortColumn = pLVInfo->iSubItem;
+        bSortAscending = !bSortAscending;
+    }
+
+    // combine sort info into a single value we can send to our sort function
+    lParamSort = 1 + nSortColumn;
+    if (!bSortAscending)
+        lParamSort = -lParamSort;
+
+//	click_hWnd = pLVInfo->hdr.hwndFrom;
+//	HL_hWnd = hWnd;
+//	TS_hWnd = hWnd;
+//	HL_hWnd = GetDlgItem(hWnd, IDC_RACESCORING);
+//	TS_hWnd = GetDlgItem(hWnd, IDC_TIMINGSCORING);
+
+	// sort list
+	if ( pLVInfo->hdr.hwndFrom == AD_hWnd);
+//	ListView_SortItems(pLVInfo->hdr.hwndFrom, CompareADListItems, lParamSort);
+
+}
+
+
   LRESULT DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   {
     if(m_sfLapPainter.HandleMessage(hWnd,uMsg,wParam,lParam))
@@ -500,6 +598,8 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 	//	Update and show Current Lap Time
     TCHAR szTemp[512], szLap[512];
     HWND hWndIp = GetDlgItem(m_hWnd, IDC_LIVELAPTIME);
+	static HWND hWnd_AllData = NULL;  // Window handle of dialog box to show all data points for a lap
+	static WINDOWPLACEMENT w_AllDataWindow;	//	Save the location for the AllData display window
     ::FormatTimeMinutesSecondsMs((float)(timeGetTime() - tmLast) / 1000, szLap, NUMCHARS(szLap) );
 	swprintf(szLap, _tcslen(szLap) - 2, L"%s", szLap);	//	Remove the fractional time
     swprintf(szTemp, NUMCHARS(szTemp), L"Current Lap: %s", szLap);
@@ -510,7 +610,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 	    case WM_INITDIALOG:
       {
         m_hWnd = hWnd;
-        
         {
           vector<wstring> lstCols;
           vector<int> lstWidths;
@@ -532,6 +631,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
         m_sfLapPainter.Init(GetDlgItem(hWnd,IDC_DISPLAY));
         m_sfSubDisplay.Init(GetDlgItem(hWnd,IDC_SUBDISPLAY));
         m_sfTractionDisplay.Init(GetDlgItem(hWnd,IDC_TRACTIONCIRCLEMAP));
+        m_sfAllDataDisplay.Init(GetDlgItem(hWnd,IDC_ALLDATADISPLAY));
 
         set<DATA_CHANNEL> setAvailable;
         InitAxes(setAvailable);
@@ -570,7 +670,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           m_sfLapOpts.flWindowShiftX += moveX;
           m_sfLapOpts.flWindowShiftY -= moveY;
         }
-        UpdateUI(UPDATE_MAP);
+        UpdateUI(UPDATE_MAP | UPDATE_ALLDATA);
         return 0;
       }
       case WM_LBUTTONDOWN:
@@ -588,46 +688,75 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
         }
         return FALSE;
       }
-      case WM_LBUTTONDBLCLK:
+	  case WM_MBUTTONDOWN:
 	  {
 		const int x = LOWORD(lParam);
         const int y = HIWORD(lParam);
-        // figure out if we should put focus on the main map
+        // figure out if the mouse is within the main map
         RECT rcMap;
         HWND hWndMap = GetDlgItem(this->m_hWnd,IDC_DISPLAY);
         GetClientRect(hWndMap,&rcMap);
-        if(x >= rcMap.left && x < rcMap.right && y >= rcMap.top && y < rcMap.bottom)
-        {
-          SetFocus(hWndMap);
-          return TRUE;
-        }
-		  //	Now display the closest values on the map.
-/*			const float flDataX = MagicDeterminingFunction(sfLapOpts, fHighlightXAxis); // this part could be hard...
-			vector<CExtendedLap*> lstLaps = GetLapsToShow();
-			if(lstLaps.size() >= 2) // don't show anything if we've got multiple laps selected
+		DLGPROC ShowAllData = NULL;
+		if (!IsWindow(hWnd_AllData)) 
+		{ 
+			//	Create the window for displaying all of the data points for the selected laps
+			INITCOMMONCONTROLSEX InitCtrlEx;
+			InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
+			InitCtrlEx.dwICC = ICC_PROGRESS_CLASS;
+			InitCommonControlsEx(&InitCtrlEx);
+			hWnd_AllData = CreateDialog(NULL, MAKEINTRESOURCE (IDD_ALLDATADISPLAY), hWnd, ShowAllData);
+			AD_hWnd = GetDlgItem(hWnd_AllData,IDC_ALLDATADISPLAY);	//	Hot Laps listview
+			SetWindowPlacement(hWnd_AllData, &w_AllDataWindow);
+			//	Initialize the results array
+			for (int i=0;i<10;i++)
 			{
-				set<DATA_CHANNEL> setChannels = lstLaps[0]->GetAvailableChannels();
-				stringstream ss;
-				for(set<DATA_CHANNEL>::const_iterator i = setChannels.begin(); i != setChannels.end(); i++)
-				{
-					const IDataChannel* pChannel = GetChannel(*i);
-					if(pChannel)
-					{
-						const float flValue = pChannel->GetValue(flDataX);
-						TCHAR szName[100];
-						GetDataChannelName(*i,szName,NUMCHARS(szName));
-						char szValue[100];
-						GetChannelString(*i, m_sfLapOpts.eUnitPreference, flValue, szValue, NUMCHARS(szValue));
-						ss<<szName;
-						ss<<szValue;
-						ss<<endl;
-					}
-				}
-				MessageBox(NULL, ss.c_str(), NULL, NULL);
+//				swprintf(m_AllData[i].db_strRaceName, NUMCHARS(m_ScoringData[i].db_strRaceName),L"");
+//				swprintf(m_AllData[i].db_szTotTime, NUMCHARS(m_ScoringData[i].db_szTotTime),L"");
+			}
+			//	Set up the AllData list box columns
+			vector<wstring> lstCols;
+			vector<int> lstWidths;
+			lstCols.push_back(L"Data Channel");
+			lstCols.push_back(L"Lap 1");
+			lstCols.push_back(L"Lap 2");
+			lstCols.push_back(L"Lap 3");
+			lstCols.push_back(L"Lap 4");
+			lstCols.push_back(L"Lap 5");
+			lstCols.push_back(L"Lap 6");
+			lstCols.push_back(L"Lap 7");
+			lstCols.push_back(L"Lap 8");
+			lstCols.push_back(L"Lap 9");
+			lstCols.push_back(L"Lap 10");
+			lstWidths.push_back(120);
+			lstWidths.push_back(60);
+			lstWidths.push_back(60);
+			lstWidths.push_back(60);
+			lstWidths.push_back(60);
+			lstWidths.push_back(60);
+			lstWidths.push_back(60);
+			lstWidths.push_back(60);
+			lstWidths.push_back(60);
+			lstWidths.push_back(60);
+			lstWidths.push_back(60);
 
-				}
-*/          return TRUE;
+			m_sfListBox.Init(AD_hWnd,lstCols,lstWidths);	//	Initialize and show the listview
+			ShowWindow(hWnd_AllData, SW_SHOW); 
+		} 
+
+		UpdateUI(UPDATE_MAP | UPDATE_ALLDATA);
+        return TRUE;
       }
+	  case WM_MBUTTONDBLCLK:
+	  {
+		  //	If the window showing all of the lap data is present, let's kill it
+		  if (hWnd_AllData)
+		  {
+			  if (GetWindowPlacement(hWnd_AllData, &w_AllDataWindow) )
+			  {
+				  DestroyWindow(hWnd_AllData);
+			  }
+		  }
+	  }
       case WM_NOTIFY:
       {
         NMHDR* notifyHeader = (NMHDR*)lParam;
@@ -1446,8 +1575,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
                 }
               }
               m_pReferenceLap = pNewRefLap;
-			  //	Tell it to close Sector Display and release all Split Points
-			  //	Blah blah blah
             }
             else
             {
@@ -1637,6 +1764,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
   const static DWORD UPDATE_MENU = 0x8;
   const static DWORD UPDATE_VALUES = 0x10;
   const static DWORD UPDATE_TRACTIONCIRCLE = 0x20;
+  const static DWORD UPDATE_ALLDATA = 0x40;
 
   const static DWORD UPDATE_ALL = 0xffffffff;
   //	Pull in PlotPrefs array as well as lines vs. dots and Painting color scheme settings from Settings.txt file
@@ -1703,7 +1831,12 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
     {
       UpdateMenus();
     }
-
+    if(IS_FLAG_SET(fdwUpdateFlags, UPDATE_ALLDATA))
+    {
+      UpdateAllData();
+	  UpdateDisplays();
+    }
+	
     if(IS_FLAG_SET(fdwUpdateFlags, UPDATE_DASHBOARD))
     {
       set<DATA_CHANNEL> setSelectedChannels;
@@ -1907,6 +2040,7 @@ private:
     GET_WINDOWPOS(IDC_SUBDISPLAY);
     GET_WINDOWPOS(IDC_LAPS);
     GET_WINDOWPOS(IDC_TRACTIONCIRCLEMAP);
+	GET_WINDOWPOS(IDC_ALLDATADISPLAY);
 
   }
   void HandleCtlResize(SIZE sNewSize, int idc, bool fResizeX, bool fResizeY)
@@ -1923,7 +2057,117 @@ private:
     HandleCtlResize(sNewSize, IDC_LAPS, false, true); // lap list
     HandleCtlResize(sNewSize, IDC_TRACTIONCIRCLEMAP, false, false); // Traction circle window
   }
-	float fAverage(DATA_CHANNEL eChannel, const IDataChannel* pChannel, float flVal)
+  void UpdateAllData()
+  {
+		const float flDataX = 0;
+//		  m_sfAllDataDisplay;
+		HWND hWnd_AllData = GetWindow(m_hWnd, GW_ENABLEDPOPUP);
+		if ( hWnd_AllData );
+		if (GetDlgItem(hWnd_AllData, IDC_ALLDATADISPLAY))	//	Only execute data display functions if window is showing
+		{
+			//	First let's get all of the information about the data points for this lap/location
+			ListView_DeleteAllItems(AD_hWnd);	//	Clear the list before displaying the update
+			//	List of highlighted laps
+			set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData();
+			if(setSelectedData.size() > 0)
+			{
+				const int cLaps = 10;	//	The maximum number of Laps to display Data channels for
+				int iLap=0;	//	Tracking variable for which Lap we are on in the loop
+				int iChannel=0;	//	Tracking variable for which Y-Channel we are on within each lap
+				const int iTotChannel = m_lstYChannels.size();	//	The number of Y Data channels for this lap
+				//	Loop through each lap and pick up all of their values for each data channel
+				for(set<LPARAM>::iterator a = setSelectedData.begin(); a != setSelectedData.end(); a++)
+				{
+				CExtendedLap* pLap = (CExtendedLap*)*a;
+				//	For each lap let's get all of the available data channels for display
+				int TotalYChannels = 0;	//	Total numbber of Data Channels availalbe for this lap
+				TCHAR szDataChannelName[MAX_PATH];	// Test string containing the Data Channel name to display
+				int iLapId = pLap->GetLap()->GetLapId();
+				set<DATA_CHANNEL> channels = g_pLapDB->GetAvailableChannels(iLapId); //	Get all available channels for this lap
+				for(set<DATA_CHANNEL>::const_iterator i = channels.begin(); i != channels.end(); i++) // Loop through them, insert them into our "all data channels" set
+				{
+					TotalYChannels = channels.size();	//	The number of Data Channels available for this lap
+					TCHAR m_szYString[512] = {NULL};
+					TCHAR szLabel[50][MAX_PATH] = {NULL};	//	Assumes that we will have no more than 50 Y-Data channels
+					DATA_CHANNEL eChannel = *i;
+					if( !eChannel ) continue;
+					float flVal;
+					//	Let's get the value for this data channel at this highlight point
+					const IDataChannel* pChannel = pLap->GetChannel(eChannel);
+					if (pChannel)	//	Check if pointer is valid
+					{
+						flVal = pChannel->GetValue(m_mapLapHighlightTimes[pLap]);	//	The value that we are looking for
+			//////////////////////////////////////////
+						//		Adding transformation functions here for Y
+						if (m_sfLapOpts.m_PlotPrefs[iChannel].iTransformYesNo == true)
+						{
+							if (m_sfLapOpts.m_PlotPrefs[iChannel].fTransBValue < 0)
+							{
+								flVal = m_sfLapOpts.m_PlotPrefs[iChannel].fTransAValue + flVal * m_sfLapOpts.m_PlotPrefs[iChannel].fTransBValue + flVal * flVal *  m_sfLapOpts.m_PlotPrefs[iChannel].fTransCValue;
+							}
+							else
+							{
+								flVal = m_sfLapOpts.m_PlotPrefs[iChannel].fTransAValue + flVal * m_sfLapOpts.m_PlotPrefs[iChannel].fTransBValue + flVal * flVal *  m_sfLapOpts.m_PlotPrefs[iChannel].fTransCValue;
+							}
+						}
+			//////////////////////////////////////////
+						//	Now assign these values to the Data Value variable for display
+						TCHAR szChannelName[MAX_PATH];
+						GetDataChannelName(eChannel,szChannelName,NUMCHARS(szChannelName));
+
+						char szVal[MAX_PATH];
+						GetChannelValue(eChannel,m_sfLapOpts.eUnitPreference,flVal,szVal,NUMCHARS(szVal));
+
+						//	Let's load the Listview with this result
+						TCHAR lstVal[MAX_PATH] ;
+						LPWSTR result;
+						swprintf(lstVal,NUMCHARS(lstVal), L"%S", szVal);
+
+						//	First set up the Main listview item (Data Channel Name) for the first lap
+						if (iLap == 0)
+						{
+							p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+							p_ADlvi.iItem = iChannel;	//	Which Data Channel subscript
+							p_ADlvi.iSubItem = iLap;	//	Which Lap subscript
+							p_ADlvi.lParam = iLap;
+							std::wstring strPos(szChannelName);
+							result = (LPWSTR)strPos.c_str();		  
+							p_ADlvi.pszText = result;
+							p_ADlvi.cchTextMax = wcslen(result);
+							ListView_InsertItem(AD_hWnd, &p_ADlvi);
+						}
+
+						//	Now populate the listview subitem with the datapoint value
+						p_ADlvi.mask = LVIF_TEXT;
+						p_ADlvi.iItem = iChannel;	//	Which Data Channel subscript
+						p_ADlvi.iSubItem = iLap + 1;	//	Which Lap subscript incremented to be positioned correctly
+						p_ADlvi.lParam = iLap + 1;
+						std::wstring strVal(lstVal);	//	Data conversion
+						result = (LPWSTR)strVal.c_str();	//	Another data conversion
+						p_ADlvi.pszText = result;
+						p_ADlvi.cchTextMax = wcslen(result);
+						ListView_SetItem(AD_hWnd, &p_ADlvi);
+					}	//	End Data Channel checking loop
+					iChannel++;	//	Increment the Data Channel counter and try to pull the next Data Channel information
+				}	//	End Data Channel Loop
+				//	Increment the lap counter and get info from the next lap if we are less than our max. laps
+				if (iLap < cLaps)
+				{
+					iLap++;
+					iChannel = 0;	//	Reset the Data Channel Listview array counter
+				}
+				else
+				{
+					break;
+				}
+				}	//	End Lap Loop
+			}	//	End Test Loop
+		}
+		return;
+  }
+  
+  
+  float fAverage(DATA_CHANNEL eChannel, const IDataChannel* pChannel, float flVal)
 	{
 		//	This function returns the average value for the data channel across all data points from this lap.
 		char szAvg[MAX_PATH];
@@ -2073,13 +2317,7 @@ void UpdateSectors()
 	//	End Sector Loop
 
 			//	Now that we have computed the Sector Time, let's Display them
-/*			if (w == lstLaps.size() - 1 && m_fShowReferenceLap)
 			{
-				swprintf(szLapString[w], NUMCHARS(szLapString[w]), L"\t\tRef Lap: \t%s", szString[w]);
-				SendMessage(m_sfLapOpts.hWndLap[w], WM_SETTEXT, 0, (LPARAM)szLapString[w]);
-			}
-			else
-*/			{
 				swprintf(szLapString[w], NUMCHARS(szLapString[w]), L"%s %s", szLapString[w], szString[w]);
 				SendMessage(m_sfLapOpts.hWndLap[w], WM_SETTEXT, 0, (LPARAM)szLapString[w]);
 			}
@@ -2237,6 +2475,10 @@ void UpdateValues()
 	{
 		m_sfTractionDisplay.Refresh();
 	}
+	if (m_sfLapOpts.bSmoothYesNo)	//	Need to change this condition to something that makes sense
+	{
+		m_sfAllDataDisplay.Refresh();
+	}
   }
   void CheckMenuHelper(HMENU hMainMenu, int id, bool fChecked)
   {
@@ -2351,6 +2593,7 @@ void UpdateValues()
 	case SUPPLIERID_SECTORDISPLAY:
 		return true;	//	Allow the Set Split Sectors to be highlight source
 	case SUPPLIERID_TRACTIONCIRCLEDISPLAY:
+	case SUPPLIERID_ALLDATADISPLAY:
 		return false;	//	main display is always the driver of highlight data
     default:
       DASSERT(FALSE);
@@ -2466,6 +2709,10 @@ void UpdateValues()
 	case SUPPLIERID_TRACTIONCIRCLEDISPLAY:
 	  {
 		return LAPDISPLAYSTYLE_TRACTIONCIRCLE;
+	  }
+	case SUPPLIERID_ALLDATADISPLAY:
+	  {
+		return LAPDISPLAYSTYLE_ALLDATADISPLAY;
 	  }
 	case SUPPLIERID_SECTORDISPLAY:
 	  {
@@ -2816,12 +3063,14 @@ public:
   vector<DATA_CHANNEL> m_lstYChannels;
   ArtListBox m_sfYAxis;
   ArtListBox m_sfLapList;
+  ArtListBox m_sfListBox;
 private:
   ArtListBox m_sfXAxis;
 
   CLapPainter m_sfLapPainter;
   CLapPainter m_sfSubDisplay;
   CLapPainter m_sfTractionDisplay;
+  CLapPainter m_sfAllDataDisplay;
 
   // lap display style data
   map<const CExtendedLap*,int> m_mapLapHighlightTimes; // stores the highlight times (in milliseconds since phone app start) for each lap.  Set from ILapSupplier calls
