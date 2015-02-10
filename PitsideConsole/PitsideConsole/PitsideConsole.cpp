@@ -273,7 +273,6 @@ public:
     : m_sfLapPainter(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_MAINDISPLAY), 
       m_sfSubDisplay(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_SUBDISPLAY), 
       m_sfTractionDisplay(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_TRACTIONCIRCLEDISPLAY), 
-      m_sfAllDataDisplay(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_ALLDATADISPLAY), 
 	  m_eLapDisplayStyle(LAPDISPLAYSTYLE_PLOT),		//	Make data plot the default initial view
       m_fShowTractionCircle(false),
 	  m_fSmooth(false),
@@ -495,99 +494,6 @@ HWND hWnd_AllData;			//	AllData window control handle
 HWND AD_hWnd;				//	AllData listview control handle
 LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
 
-//	Routines for sorting list views by column headers
-int CALLBACK CompareADListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort )
-{
-    // Get the text of the list items for comparison
-	LVITEM pitem1 = {NULL};
-	LVITEM pitem2 = {NULL};
-	TCHAR sz_Result1[512] = {NULL};
-	TCHAR sz_Result2[512] = {NULL};
-	BOOL result;
-	BOOL b_TextResult;
-	BOOL bSortAscending = (lParamSort > 0);	//	Determines which way to sort the column
-    int nColumn = abs(lParamSort) - 1;	//	Then pulls the column number from the same variable
-
-	if ( AD_hWnd )	//	Hot Laps listview
-	{
-		//	Get the text value for the given items and compare them
-		p_ADlvi.iItem = lParam1;
-		p_ADlvi.iSubItem =nColumn;
-		ListView_GetItem(AD_hWnd, (LVITEM*)&p_ADlvi);
-		swprintf(sz_Result1, p_ADlvi.cchTextMax, L"%s", p_ADlvi.pszText);
-		p_ADlvi.iItem = lParam2;
-		p_ADlvi.iSubItem = nColumn;
-		ListView_GetItem(AD_hWnd, (LVITEM*)&p_ADlvi);
-		swprintf(sz_Result2, p_ADlvi.cchTextMax, L"%s", p_ADlvi.pszText);
-	}
-
-//	b_TextResult = wcscmp(sz_Result2, sz_Result1);
-	b_TextResult = wcscmp(sz_Result1, sz_Result2);
-	if (bSortAscending > 0 && b_TextResult < 0)
-//	if (bSortAscending && b_TextResult < 0)
-	{
-		result = -1 * abs((lParam1 - lParam2));
-//		result = (lParam2 - lParam1);
-	}
-	else if (bSortAscending > 0 && b_TextResult >= 0)
-//	else if (bSortAscending && b_TextResult >= 0)
-	{
-		result = 1 * abs((lParam1 - lParam2));
-//		result = (lParam1 - lParam2);
-	}
-	else if (b_TextResult < 0)
-//	else if (b_TextResult < 0)
-	{
-		result = 1 * abs(lParam2 - lParam1);
-//		result = (lParam1 - lParam2);
-	}
-	else
-	{
-		result = -1 * abs(lParam2 - lParam1);
-//		result = (lParam2 - lParam1);
-	}
-
-//	result = (bSortAscending && b_TextResult < 0) ? -1 : 1;
-	if (nColumn == 0) 
-	{
-		result = bSortAscending ? (lParam1 - lParam2) : (lParam2 - lParam1);
-	}
-	return result;
-}
-
-void OnColumnClick2(LPNMLISTVIEW pLVInfo, HWND hWnd)
-{
-    static int nSortColumn = 0;
-    static BOOL bSortAscending = TRUE;
-    LPARAM lParamSort;
-
-    // get new sort parameters
-    if (pLVInfo->iSubItem == nSortColumn)
-        bSortAscending = !bSortAscending;
-    else
-    {
-        nSortColumn = pLVInfo->iSubItem;
-        bSortAscending = !bSortAscending;
-    }
-
-    // combine sort info into a single value we can send to our sort function
-    lParamSort = 1 + nSortColumn;
-    if (!bSortAscending)
-        lParamSort = -lParamSort;
-
-//	click_hWnd = pLVInfo->hdr.hwndFrom;
-//	HL_hWnd = hWnd;
-//	TS_hWnd = hWnd;
-//	HL_hWnd = GetDlgItem(hWnd, IDC_RACESCORING);
-//	TS_hWnd = GetDlgItem(hWnd, IDC_TIMINGSCORING);
-
-	// sort list
-	if ( pLVInfo->hdr.hwndFrom == AD_hWnd);
-//	ListView_SortItems(pLVInfo->hdr.hwndFrom, CompareADListItems, lParamSort);
-
-}
-
-
   LRESULT DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   {
     if(m_sfLapPainter.HandleMessage(hWnd,uMsg,wParam,lParam))
@@ -631,7 +537,6 @@ void OnColumnClick2(LPNMLISTVIEW pLVInfo, HWND hWnd)
         m_sfLapPainter.Init(GetDlgItem(hWnd,IDC_DISPLAY));
         m_sfSubDisplay.Init(GetDlgItem(hWnd,IDC_SUBDISPLAY));
         m_sfTractionDisplay.Init(GetDlgItem(hWnd,IDC_TRACTIONCIRCLEMAP));
-        m_sfAllDataDisplay.Init(GetDlgItem(hWnd,IDC_ALLDATADISPLAY));
 
         set<DATA_CHANNEL> setAvailable;
         InitAxes(setAvailable);
@@ -690,12 +595,8 @@ void OnColumnClick2(LPNMLISTVIEW pLVInfo, HWND hWnd)
       }
 	  case WM_MBUTTONDOWN:
 	  {
-		const int x = LOWORD(lParam);
-        const int y = HIWORD(lParam);
-        // figure out if the mouse is within the main map
-        RECT rcMap;
+		//	Middle mouse button activates a modal window that dispalys all of the data for a given point in a table
         HWND hWndMap = GetDlgItem(this->m_hWnd,IDC_DISPLAY);
-        GetClientRect(hWndMap,&rcMap);
 		DLGPROC ShowAllData = NULL;
 		if (!IsWindow(hWnd_AllData)) 
 		{ 
@@ -707,12 +608,7 @@ void OnColumnClick2(LPNMLISTVIEW pLVInfo, HWND hWnd)
 			hWnd_AllData = CreateDialog(NULL, MAKEINTRESOURCE (IDD_ALLDATADISPLAY), hWnd, ShowAllData);
 			AD_hWnd = GetDlgItem(hWnd_AllData,IDC_ALLDATADISPLAY);	//	Hot Laps listview
 			SetWindowPlacement(hWnd_AllData, &w_AllDataWindow);
-			//	Initialize the results array
-			for (int i=0;i<10;i++)
-			{
-//				swprintf(m_AllData[i].db_strRaceName, NUMCHARS(m_ScoringData[i].db_strRaceName),L"");
-//				swprintf(m_AllData[i].db_szTotTime, NUMCHARS(m_ScoringData[i].db_szTotTime),L"");
-			}
+
 			//	Set up the AllData list box columns
 			vector<wstring> lstCols;
 			vector<int> lstWidths;
@@ -754,6 +650,7 @@ void OnColumnClick2(LPNMLISTVIEW pLVInfo, HWND hWnd)
 			  if (GetWindowPlacement(hWnd_AllData, &w_AllDataWindow) )
 			  {
 				  DestroyWindow(hWnd_AllData);
+				  hWnd_AllData = NULL;
 			  }
 		  }
 	  }
@@ -2057,109 +1954,200 @@ private:
     HandleCtlResize(sNewSize, IDC_LAPS, false, true); // lap list
     HandleCtlResize(sNewSize, IDC_TRACTIONCIRCLEMAP, false, false); // Traction circle window
   }
+  //	Function updates the data points in the window showing all of the data for the selected laps, activated by the middle mouse button
   void UpdateAllData()
   {
-		const float flDataX = 0;
-//		  m_sfAllDataDisplay;
-		HWND hWnd_AllData = GetWindow(m_hWnd, GW_ENABLEDPOPUP);
-		if ( hWnd_AllData );
+		//	hWnd_AllData is the handle for the window we want. Let's make sure that it is displayed
+		hWnd_AllData = GetWindow(m_hWnd, GW_ENABLEDPOPUP);
 		if (GetDlgItem(hWnd_AllData, IDC_ALLDATADISPLAY))	//	Only execute data display functions if window is showing
 		{
 			//	First let's get all of the information about the data points for this lap/location
 			ListView_DeleteAllItems(AD_hWnd);	//	Clear the list before displaying the update
-			//	List of highlighted laps
-			set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData();
+			set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData();	//	List of highlighted laps
 			if(setSelectedData.size() > 0)
 			{
-				const int cLaps = 10;	//	The maximum number of Laps to display Data channels for
-				int iLap=0;	//	Tracking variable for which Lap we are on in the loop
-				int iChannel=0;	//	Tracking variable for which Y-Channel we are on within each lap
+				const int cLaps = 10;	//	The maximum number of Laps to display Data channels for, limited by the window form
+				int iLap = 0;	//	Tracking variable for which Lap we are on in the loop
+				int iChannel = 0;	//	Tracking variable for which Y-Channel we are on within each lap
 				const int iTotChannel = m_lstYChannels.size();	//	The number of Y Data channels for this lap
 				//	Loop through each lap and pick up all of their values for each data channel
 				for(set<LPARAM>::iterator a = setSelectedData.begin(); a != setSelectedData.end(); a++)
 				{
-				CExtendedLap* pLap = (CExtendedLap*)*a;
-				//	For each lap let's get all of the available data channels for display
-				int TotalYChannels = 0;	//	Total numbber of Data Channels availalbe for this lap
-				TCHAR szDataChannelName[MAX_PATH];	// Test string containing the Data Channel name to display
-				int iLapId = pLap->GetLap()->GetLapId();
-				set<DATA_CHANNEL> channels = g_pLapDB->GetAvailableChannels(iLapId); //	Get all available channels for this lap
-				for(set<DATA_CHANNEL>::const_iterator i = channels.begin(); i != channels.end(); i++) // Loop through them, insert them into our "all data channels" set
-				{
-					TotalYChannels = channels.size();	//	The number of Data Channels available for this lap
-					TCHAR m_szYString[512] = {NULL};
-					TCHAR szLabel[50][MAX_PATH] = {NULL};	//	Assumes that we will have no more than 50 Y-Data channels
-					DATA_CHANNEL eChannel = *i;
-					if( !eChannel ) continue;
-					float flVal;
-					//	Let's get the value for this data channel at this highlight point
-					const IDataChannel* pChannel = pLap->GetChannel(eChannel);
-					if (pChannel)	//	Check if pointer is valid
+					CExtendedLap* pLap = (CExtendedLap*)*a;
+					//	For each lap let's get all of the available data channels for display
+					int TotalYChannels = 0;	//	Total numbber of Data Channels availalbe for this lap
+					int iLapId = pLap->GetLap()->GetLapId();
+					set<DATA_CHANNEL> channels = g_pLapDB->GetAvailableChannels(iLapId); //	Get all available channels for this lap
+					for(set<DATA_CHANNEL>::const_iterator i = channels.begin(); i != channels.end(); i++) // Loop through them, insert them into our "all data channels" set
 					{
-						flVal = pChannel->GetValue(m_mapLapHighlightTimes[pLap]);	//	The value that we are looking for
-			//////////////////////////////////////////
-						//		Adding transformation functions here for Y
-						if (m_sfLapOpts.m_PlotPrefs[iChannel].iTransformYesNo == true)
+						TotalYChannels = channels.size();	//	The number of Data Channels available for this lap
+						TCHAR m_szYString[512] = {NULL};
+						TCHAR szLabel[50][MAX_PATH] = {NULL};	//	Assumes that we will have no more than 50 Y-Data channels
+						DATA_CHANNEL eChannel = *i;
+						if( !eChannel ) continue;
+						float flVal;
+						//	Let's get the value for this data channel at this highlight point
+						const IDataChannel* pChannel = pLap->GetChannel(eChannel);
+						if (pChannel)	//	Check if pointer is valid
 						{
-							if (m_sfLapOpts.m_PlotPrefs[iChannel].fTransBValue < 0)
+							flVal = pChannel->GetValue(m_mapLapHighlightTimes[pLap]);	//	The value that we are looking for
+				//////////////////////////////////////////
+							//		Adding transformation functions here for Y
+							if (m_sfLapOpts.m_PlotPrefs[iChannel].iTransformYesNo == true)
 							{
-								flVal = m_sfLapOpts.m_PlotPrefs[iChannel].fTransAValue + flVal * m_sfLapOpts.m_PlotPrefs[iChannel].fTransBValue + flVal * flVal *  m_sfLapOpts.m_PlotPrefs[iChannel].fTransCValue;
+								if (m_sfLapOpts.m_PlotPrefs[iChannel].fTransBValue < 0)
+								{
+									flVal = m_sfLapOpts.m_PlotPrefs[iChannel].fTransAValue + flVal * m_sfLapOpts.m_PlotPrefs[iChannel].fTransBValue + flVal * flVal *  m_sfLapOpts.m_PlotPrefs[iChannel].fTransCValue;
+								}
+								else
+								{
+									flVal = m_sfLapOpts.m_PlotPrefs[iChannel].fTransAValue + flVal * m_sfLapOpts.m_PlotPrefs[iChannel].fTransBValue + flVal * flVal *  m_sfLapOpts.m_PlotPrefs[iChannel].fTransCValue;
+								}
 							}
-							else
+				//////////////////////////////////////////
+							//	Now assign these values to the Data Value variable for display
+							TCHAR szChannelName[MAX_PATH];
+							GetDataChannelName(eChannel,szChannelName,NUMCHARS(szChannelName));
+
+							char szVal[MAX_PATH];
+							GetChannelValue(eChannel,m_sfLapOpts.eUnitPreference,flVal,szVal,NUMCHARS(szVal));
+
+							//	Let's load the Listview with this result
+							TCHAR lstVal[MAX_PATH] ;
+							swprintf(lstVal,NUMCHARS(lstVal), L"%S", szVal);
+//							LPWSTR result;
+							wchar_t result[MAX_PATH] ;
+							bool b_LV_ChannelFound = false;	//	ListView boolean for Data Channel searches
+							//	First set up the Main listview item (Data Channel Name) for the first lap
+							int i_TextResult = 0;	//	Data channel matching integer
+							if (iLap == 0)
 							{
-								flVal = m_sfLapOpts.m_PlotPrefs[iChannel].fTransAValue + flVal * m_sfLapOpts.m_PlotPrefs[iChannel].fTransBValue + flVal * flVal *  m_sfLapOpts.m_PlotPrefs[iChannel].fTransCValue;
+								p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+								p_ADlvi.iItem = iChannel;	//	Which Data Channel subscript
+								p_ADlvi.iSubItem = iLap;	//	Which Lap subscript
+								p_ADlvi.lParam = iLap;
+//								std::wstring strPos(szChannelName);
+//								result = (LPWSTR)strPos.c_str();		  
+								swprintf(result,NUMCHARS(result), szChannelName);
+								p_ADlvi.pszText = result;
+								p_ADlvi.cchTextMax = wcslen(result);
+								ListView_InsertItem(AD_hWnd, &p_ADlvi);
+								b_LV_ChannelFound = true;
 							}
-						}
-			//////////////////////////////////////////
-						//	Now assign these values to the Data Value variable for display
-						TCHAR szChannelName[MAX_PATH];
-						GetDataChannelName(eChannel,szChannelName,NUMCHARS(szChannelName));
+							else	//	Let's match up the Data Channel Name with those in the first lap for displaying in-line
+							{
+								//	First let's get the channel name for this data channel
+								wchar_t szChannelString[MAX_PATH];
+								p_ADlvi.iItem = iChannel;	//	The first lap's data channel name
+								p_ADlvi.iSubItem = 0;	//	The first lap's subscript
+								p_ADlvi.lParam = 0;
+								p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+								p_ADlvi.cchTextMax = MAX_PATH;
 
-						char szVal[MAX_PATH];
-						GetChannelValue(eChannel,m_sfLapOpts.eUnitPreference,flVal,szVal,NUMCHARS(szVal));
+								ListView_GetItem(AD_hWnd, &p_ADlvi);
+								swprintf(szChannelString, NUMCHARS(p_ADlvi.pszText), (wchar_t*)p_ADlvi.pszText);
 
-						//	Let's load the Listview with this result
-						TCHAR lstVal[MAX_PATH] ;
-						LPWSTR result;
-						swprintf(lstVal,NUMCHARS(lstVal), L"%S", szVal);
+//								std::wstring strPos(szChannelName);
+//								result = (LPWSTR)strPos.c_str();		
+								swprintf(result,NUMCHARS(result), szChannelName);
 
-						//	First set up the Main listview item (Data Channel Name) for the first lap
-						if (iLap == 0)
-						{
-							p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
-							p_ADlvi.iItem = iChannel;	//	Which Data Channel subscript
-							p_ADlvi.iSubItem = iLap;	//	Which Lap subscript
-							p_ADlvi.lParam = iLap;
-							std::wstring strPos(szChannelName);
-							result = (LPWSTR)strPos.c_str();		  
-							p_ADlvi.pszText = result;
-							p_ADlvi.cchTextMax = wcslen(result);
-							ListView_InsertItem(AD_hWnd, &p_ADlvi);
-						}
+//								ListView_GetItem(AD_hWnd, &p_ADlvi);	//	Get the pointer to the LV item
+//								swprintf(szChannelString, p_ADlvi.cchTextMax, p_ADlvi.pszText);	//	Get the text from the LV Item
+								i_TextResult = wcscmp((LPWSTR)p_ADlvi.pszText, result);	//	Compare the wide strings to see if they match
 
-						//	Now populate the listview subitem with the datapoint value
-						p_ADlvi.mask = LVIF_TEXT;
-						p_ADlvi.iItem = iChannel;	//	Which Data Channel subscript
-						p_ADlvi.iSubItem = iLap + 1;	//	Which Lap subscript incremented to be positioned correctly
-						p_ADlvi.lParam = iLap + 1;
-						std::wstring strVal(lstVal);	//	Data conversion
-						result = (LPWSTR)strVal.c_str();	//	Another data conversion
-						p_ADlvi.pszText = result;
-						p_ADlvi.cchTextMax = wcslen(result);
-						ListView_SetItem(AD_hWnd, &p_ADlvi);
-					}	//	End Data Channel checking loop
-					iChannel++;	//	Increment the Data Channel counter and try to pull the next Data Channel information
-				}	//	End Data Channel Loop
-				//	Increment the lap counter and get info from the next lap if we are less than our max. laps
-				if (iLap < cLaps)
-				{
-					iLap++;
-					iChannel = 0;	//	Reset the Data Channel Listview array counter
-				}
-				else
-				{
-					break;
-				}
+								if ( i_TextResult )	//	0 if they match, <>0 if they are different
+								{
+									//	Items don't match. Let's see if the data channel exists in the array
+									for (int chan = 0; chan < TotalYChannels; chan++)
+									{
+										//	First let's get the channel name for this data channel
+										LPWSTR result2;
+										wchar_t szChannelString[MAX_PATH];
+										p_ADlvi.iItem = chan;	//	The first lap's data channel name
+										p_ADlvi.iSubItem = 0;	//	The first lap's subscript
+										p_ADlvi.lParam = 0;
+										p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+										p_ADlvi.cchTextMax = MAX_PATH;
+
+										if (ListView_GetItem(AD_hWnd, &p_ADlvi) )	//	Returns TRUE if it gets an item
+										{
+											swprintf(szChannelString, NUMCHARS(p_ADlvi.pszText), (wchar_t*)p_ADlvi.pszText);
+
+											std::wstring strPos(szChannelName);
+											result2 = (LPWSTR)strPos.c_str();		
+
+			//								ListView_GetItem(AD_hWnd, &p_ADlvi);	//	Get the pointer to the LV item
+			//								swprintf(szChannelString, p_ADlvi.cchTextMax, p_ADlvi.pszText);	//	Get the text from the LV Item
+											i_TextResult = wcscmp((LPWSTR)p_ADlvi.pszText, result2);	//	Compare the wide strings to see if they match
+											if ( !i_TextResult )	//	0 if they match, <>0 if they are different. Break loop if we found a match
+											{
+		//										p_ADlvi = p_ADlviTemp;	//	Re-assign the List View pointer
+												iChannel = chan;	//	Set the LV Item subsript to the channel's number
+												b_LV_ChannelFound = true;	//	Set the "Channel Found" flag
+												break;
+											}
+										}
+									}	//	End of Data Channel searching loop
+									if ( !b_LV_ChannelFound )	//	Data Channel doesn't exist in the list. Let's add it and the value.
+									{
+										p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+										p_ADlvi.iItem = TotalYChannels + 1;	//	Which Data Channel subscript
+										p_ADlvi.iSubItem = 0;	//	Which Lap subscript
+										p_ADlvi.lParam = 0;
+//										std::wstring strPos(szChannelName);
+//										result = (LPWSTR)strPos.c_str();		  
+										swprintf(result,NUMCHARS(result), szChannelName);
+										p_ADlvi.pszText = result;
+										p_ADlvi.cchTextMax = wcslen(result);
+										ListView_InsertItem(AD_hWnd, &p_ADlvi);
+
+										//	Now populate the listview subitem with the datapoint value, if it's valid
+										p_ADlvi.mask = LVIF_TEXT;
+										p_ADlvi.iItem = TotalYChannels + 1;	//	Which Data Channel subscript
+										p_ADlvi.iSubItem = iLap + 1;	//	Which Lap subscript incremented to be positioned correctly
+										p_ADlvi.lParam = iLap + 1;
+//										std::wstring strVal(lstVal);	//	Data conversion
+//										result = (LPWSTR)strVal.c_str();	//	Another data conversion
+										swprintf(result,NUMCHARS(result), lstVal);
+										p_ADlvi.pszText = result;
+										p_ADlvi.cchTextMax = wcslen(result);
+										ListView_SetItem(AD_hWnd, &p_ADlvi);
+										TotalYChannels = TotalYChannels + 1;	//	Increment the total number of data channels
+										b_LV_ChannelFound = false;	//	Set the channel search flag to not found
+									}	//	End of data channel add test
+								}	//	End of Data Channel not matched test
+								else
+								{
+									b_LV_ChannelFound = true;	//	The channels match
+								}
+							}	//	End of Sub Item addition test
+							if (b_LV_ChannelFound )
+							{
+								//	Now populate the listview subitem with the datapoint value, if it's valid
+								p_ADlvi.mask = LVIF_TEXT;
+								p_ADlvi.iItem = iChannel;	//	Which Data Channel subscript
+								p_ADlvi.iSubItem = iLap + 1;	//	Which Lap subscript incremented to be positioned correctly
+								p_ADlvi.lParam = iLap + 1;
+//								std::wstring strVal(lstVal);	//	Data conversion
+//								result = (LPWSTR)strVal.c_str();	//	Another data conversion
+								swprintf(result,NUMCHARS(result), lstVal);
+								p_ADlvi.pszText = result;
+								p_ADlvi.cchTextMax = wcslen(result);
+								ListView_SetItem(AD_hWnd, &p_ADlvi);
+							}
+						}	//	End Data Channel checking loop
+						iChannel++;	//	Increment the Data Channel counter and try to pull the next Data Channel information
+					}	//	End Data Channel Loop
+					//	Increment the lap counter and get info from the next lap if we are less than our max. laps
+					if (iLap < cLaps)
+					{
+						iLap++;
+						iChannel = 0;	//	Reset the Data Channel Listview array counter for the next lap
+					}
+					else
+					{
+						break;
+					}
 				}	//	End Lap Loop
 			}	//	End Test Loop
 		}
@@ -2474,10 +2462,6 @@ void UpdateValues()
 	if (m_sfLapOpts.bTractionCircle)
 	{
 		m_sfTractionDisplay.Refresh();
-	}
-	if (m_sfLapOpts.bSmoothYesNo)	//	Need to change this condition to something that makes sense
-	{
-//		m_sfAllDataDisplay.Refresh();
 	}
   }
   void CheckMenuHelper(HMENU hMainMenu, int id, bool fChecked)
@@ -3070,7 +3054,6 @@ private:
   CLapPainter m_sfLapPainter;
   CLapPainter m_sfSubDisplay;
   CLapPainter m_sfTractionDisplay;
-  CLapPainter m_sfAllDataDisplay;
 
   // lap display style data
   map<const CExtendedLap*,int> m_mapLapHighlightTimes; // stores the highlight times (in milliseconds since phone app start) for each lap.  Set from ILapSupplier calls
