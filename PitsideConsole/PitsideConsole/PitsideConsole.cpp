@@ -2477,7 +2477,7 @@ void UpdateValues()
 	}
 	if (m_sfLapOpts.bSmoothYesNo)	//	Need to change this condition to something that makes sense
 	{
-		m_sfAllDataDisplay.Refresh();
+//		m_sfAllDataDisplay.Refresh();
 	}
   }
   void CheckMenuHelper(HMENU hMainMenu, int id, bool fChecked)

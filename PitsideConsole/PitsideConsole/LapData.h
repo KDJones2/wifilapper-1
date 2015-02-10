@@ -203,12 +203,12 @@ private:
   SYSTEMTIME m_tmStart; // when was this thing started on-track?
 public:
   vector<TimePoint2D> m_lstPoints;	//	Made public by KDJ
-  mutable map<DATA_CHANNEL,const IDataChannel*> m_mapChannels; // we own these pointers.  We get them allocated in ComputeLapData, and it is our responsibility to get them de-allocated
+//  mutable map<DATA_CHANNEL,const IDataChannel*> m_mapChannels; // we own these pointers.  We get them allocated in ComputeLapData, and it is our responsibility to get them de-allocated
 
 private:  
   bool m_fComputeTimeSlip; // time-slip is the most expensive data channel, so let's allow the caller to choose not to compute it
 
-//  mutable map<DATA_CHANNEL,const IDataChannel*> m_mapChannels; // we own these pointers.  We get them allocated in ComputeLapData, and it is our responsibility to get them de-allocated
+  mutable map<DATA_CHANNEL,const IDataChannel*> m_mapChannels; // we own these pointers.  We get them allocated in ComputeLapData, and it is our responsibility to get them de-allocated
 };
 const TimePoint2D GetPointAtTime(const vector<TimePoint2D>& lstPoints, int iTimeMs);
 
