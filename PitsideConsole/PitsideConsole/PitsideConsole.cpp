@@ -1376,7 +1376,7 @@ LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
             }
             return TRUE;
           }
-          case ID_DATA_DASHWARE:
+          case ID_DATA_DASHWARE:	//	Save the data to a .CSV file
           {
             set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData();
             if(setSelectedData.size() > 0)
@@ -1969,7 +1969,7 @@ private:
 				const int cLaps = 10;	//	The maximum number of Laps to display Data channels for, limited by the window form
 				int iLap = 0;	//	Tracking variable for which Lap we are on in the loop
 				int iChannel = 0;	//	Tracking variable for which Y-Channel we are on within each lap
-				const int iTotChannel = m_lstYChannels.size();	//	The number of Y Data channels for this lap
+				int iTotChannel = 0;	//	The number of Y Data channels in the Listview
 				//	Loop through each lap and pick up all of their values for each data channel
 				for(set<LPARAM>::iterator a = setSelectedData.begin(); a != setSelectedData.end(); a++)
 				{
@@ -1977,12 +1977,36 @@ private:
 					//	For each lap let's get all of the available data channels for display
 					int TotalYChannels = 0;	//	Total numbber of Data Channels availalbe for this lap
 					int iLapId = pLap->GetLap()->GetLapId();
-					set<DATA_CHANNEL> channels = g_pLapDB->GetAvailableChannels(iLapId); //	Get all available channels for this lap
+					int iLapTime = pLap->GetLap()->GetStartTime();	//	Get the start time for the lap, use it for the ID in the LV
+/*
+	pTime->Init(GetLap()->GetLapId(), DATA_CHANNEL_TIME); 
+	pLapTime->Init(GetLap()->GetLapId(), DATA_CHANNEL_ELAPSEDTIME);
+	pLapTimeSummary->Init(GetLap()->GetLapId(), DATA_CHANNEL_LAPTIME_SUMMARY);
+	pX->Init(GetLap()->GetLapId(), DATA_CHANNEL_X);
+    pY->Init(GetLap()->GetLapId(), DATA_CHANNEL_Y);
+    pDistance->Init(GetLap()->GetLapId(), DATA_CHANNEL_DISTANCE);
+    pVelocity->Init(GetLap()->GetLapId(), DATA_CHANNEL_VELOCITY);
+	*/
+//					set<DATA_CHANNEL> channels = g_pLapDB->GetAvailableChannels(iLapId); //	Get all available channels for this lap
+
+    // let's add the rest of the data channels...
+    set<DATA_CHANNEL> channels = g_pLapDB->GetAvailableChannels(iLapId);
+    for(set<DATA_CHANNEL>::iterator i = channels.begin(); i != channels.end(); i++)
+    {
+      const IDataChannel* pChannel = g_pLapDB->GetDataChannel(iLapId,*i);
+      if(pChannel)
+      {
+//        AddChannel(pChannel);
+      }
+    }
+
+
+					if ( !iTotChannel ) iTotChannel = channels.size();	//	Only update the first time through the LV creation loop
 					for(set<DATA_CHANNEL>::const_iterator i = channels.begin(); i != channels.end(); i++) // Loop through them, insert them into our "all data channels" set
 					{
-						TotalYChannels = channels.size();	//	The number of Data Channels available for this lap
 						TCHAR m_szYString[512] = {NULL};
 						TCHAR szLabel[50][MAX_PATH] = {NULL};	//	Assumes that we will have no more than 50 Y-Data channels
+						TotalYChannels = channels.size();	//	The number of Data Channels available for this lap
 						DATA_CHANNEL eChannel = *i;
 						if( !eChannel ) continue;
 						float flVal;
@@ -2010,111 +2034,124 @@ private:
 							GetDataChannelName(eChannel,szChannelName,NUMCHARS(szChannelName));
 
 							char szVal[MAX_PATH];
-							GetChannelValue(eChannel,m_sfLapOpts.eUnitPreference,flVal,szVal,NUMCHARS(szVal));
+							GetChannelValue(eChannel,m_sfLapOpts.eUnitPreference,flVal,szVal,NUMCHARS(szVal));	//	Value for data channels
+
+							TCHAR szDate[100];
+							pLap->GetString(szDate, 9); //   Truncated timestamp of this lap, to used to name it
 
 							//	Let's load the Listview with this result
 							TCHAR lstVal[MAX_PATH] ;
 							swprintf(lstVal,NUMCHARS(lstVal), L"%S", szVal);
-//							LPWSTR result;
 							wchar_t result[MAX_PATH] ;
 							bool b_LV_ChannelFound = false;	//	ListView boolean for Data Channel searches
 							//	First set up the Main listview item (Data Channel Name) for the first lap
 							int i_TextResult = 0;	//	Data channel matching integer
-							if (iLap == 0)
+							if (iLap == 0 && iChannel == 0 )
 							{
 								p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
-								p_ADlvi.iItem = iChannel;	//	Which Data Channel subscript
-								p_ADlvi.iSubItem = iLap;	//	Which Lap subscript
-								p_ADlvi.lParam = iLap;
-//								std::wstring strPos(szChannelName);
-//								result = (LPWSTR)strPos.c_str();		  
+								p_ADlvi.iItem = 0;	//	Which Data Channel subscript
+								p_ADlvi.iSubItem = 0;	//	Which Lap subscript
+								p_ADlvi.lParam = 0;
+								swprintf(result,NUMCHARS(result), L"Laptime");
+								p_ADlvi.pszText = result;
+								p_ADlvi.cchTextMax = wcslen(result);
+								ListView_InsertItem(AD_hWnd, &p_ADlvi);	//	For the first item line let's use the Lap Start Time for Identification
+
+								p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+								p_ADlvi.iItem = iChannel + 1;	//	Which Data Channel subscript
+								p_ADlvi.iSubItem = 0;	//	Which Lap subscript
+								p_ADlvi.lParam = 0;
 								swprintf(result,NUMCHARS(result), szChannelName);
 								p_ADlvi.pszText = result;
 								p_ADlvi.cchTextMax = wcslen(result);
-								ListView_InsertItem(AD_hWnd, &p_ADlvi);
+								ListView_InsertItem(AD_hWnd, &p_ADlvi);	//	Put in the Data Channel name next
+								b_LV_ChannelFound = true;
+							}
+							else if (iLap == 0 && !iChannel == 0 )
+							{
+								p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+								p_ADlvi.iItem = iChannel + 1;	//	Which Data Channel subscript
+								p_ADlvi.iSubItem = 0;	//	Which Lap subscript
+								p_ADlvi.lParam = 0;
+								swprintf(result,NUMCHARS(result), szChannelName);
+								p_ADlvi.pszText = result;
+								p_ADlvi.cchTextMax = wcslen(result);
+								ListView_InsertItem(AD_hWnd, &p_ADlvi);	//	Put in the Data Channel name next
 								b_LV_ChannelFound = true;
 							}
 							else	//	Let's match up the Data Channel Name with those in the first lap for displaying in-line
 							{
 								//	First let's get the channel name for this data channel
-								wchar_t szChannelString[MAX_PATH];
-								p_ADlvi.iItem = iChannel;	//	The first lap's data channel name
+								wchar_t result2[MAX_PATH];
+								p_ADlvi.iItem = iChannel + 1;	//	The first lap's data channel name
 								p_ADlvi.iSubItem = 0;	//	The first lap's subscript
 								p_ADlvi.lParam = 0;
-								p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+								p_ADlvi.mask = LVIF_TEXT;
 								p_ADlvi.cchTextMax = MAX_PATH;
-
 								ListView_GetItem(AD_hWnd, &p_ADlvi);
-								swprintf(szChannelString, NUMCHARS(p_ADlvi.pszText), (wchar_t*)p_ADlvi.pszText);
 
-//								std::wstring strPos(szChannelName);
-//								result = (LPWSTR)strPos.c_str();		
-								swprintf(result,NUMCHARS(result), szChannelName);
-
-//								ListView_GetItem(AD_hWnd, &p_ADlvi);	//	Get the pointer to the LV item
-//								swprintf(szChannelString, p_ADlvi.cchTextMax, p_ADlvi.pszText);	//	Get the text from the LV Item
-								i_TextResult = wcscmp((LPWSTR)p_ADlvi.pszText, result);	//	Compare the wide strings to see if they match
-
+								swprintf(result2,NUMCHARS(szChannelName), szChannelName);	//	szChannelName is the current Data Channel name we want to add the value to the LV
+								i_TextResult = wcscmp(p_ADlvi.pszText, result2);	//	Compare the wide strings to see if they match
 								if ( i_TextResult )	//	0 if they match, <>0 if they are different
 								{
 									//	Items don't match. Let's see if the data channel exists in the array
-									for (int chan = 0; chan < TotalYChannels; chan++)
+									for (int chan = 0; chan < iTotChannel; chan++)
 									{
 										//	First let's get the channel name for this data channel
-										LPWSTR result2;
-										wchar_t szChannelString[MAX_PATH];
-										p_ADlvi.iItem = chan;	//	The first lap's data channel name
+										p_ADlvi.iItem = chan + 1;	//	The first lap's data channel name
 										p_ADlvi.iSubItem = 0;	//	The first lap's subscript
 										p_ADlvi.lParam = 0;
-										p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+										p_ADlvi.mask = LVIF_TEXT;
 										p_ADlvi.cchTextMax = MAX_PATH;
 
 										if (ListView_GetItem(AD_hWnd, &p_ADlvi) )	//	Returns TRUE if it gets an item
 										{
-											swprintf(szChannelString, NUMCHARS(p_ADlvi.pszText), (wchar_t*)p_ADlvi.pszText);
-
-											std::wstring strPos(szChannelName);
-											result2 = (LPWSTR)strPos.c_str();		
-
-			//								ListView_GetItem(AD_hWnd, &p_ADlvi);	//	Get the pointer to the LV item
-			//								swprintf(szChannelString, p_ADlvi.cchTextMax, p_ADlvi.pszText);	//	Get the text from the LV Item
 											i_TextResult = wcscmp((LPWSTR)p_ADlvi.pszText, result2);	//	Compare the wide strings to see if they match
 											if ( !i_TextResult )	//	0 if they match, <>0 if they are different. Break loop if we found a match
 											{
-		//										p_ADlvi = p_ADlviTemp;	//	Re-assign the List View pointer
 												iChannel = chan;	//	Set the LV Item subsript to the channel's number
 												b_LV_ChannelFound = true;	//	Set the "Channel Found" flag
 												break;
 											}
 										}
 									}	//	End of Data Channel searching loop
-									if ( !b_LV_ChannelFound )	//	Data Channel doesn't exist in the list. Let's add it and the value.
+									if ( b_LV_ChannelFound )	//	Data Channel was found, now add the value to it
 									{
-										p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
-										p_ADlvi.iItem = TotalYChannels + 1;	//	Which Data Channel subscript
-										p_ADlvi.iSubItem = 0;	//	Which Lap subscript
-										p_ADlvi.lParam = 0;
-//										std::wstring strPos(szChannelName);
-//										result = (LPWSTR)strPos.c_str();		  
-										swprintf(result,NUMCHARS(result), szChannelName);
-										p_ADlvi.pszText = result;
-										p_ADlvi.cchTextMax = wcslen(result);
-										ListView_InsertItem(AD_hWnd, &p_ADlvi);
-
 										//	Now populate the listview subitem with the datapoint value, if it's valid
 										p_ADlvi.mask = LVIF_TEXT;
-										p_ADlvi.iItem = TotalYChannels + 1;	//	Which Data Channel subscript
+										p_ADlvi.iItem = iChannel + 1;	//	Which Data Channel subscript, +1 for "Lap" row
 										p_ADlvi.iSubItem = iLap + 1;	//	Which Lap subscript incremented to be positioned correctly
 										p_ADlvi.lParam = iLap + 1;
-//										std::wstring strVal(lstVal);	//	Data conversion
-//										result = (LPWSTR)strVal.c_str();	//	Another data conversion
 										swprintf(result,NUMCHARS(result), lstVal);
 										p_ADlvi.pszText = result;
 										p_ADlvi.cchTextMax = wcslen(result);
 										ListView_SetItem(AD_hWnd, &p_ADlvi);
-										TotalYChannels = TotalYChannels + 1;	//	Increment the total number of data channels
-										b_LV_ChannelFound = false;	//	Set the channel search flag to not found
+									}
+									else	//	Data Channel doesn't exist in the list. Let's add it and the value.
+									{
+										p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+										p_ADlvi.iItem = iTotChannel + 1;	//	Which Data Channel subscript
+										p_ADlvi.iSubItem = 0;	//	Which Lap subscript
+										p_ADlvi.lParam = 0;
+										swprintf(result2,NUMCHARS(szChannelName), szChannelName);
+										p_ADlvi.pszText = result2;
+										p_ADlvi.cchTextMax = wcslen(result2);
+										ListView_InsertItem(AD_hWnd, &p_ADlvi);
+
+										//	Now populate the listview subitem with the datapoint value, if it's valid
+										p_ADlvi.mask = LVIF_TEXT;
+										p_ADlvi.iItem = iTotChannel + 1;	//	Which Data Channel subscript
+										p_ADlvi.iSubItem = iLap + 1;	//	Which Lap subscript incremented to be positioned correctly
+										p_ADlvi.lParam = iLap + 1;
+										swprintf(result,NUMCHARS(result), lstVal);
+										p_ADlvi.pszText = result;
+										p_ADlvi.cchTextMax = wcslen(result);
+										ListView_SetItem(AD_hWnd, &p_ADlvi);
+
+										iTotChannel = iTotChannel + 1;	//	Increment the total number of data channels in the LV
 									}	//	End of data channel add test
+
+									b_LV_ChannelFound = false;	//	Set the channel search flag to not found
 								}	//	End of Data Channel not matched test
 								else
 								{
@@ -2124,16 +2161,37 @@ private:
 							if (b_LV_ChannelFound )
 							{
 								//	Now populate the listview subitem with the datapoint value, if it's valid
-								p_ADlvi.mask = LVIF_TEXT;
-								p_ADlvi.iItem = iChannel;	//	Which Data Channel subscript
-								p_ADlvi.iSubItem = iLap + 1;	//	Which Lap subscript incremented to be positioned correctly
-								p_ADlvi.lParam = iLap + 1;
-//								std::wstring strVal(lstVal);	//	Data conversion
-//								result = (LPWSTR)strVal.c_str();	//	Another data conversion
-								swprintf(result,NUMCHARS(result), lstVal);
-								p_ADlvi.pszText = result;
-								p_ADlvi.cchTextMax = wcslen(result);
-								ListView_SetItem(AD_hWnd, &p_ADlvi);
+								if (iChannel == 0)	//	Put in Lap Name if it's the first row
+								{
+									p_ADlvi.mask = LVIF_TEXT;
+									p_ADlvi.iItem = 0;	//	Which Data Channel subscript
+									p_ADlvi.iSubItem = iLap + 1;	//	Which Lap subscript incremented to be positioned correctly
+									p_ADlvi.lParam = iLap + 1;
+									swprintf(result,NUMCHARS(szDate), szDate);
+									p_ADlvi.pszText = result;
+									p_ADlvi.cchTextMax = wcslen(result);
+									ListView_SetItem(AD_hWnd, &p_ADlvi);
+
+									p_ADlvi.mask = LVIF_TEXT;
+									p_ADlvi.iItem = iChannel + 1;	//	Which Data Channel subscript
+									p_ADlvi.iSubItem = iLap + 1;	//	Which Lap subscript incremented to be positioned correctly
+									p_ADlvi.lParam = iLap + 1;
+									swprintf(result,NUMCHARS(result), lstVal);
+									p_ADlvi.pszText = result;
+									p_ADlvi.cchTextMax = wcslen(result);
+									ListView_SetItem(AD_hWnd, &p_ADlvi);
+								}
+								else	//	Populate with the data channel value
+								{
+									p_ADlvi.mask = LVIF_TEXT;
+									p_ADlvi.iItem = iChannel + 1;	//	Which Data Channel subscript
+									p_ADlvi.iSubItem = iLap + 1;	//	Which Lap subscript incremented to be positioned correctly
+									p_ADlvi.lParam = iLap + 1;
+									swprintf(result,NUMCHARS(result), lstVal);
+									p_ADlvi.pszText = result;
+									p_ADlvi.cchTextMax = wcslen(result);
+									ListView_SetItem(AD_hWnd, &p_ADlvi);
+								}
 							}
 						}	//	End Data Channel checking loop
 						iChannel++;	//	Increment the Data Channel counter and try to pull the next Data Channel information
