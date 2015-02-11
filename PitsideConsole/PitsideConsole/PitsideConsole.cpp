@@ -574,7 +574,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           m_sfLapOpts.flWindowShiftX += moveX;
           m_sfLapOpts.flWindowShiftY -= moveY;
         }
-        UpdateUI(UPDATE_MAP | UPDATE_ALLDATA);
+        UpdateUI(UPDATE_MAP);
         return 0;
       }
       case WM_LBUTTONDOWN:
@@ -622,7 +622,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			lstCols.push_back(L"Lap 8");
 			lstCols.push_back(L"Lap 9");
 			lstCols.push_back(L"Lap 10");
-			lstWidths.push_back(120);
+			lstWidths.push_back(130);
 			lstWidths.push_back(60);
 			lstWidths.push_back(60);
 			lstWidths.push_back(60);
@@ -1730,7 +1730,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
     if(IS_FLAG_SET(fdwUpdateFlags, UPDATE_ALLDATA))
     {
       UpdateAllData();
-	  UpdateDisplays();
     }
 	
     if(IS_FLAG_SET(fdwUpdateFlags, UPDATE_DASHBOARD))
@@ -1975,30 +1974,7 @@ private:
 					//	For each lap let's get all of the available data channels for display
 					int TotalYChannels = 0;	//	Total numbber of Data Channels availalbe for this lap
 					int iLapId = pLap->GetLap()->GetLapId();
-					int iLapTime = pLap->GetLap()->GetStartTime();	//	Get the start time for the lap, use it for the ID in the LV
-/*
-	pTime->Init(GetLap()->GetLapId(), DATA_CHANNEL_TIME); 
-	pLapTime->Init(GetLap()->GetLapId(), DATA_CHANNEL_ELAPSEDTIME);
-	pLapTimeSummary->Init(GetLap()->GetLapId(), DATA_CHANNEL_LAPTIME_SUMMARY);
-	pX->Init(GetLap()->GetLapId(), DATA_CHANNEL_X);
-    pY->Init(GetLap()->GetLapId(), DATA_CHANNEL_Y);
-    pDistance->Init(GetLap()->GetLapId(), DATA_CHANNEL_DISTANCE);
-    pVelocity->Init(GetLap()->GetLapId(), DATA_CHANNEL_VELOCITY);
-	*/
-//					set<DATA_CHANNEL> channels = g_pLapDB->GetAvailableChannels(iLapId); //	Get all available channels for this lap
-
-    // let's add the rest of the data channels...
-    set<DATA_CHANNEL> channels = g_pLapDB->GetAvailableChannels(iLapId);
-    for(set<DATA_CHANNEL>::iterator i = channels.begin(); i != channels.end(); i++)
-    {
-      const IDataChannel* pChannel = g_pLapDB->GetDataChannel(iLapId,*i);
-      if(pChannel)
-      {
-//        AddChannel(pChannel);
-      }
-    }
-
-
+					set<DATA_CHANNEL> channels = pLap->GetAvailableChannels();	//	Get all of the data channels for this lap
 					if ( !iTotChannel ) iTotChannel = channels.size();	//	Only update the first time through the LV creation loop
 					for(set<DATA_CHANNEL>::const_iterator i = channels.begin(); i != channels.end(); i++) // Loop through them, insert them into our "all data channels" set
 					{
