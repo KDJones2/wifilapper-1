@@ -2052,7 +2052,7 @@ private:
 								p_ADlvi.iItem = 0;	//	Which Data Channel subscript
 								p_ADlvi.iSubItem = 0;	//	Which Lap subscript
 								p_ADlvi.lParam = 0;
-								swprintf(result,NUMCHARS(result), L"Laptime");
+								swprintf(result,NUMCHARS(result), L"Time");
 								p_ADlvi.pszText = result;
 								p_ADlvi.cchTextMax = wcslen(result);
 								ListView_InsertItem(AD_hWnd, &p_ADlvi);	//	For the first item line let's use the Lap Start Time for Identification
