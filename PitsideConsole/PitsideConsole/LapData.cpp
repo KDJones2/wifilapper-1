@@ -290,19 +290,6 @@ void GetDataChannelName(DATA_CHANNEL eDC, LPTSTR lpszName, int cch)
   }
 }
 
-bool bXAxisUnits(XAXIS_PREFERENCE xConvertTo)
-{
-  
-  switch(xConvertTo)
-  {
-  case XAXIS_PREFERENCE_LAT: return false;
-  case XAXIS_PREFERENCE_KM: return true;
-  }
-  CASSERT(UNIT_PREFERENCE_COUNT == 3);
-
-  return false;
-}
-
 float ConvertSpeed(UNIT_PREFERENCE eConvertTo, float flValueInMetersPerSecond)
 {
   
@@ -876,10 +863,14 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
       const double dX = p.flX - ptLast.flX;
       const double dY = p.flY - ptLast.flY;
 	  double d;
-//	  if ( p_sfLapOpts )
-//	  	d = fReturnDistanceInMeters (p, ptLast);	// Return the distance in meters
-//	  else
+	  if ( SetDistance(-1) )
+	  {
+	  	d = fReturnDistanceInMeters (p, ptLast);	// Return the distance in meters
+	  }
+	  else
+	  {
 	  	d = sqrt (dY*dY + dX*dX);	// Return distance in Theta of Long/Lat. Needed until Jason fixes web-side GUI
+	  }
 	  dDistance += d;
       m_lstPoints.push_back(TimePoint2D(p));
       ptLast = p;

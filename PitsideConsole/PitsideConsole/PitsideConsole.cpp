@@ -489,10 +489,9 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
   return pDevMode;
 }
 ///////////////////////////////////////////////////////////////////////////////////////
-
-HWND hWnd_AllData;			//	AllData window control handle
-HWND AD_hWnd;				//	AllData listview control handle
-LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
+	HWND hWnd_AllData;			//	AllData window control handle
+	HWND AD_hWnd;				//	AllData listview control handle
+	LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
 
   LRESULT DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   {
@@ -504,7 +503,6 @@ LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
 	//	Update and show Current Lap Time
     TCHAR szTemp[512], szLap[512];
     HWND hWndIp = GetDlgItem(m_hWnd, IDC_LIVELAPTIME);
-	static HWND hWnd_AllData = NULL;  // Window handle of dialog box to show all data points for a lap
 	static WINDOWPLACEMENT w_AllDataWindow;	//	Save the location for the AllData display window
     ::FormatTimeMinutesSecondsMs((float)(timeGetTime() - tmLast) / 1000, szLap, NUMCHARS(szLap) );
 	swprintf(szLap, _tcslen(szLap) - 2, L"%s", szLap);	//	Remove the fractional time
@@ -521,6 +519,7 @@ LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
           vector<int> lstWidths;
           CExtendedLap::GetStringHeadersXAxis(lstCols,lstWidths);
           m_sfXAxis.Init(GetDlgItem(m_hWnd, IDC_XAXIS),lstCols,lstWidths);
+          CExtendedLap::SetDistance(m_sfLapOpts.bXAxis_KM);	//	Set the X Axis as read from SETTINGS.TXT file
 		}
         {
           vector<wstring> lstCols;
@@ -776,7 +775,7 @@ LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
           case ID_OPTIONS_XAXIS_KM:
           {
             m_sfLapOpts.bXAxis_KM = XAXIS_PREFERENCE_KM;
-			bXAxisUnits ( XAXIS_PREFERENCE_KM );
+            CExtendedLap::SetDistance(m_sfLapOpts.bXAxis_KM);	//	Set the X Axis as read from SETTINGS.TXT file
 			MessageBox(hWnd, L"X-Axis will be displayed in KM's\n\nYou need to re-load the Race Session for this change to take effect!",L"NOTICE", MB_OK);
             UpdateUI(UPDATE_MAP | UPDATE_MENU);
             return TRUE;
@@ -784,7 +783,7 @@ LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
           case ID_OPTIONS_XAXIS_LAT:
           {
             m_sfLapOpts.bXAxis_KM = XAXIS_PREFERENCE_LAT;
-			bXAxisUnits ( XAXIS_PREFERENCE_LAT );
+            CExtendedLap::SetDistance(m_sfLapOpts.bXAxis_KM);	//	Set the X Axis as read from SETTINGS.TXT file
 			MessageBox(hWnd, L"X-Axis will be displayed in Latitude/Longitudinal degrees\n\nYou need to re-load the Race Session for this change to take effect!",L"NOTICE", MB_OK);
             UpdateUI(UPDATE_MAP | UPDATE_MENU);
             return TRUE;
@@ -1592,7 +1591,7 @@ LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
 				}
                 
                 ClearUILaps();
-                LoadLaps(g_pLapDB);
+				LoadLaps(g_pLapDB);
                 UpdateUI(UPDATE_ALL);
               }
             }
@@ -1785,7 +1784,6 @@ LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
       {
         SendMessage(hWndReference, WM_SETTEXT, 0, (LPARAM)L"No Reference Lap");
       }
-
       HWND hWndMessageStatus = GetDlgItem(m_hWnd, IDC_MESSAGESTATUS);
       SendMessage(hWndMessageStatus, WM_SETTEXT, 0, (LPARAM)m_szMessageStatus);
 
@@ -3396,7 +3394,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   case 0:
   case 1:
           {
-            x_sfLapOpts.bXAxis_KM = sfSettings.bXAxis_KM;	//	Assign choice of LAT or KM for X-Axis setting from Settings.txt file
+			x_sfLapOpts.bXAxis_KM = sfSettings.bXAxis_KM;	//	Assign choice of LAT or KM for X-Axis setting from Settings.txt file
 			break;
           }
   }
