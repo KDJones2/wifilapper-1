@@ -574,6 +574,11 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           m_sfLapOpts.flWindowShiftX += moveX;
           m_sfLapOpts.flWindowShiftY -= moveY;
         }
+        if(IS_FLAG_SET(wParam, MK_MBUTTON))
+        {
+          // Dynamic update of All Data display
+		  UpdateUI(UPDATE_ALLDATA);
+		}
         UpdateUI(UPDATE_MAP);
         return 0;
       }
@@ -3218,7 +3223,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   INITCOMMONCONTROLSEX initCtrls;
   initCtrls.dwICC = ICC_LISTVIEW_CLASSES;
   initCtrls.dwSize = sizeof(initCtrls);
-
+  LoadIcon(hInstance,_T("IDI_EXPLORERICON"));
   InitCommonControlsEx(&initCtrls);
 
   CMainUI sfUI;

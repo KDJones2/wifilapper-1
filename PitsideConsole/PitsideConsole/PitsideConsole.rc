@@ -2,7 +2,7 @@
 #include <windows.h>
 #include "commctrl.h"
 
-IDI_EXPLORERICON ICON "res\\pitside.ico"
+"IDI_EXPLORERICON" ICON "res\\pitside.ico"
 IDB_SPLASHIMAGE BITMAP "res\\splash.bmp"
 
 IDD_DLGFIRST DIALOG 100, 100, 745, 350
