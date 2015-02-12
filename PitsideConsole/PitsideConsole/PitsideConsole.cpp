@@ -28,7 +28,6 @@
 #include "DashWare.h"
 #include "Multicast.h"
 #include "PitsideHTTP.h"
-#include "DlgSplash.h"
 #include "SQLiteLapDB.h"
 #include "UnitTests.h"
 #include <fstream>
@@ -3211,10 +3210,6 @@ void InitPlotPrefs(LAPSUPPLIEROPTIONS &p_sfLapOpts)
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 
 {
-//  Show Splash screen as first screen
-  CSplashDlg splash;
-  ArtShowDialog<IDD_DLGSPLASH>(&splash);
-
   if(strcmp(lpCmdLine,"unit") == 0)
   {
     return UnitTests();
