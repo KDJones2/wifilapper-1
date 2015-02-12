@@ -91,7 +91,7 @@ END
 
 //	Dialog box for displaying all data for a given point
 IDD_ALLDATADISPLAY DIALOG 250, 75, 400, 250
-STYLE DS_MODALFRAME |  WS_EX_TOPMOST | WS_POPUP
+STYLE DS_MODALFRAME |  WS_EX_TOPMOST | WS_POPUP | WS_CAPTION
 CAPTION "Data Point Information"
 FONT 10, "MS Shell Dlg"
 BEGIN
@@ -101,7 +101,7 @@ END
 
 //	Dialog box for displaying sector split times
 IDD_SHOWSECTORS DIALOG 250, 75, 375, 99
-STYLE DS_MODALFRAME | WS_EX_TOPMOST | WS_POPUP | WS_CAPTION
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Sector Times"
 FONT 9, "MS Shell Dlg"
 BEGIN
@@ -118,7 +118,7 @@ END
 // dialog for selecting which race in a DB we want to use
 IDD_SELECTRACE DIALOG 150, 200, 200, 200
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Select race to load"
+CAPTION "Select one or more race sessions to load"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_RACE, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_ALIGNLEFT | LVS_REPORT/* | LVS_SINGLESEL*/ | LVS_SHOWSELALWAYS, 0,0,200,180

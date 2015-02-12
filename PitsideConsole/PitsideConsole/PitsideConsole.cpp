@@ -600,9 +600,8 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 	  case WM_MBUTTONDOWN:
 	  {
 		//	Middle mouse button activates a modal window that dispalys all of the data for a given point in a table
-        HWND hWndMap = GetDlgItem(this->m_hWnd,IDC_DISPLAY);
 		DLGPROC ShowAllData = NULL;
-		if (!IsWindow(hWnd_AllData)) 
+		if (!GetDlgItem(hWnd_AllData, IDC_ALLDATADISPLAY))	//	Make sure that the display isn't already showing
 		{ 
 			//	Create the window for displaying all of the data points for the selected laps
 			INITCOMMONCONTROLSEX InitCtrlEx;
@@ -655,6 +654,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			  {
 				  DestroyWindow(hWnd_AllData);
 				  hWnd_AllData = NULL;
+				  AD_hWnd = NULL;
 			  }
 		  }
 	  }
@@ -808,13 +808,13 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           case ID_OPTIONS_DRAWLINES:
           {
             m_sfLapOpts.fDrawLines = !m_sfLapOpts.fDrawLines;
-            UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_DASHBOARD);
+            UpdateUI(UPDATE_MENU | UPDATE_MAP);
             return TRUE;
           }
           case ID_OPTIONS_BACKGROUND:
           {
             m_sfLapOpts.fColorScheme = !m_sfLapOpts.fColorScheme;
-            UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_DASHBOARD);
+            UpdateUI(UPDATE_MENU | UPDATE_MAP);
             return TRUE;
           }
           case ID_OPTIONS_IOIO5VSCALE:
@@ -893,7 +893,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				CPlotSelectDlg dlgPlot(g_pLapDB, &sfResult, m_iRaceId[0], &m_sfLapOpts);
 				ArtShowDialog<IDD_PLOTPREFS>(&dlgPlot);
 				bSetPlot = false;
-				UpdateUI(UPDATE_ALL | UPDATE_VALUES);
+				UpdateUI(UPDATE_ALL);
 			}
 			return TRUE;
 		  }		
@@ -940,7 +940,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			}
 			if(!sfResult.fCancelled)
             {
-			  UpdateUI(UPDATE_ALL | UPDATE_VALUES);
+			  UpdateUI(UPDATE_ALL);
 			}
             return TRUE;
 		  }		
@@ -976,8 +976,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		  }		
           case ID_OPTIONS_SMOOTH:
 		  {
-            m_fSmooth = !m_fSmooth;
-			m_sfLapOpts.bSmoothYesNo = m_fSmooth;
+			m_sfLapOpts.bSmoothYesNo = !m_sfLapOpts.bSmoothYesNo;
 			UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_TRACTIONCIRCLE);
             return TRUE;
 		  }		
@@ -1960,7 +1959,7 @@ private:
   void UpdateAllData()
   {
 		//	hWnd_AllData is the handle for the window we want. Let's make sure that it is displayed
-		hWnd_AllData = GetWindow(m_hWnd, GW_ENABLEDPOPUP);
+//		hWnd_AllData = GetWindow(m_hWnd, GW_ENABLEDPOPUP);
 		if (GetDlgItem(hWnd_AllData, IDC_ALLDATADISPLAY))	//	Only execute data display functions if window is showing
 		{
 			//	First let's get all of the information about the data points for this lap/location
