@@ -503,6 +503,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
     TCHAR szTemp[512], szLap[512];
     HWND hWndIp = GetDlgItem(m_hWnd, IDC_LIVELAPTIME);
 	static WINDOWPLACEMENT w_AllDataWindow;	//	Save the location for the AllData display window
+	static WINDOWPLACEMENT w_SectorTimesWindow;	//	Save the location for the Sector Times display window
     ::FormatTimeMinutesSecondsMs((float)(timeGetTime() - tmLast) / 1000, szLap, NUMCHARS(szLap) );
 	swprintf(szLap, _tcslen(szLap) - 2, L"%s", szLap);	//	Remove the fractional time
     swprintf(szTemp, NUMCHARS(szTemp), L"Current Lap: %s", szLap);
@@ -922,13 +923,54 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				DLGPROC ShowSplits = NULL;
 				if (!IsWindow(hwndSplits)) 
 				{ 
-					hwndSplits = CreateDialog(NULL, MAKEINTRESOURCE (IDD_SHOWSECTORS), hWnd, ShowSplits); 
+//					hwndSplits = CreateDialog(NULL, MAKEINTRESOURCE (IDD_SHOWSECTORS), hWnd, ShowSplits); 
 					//	Let's get the handles for all display controls in this window
 					for (int y = 0; y < MaxLaps; y++)
 					{
 						m_sfLapOpts.hWndLap[y] = GetDlgItem(hwndSplits, IDC_SHOW_LAP0 + y);
 					}
+					//	Now let's create the Listview for this control
+
+//					LTEXT      "\t\tLap ID\t\t\tSect 1\tSect 2\tSect 3\tSect 4\tSect 5\tSect 6\tSect 7\tSect 8\tSect 9", IDC_SHOW_SECTORS,5,0,370,12
+//					LTEXT      "Lap 1", IDC_SHOW_LAP0, 5,15,375,12
+//					LTEXT      "Lap 2", IDC_SHOW_LAP1, 5,27,375,12
+//					LTEXT      "Lap 3", IDC_SHOW_LAP2, 5,39,375,12
+//					LTEXT      "Lap 4", IDC_SHOW_LAP3, 5,51,375,12
+//					LTEXT      "Lap 5", IDC_SHOW_LAP4, 5,63,375,12
+//					LTEXT      "Lap 6", IDC_SHOW_LAP5, 5,75,375,12
+//					LTEXT      "Lap 7", IDC_SHOW_LAP6, 5,87,375,12
+
+					//	Create the window for displaying sector times for the selected laps
+					INITCOMMONCONTROLSEX InitCtrlEx;
+					InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
+					InitCtrlEx.dwICC = ICC_PROGRESS_CLASS;
+					InitCommonControlsEx(&InitCtrlEx);
+					hwndSplits = CreateDialog(NULL, MAKEINTRESOURCE (IDD_SHOWSECTORS), hWnd, ShowSplits);
+					m_sfLapOpts.hWndLap[0] = GetDlgItem(hwndSplits,IDC_SHOW_SECTORS);	//	Sector Times listview
+					SetWindowPlacement(hwndSplits, &w_SectorTimesWindow);	//	Maintains the location of the Sector Times window
+
+					//	Set up the Sector Times list box columns
+					vector<wstring> lstCols;
+					vector<int> lstWidths;
+					lstCols.push_back(L"Lap ID");
+					lstCols.push_back(L"Sect 1");
+					lstCols.push_back(L"Sect 2");
+					lstCols.push_back(L"Sect 3");
+					lstCols.push_back(L"Sect 4");
+					lstCols.push_back(L"Sect 5");
+					lstCols.push_back(L"Sect 6");
+					lstCols.push_back(L"Sect 7");
+					lstWidths.push_back(180);
+					lstWidths.push_back(50);
+					lstWidths.push_back(50);
+					lstWidths.push_back(50);
+					lstWidths.push_back(50);
+					lstWidths.push_back(50);
+					lstWidths.push_back(50);
+					lstWidths.push_back(50);
+
 					ShowSplitsHandle = hwndSplits;  //	Tracker for handle address 
+					m_sfListBox.Init(m_sfLapOpts.hWndLap[0],lstCols,lstWidths);	//	Initialize and show the listview control
 					ShowWindow(hwndSplits, SW_SHOW); 
 				} 
 			}
@@ -2334,10 +2376,8 @@ void UpdateSectors()
 						dLastLapDist = dSectorDistance;
 						break;
 					}
-				}
-	//	End Interpolation Loop
-			}
-	//	End Sector Loop
+				}	//	End Interpolation Loop
+			}	//	End Sector Loop
 
 			//	Now that we have computed the Sector Time, let's Display them
 			{
