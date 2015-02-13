@@ -530,8 +530,14 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
         {
           vector<wstring> lstCols;
           vector<int> lstWidths;
+          CExtendedLap::GetStringHeadersDataValues(lstCols,lstWidths);
+          m_sfLapList.Init(GetDlgItem(m_hWnd, IDC_DATAVALUES), lstCols,lstWidths);
+        }
+        {
+          vector<wstring> lstCols;
+          vector<int> lstWidths;
           CExtendedLap::GetStringHeaders(lstCols,lstWidths);
-          m_sfLapList.Init(GetDlgItem(hWnd, IDC_LAPS), lstCols,lstWidths);
+          m_sfLapList.Init(GetDlgItem(m_hWnd, IDC_LAPS), lstCols,lstWidths);
         }
         m_sfLapPainter.Init(GetDlgItem(hWnd,IDC_DISPLAY));
         m_sfSubDisplay.Init(GetDlgItem(hWnd,IDC_SUBDISPLAY));
@@ -923,22 +929,8 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				DLGPROC ShowSplits = NULL;
 				if (!IsWindow(hwndSplits)) 
 				{ 
-//					hwndSplits = CreateDialog(NULL, MAKEINTRESOURCE (IDD_SHOWSECTORS), hWnd, ShowSplits); 
-					//	Let's get the handles for all display controls in this window
-					for (int y = 0; y < MaxLaps; y++)
-					{
-						m_sfLapOpts.hWndLap[y] = GetDlgItem(hwndSplits, IDC_SHOW_LAP0 + y);
-					}
-					//	Now let's create the Listview for this control
-
-//					LTEXT      "\t\tLap ID\t\t\tSect 1\tSect 2\tSect 3\tSect 4\tSect 5\tSect 6\tSect 7\tSect 8\tSect 9", IDC_SHOW_SECTORS,5,0,370,12
-//					LTEXT      "Lap 1", IDC_SHOW_LAP0, 5,15,375,12
-//					LTEXT      "Lap 2", IDC_SHOW_LAP1, 5,27,375,12
-//					LTEXT      "Lap 3", IDC_SHOW_LAP2, 5,39,375,12
-//					LTEXT      "Lap 4", IDC_SHOW_LAP3, 5,51,375,12
-//					LTEXT      "Lap 5", IDC_SHOW_LAP4, 5,63,375,12
-//					LTEXT      "Lap 6", IDC_SHOW_LAP5, 5,75,375,12
-//					LTEXT      "Lap 7", IDC_SHOW_LAP6, 5,87,375,12
+					//	Let's get the handle for the display control in this window
+					m_sfLapOpts.hWndLap[0] = GetDlgItem(hwndSplits, IDC_SHOW_SECTORS);
 
 					//	Create the window for displaying sector times for the selected laps
 					INITCOMMONCONTROLSEX InitCtrlEx;
@@ -2460,7 +2452,9 @@ void UpdateSectors()
 	set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData();
     if(setSelectedData.size() > 0)
     {
-      const int cLabels = 5;	//	The maximum number of Value Data channels to display, gated by display area
+	  HWND hWndDataValues = GetDlgItem(m_hWnd, IDC_DATAVALUES);	//	Get the handle for the control
+	  ListView_DeleteAllItems(hWndDataValues);	//	Clear the list before displaying the update
+      const int cLabels = 10;	//	The maximum number of Value Data channels to display, gated by display area
 	  bool m_Warning = false;	//	Flag for showing dialog of Value display to indicate statistics are outside of bounds
 	  TCHAR m_szYString[512] = {NULL};
 	  TCHAR m_szWarningChannel[MAX_PATH] = {NULL};
@@ -2534,18 +2528,69 @@ void UpdateSectors()
 						  flAvg=0.0f;
 					  }
 					}
+
 					//	Now assign these values to the Data Value variable for display
 					TCHAR szChannelName[MAX_PATH];
+					TCHAR w_szMin[MAX_PATH];
+					TCHAR w_szMax[MAX_PATH];
 					GetDataChannelName(eChannel,szChannelName,NUMCHARS(szChannelName));
 
 					char szMin[MAX_PATH];
 					char szMax[MAX_PATH];
 					GetChannelValue(eChannel,m_sfLapOpts.eUnitPreference,flMin,szMin,NUMCHARS(szMin));
 					GetChannelValue(eChannel,m_sfLapOpts.eUnitPreference,flMax,szMax,NUMCHARS(szMax));
+					//	Need to convert these from char to wchar_t
+					swprintf(w_szMin, NUMCHARS(w_szMin), L"S", szMin);
+					swprintf(w_szMax, NUMCHARS(w_szMax), L"S", szMax);
+
 					//	Now assemble the string to display (max of 5)
 					if (w < cLabels)
 					{
-						swprintf(szLabel[w],NUMCHARS(szLabel[w]),L"%s: Min: %S, Max: %S, Avg: %3.1f",szChannelName,szMin,szMax,flAvg);
+
+						//	Display the Data Value Channels
+
+						//	Let's load the Listview row titles with this result
+						p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+						p_ADlvi.iItem = w;	//	Which Data Value subscript (Max = cLabels)
+						p_ADlvi.iSubItem = 0;	//	Which Sector subscript (0 = Lap Name string)
+						p_ADlvi.lParam = 0;
+						p_ADlvi.pszText = szChannelName;
+						p_ADlvi.cchTextMax = wcslen(szChannelName);
+						ListView_InsertItem(hWndDataValues, &p_ADlvi);	//	Using a null string for the name
+
+
+						wchar_t result[MAX_PATH] = {NULL};	//	Null string
+						//	Insert the item into the Listview
+						p_ADlvi.mask = LVIF_TEXT;
+						p_ADlvi.iItem = w;	//	Which Data Value subscript (Max = cLabels)
+						p_ADlvi.iSubItem = 1;	//	Which Subitem subscript
+						p_ADlvi.lParam = 1;
+						swprintf(result,NUMCHARS(result), L"%S", szMin);
+						p_ADlvi.pszText = result;
+						p_ADlvi.cchTextMax = wcslen(result);
+						ListView_SetItem(hWndDataValues, &p_ADlvi);
+
+												//	Insert the item into the Listview
+						p_ADlvi.mask = LVIF_TEXT;
+						p_ADlvi.iItem = w;	//	Which Data Value subscript (Max = cLabels)
+						p_ADlvi.iSubItem = 2;	//	Which Sector subscript incremented to be positioned correctly
+						p_ADlvi.lParam = 2;
+						swprintf(result,NUMCHARS(result), L"%S", szMax);
+						p_ADlvi.pszText = result;
+						p_ADlvi.cchTextMax = wcslen(result);
+						ListView_SetItem(hWndDataValues, &p_ADlvi);
+
+
+						//	Insert the item into the Listview
+						p_ADlvi.mask = LVIF_TEXT;
+						p_ADlvi.iItem = w;	//	Which Data Value subscript (Max = cLabels)
+						p_ADlvi.iSubItem = 3;	//	Which Sector subscript incremented to be positioned correctly
+						p_ADlvi.lParam = 3;
+						swprintf(result,NUMCHARS(result), L"%3.1f", flAvg);
+						p_ADlvi.pszText = result;
+						p_ADlvi.cchTextMax = wcslen(result);
+						ListView_SetItem(hWndDataValues, &p_ADlvi);
+
 						w++;	//	Increment Value string counter
 					}
 					break;
@@ -2555,22 +2600,7 @@ void UpdateSectors()
 				}
 			}
 	  }
-	  //	Display the Data Value Channels
-	  for (int z = 0; z < cLabels; z++)
-	  {
-			HWND hWndLabel = GetDlgItem(m_hWnd, IDC_VALUE_CHANNEL1 + z);
-			hdc = GetDC(hWndLabel);
-			
-			SetBkMode(hdc,TRANSPARENT);
-			SetTextColor(hdc,RGB(255,0,0));
-			//GetSysColorBrush(GetSysColor(COLOR_WINDOW));
-			CreateSolidBrush(RGB(255,255,255));
-
-			//SetTextColor( hdc, RGB(255, 0, 0) );
-			//SetBkColor(hdc, RGB(222,231,249));
-			SendMessage(hWndLabel, WM_SETTEXT, 0, (LPARAM)szLabel[z]);
-	  }
-		if (m_Warning)	//	Pop up dialog saying the alarm has been triggered
+	  if (m_Warning)	//	Pop up dialog saying the alarm has been triggered
 		{
 			static bool fWarnedOnce;	//	Prevent multiple windows from appearing
 			if(!fWarnedOnce)
@@ -2582,6 +2612,7 @@ void UpdateSectors()
 				ArtShowDialog<IDD_WARNING>(&dlgWarning);
 				fWarnedOnce = false;
 /*
+				//	Attempt at a Modal display of this message, not working currently
 				TCHAR szMessage[1024] = L"";
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
 //				HWND hWndWarning = NULL; UINT uWarningMsg = NULL; WPARAM wWarningParam = NULL; LPARAM lWarningParam = NULL;
@@ -2604,7 +2635,7 @@ void UpdateSectors()
 		}
     }
   }
-
+/*
 //	Processing routine for Data Channel warning dialog
 LRESULT WarningProc(HWND c_hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -2639,7 +2670,7 @@ LRESULT WarningProc(HWND c_hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	return FALSE;
 }
-
+*/
 void UpdateDisplays()
   {
     m_sfLapPainter.Refresh();

@@ -145,6 +145,17 @@ static bool SetDistance(int b_KmOrLat)	//	Function to set X-Axis units in either
     lstCols.push_back(L"Y-Axis");
     lstWidths.push_back(90);
   }
+  static void GetStringHeadersDataValues(vector<wstring>& lstCols, vector<int>& lstWidths)
+  {
+	lstCols.push_back(L"Parameter");
+    lstWidths.push_back(110);
+    lstCols.push_back(L"Min:");
+    lstWidths.push_back(50);
+    lstCols.push_back(L"Max:");
+    lstWidths.push_back(50);
+    lstCols.push_back(L"Avg:");
+    lstWidths.push_back(50);
+  }
   void GetStrings(vector<wstring>& lstStrings) const
   {
     TCHAR szTime[100];
