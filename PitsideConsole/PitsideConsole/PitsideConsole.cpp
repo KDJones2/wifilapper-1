@@ -953,21 +953,25 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					vector<wstring> lstCols;
 					vector<int> lstWidths;
 					lstCols.push_back(L"Lap ID");
-					lstCols.push_back(L"Sect 1");
-					lstCols.push_back(L"Sect 2");
-					lstCols.push_back(L"Sect 3");
-					lstCols.push_back(L"Sect 4");
-					lstCols.push_back(L"Sect 5");
-					lstCols.push_back(L"Sect 6");
-					lstCols.push_back(L"Sect 7");
-					lstWidths.push_back(180);
-					lstWidths.push_back(50);
-					lstWidths.push_back(50);
-					lstWidths.push_back(50);
-					lstWidths.push_back(50);
-					lstWidths.push_back(50);
-					lstWidths.push_back(50);
-					lstWidths.push_back(50);
+					lstCols.push_back(L"1");
+					lstCols.push_back(L"2");
+					lstCols.push_back(L"3");
+					lstCols.push_back(L"4");
+					lstCols.push_back(L"5");
+					lstCols.push_back(L"6");
+					lstCols.push_back(L"7");
+					lstCols.push_back(L"8");
+					lstCols.push_back(L"9");
+					lstWidths.push_back(195);
+					lstWidths.push_back(40);
+					lstWidths.push_back(40);
+					lstWidths.push_back(40);
+					lstWidths.push_back(40);
+					lstWidths.push_back(40);
+					lstWidths.push_back(40);
+					lstWidths.push_back(40);
+					lstWidths.push_back(40);
+					lstWidths.push_back(40);
 
 					ShowSplitsHandle = hwndSplits;  //	Tracker for handle address 
 					m_sfListBox.Init(m_sfLapOpts.hWndLap[0],lstCols,lstWidths);	//	Initialize and show the listview control
@@ -976,8 +980,15 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			}
 			else if (!m_sfLapOpts.fDrawSplitPoints)
 			{
-				EndDialog(ShowSplitsHandle, 0);
-				ShowSplitsHandle = NULL;
+				  //	If the window showing all of the lap data is present, let's kill it
+				  if (m_sfLapOpts.hWndLap[0])
+				  {
+					  if (GetWindowPlacement(ShowSplitsHandle, &w_SectorTimesWindow) )
+					  {
+						  DestroyWindow(ShowSplitsHandle);
+						  ShowSplitsHandle = NULL;
+					  }
+				  }
 			}
 			if(!sfResult.fCancelled)
             {
@@ -2260,18 +2271,16 @@ void UpdateSectors()
 	//  Lap run through the Ref Lap Time/Distance array and interpolate the iTime at the equivalent distance
 	//  Coding is similar to TimeSlip
 
-	//	First, let's make sure that we have a Reference Lap, or let's not perform this
-	if (m_pReferenceLap != NULL)
-		{
+	if (m_pReferenceLap != NULL)	//	First, let's make sure that we have a Reference Lap, or let's not perform this
+	{
+		ListView_DeleteAllItems(m_sfLapOpts.hWndLap[0]);	//	Clear the list before displaying the update
 		const int cSectors = 9;	//	The maximum number of Sectors to display, gated by display area
-		const int MaxLaps = 7;	//	Maximum number of laps to display
-		int w = 0;	//	String variable counter for Sector display
+		const int MaxLaps = 9;	//	Maximum number of laps to display
+		int w = 0;	//	Lap tracker for Sector display
+		int s = 0;	//	Sector tracker for Listview
 
-		//	Get the list of highlighted lap time ID's
-		set<LPARAM> setSelected = m_sfLapList.GetSelectedItemsData();
-
-		//	Load the CExtendedLap data for the lap list
-		vector<CExtendedLap*> lstLaps = GetLapsToShow();
+		set<LPARAM> setSelected = m_sfLapList.GetSelectedItemsData();	//	Get the list of highlighted lap time ID's
+		vector<CExtendedLap*> lstLaps = GetLapsToShow();	//	Load the CExtendedLap data for the lap list
 
 		//	Get the points from the Ref Lap for computation
 		const vector<TimePoint2D>& lstRefPoints = m_pReferenceLap->GetPoints();	// For iTime
@@ -2280,43 +2289,40 @@ void UpdateSectors()
 		//	Strings for building the Sector Times output for each lap
 		TCHAR szLapString[50][512] = {NULL};
 		TCHAR szString[50][512] = {NULL};
+		TCHAR szSectorTime[MAX_PATH] = {NULL};	//	String containing the formatted sector time
 
-	//	Lap Loop
+		//	Lap Loop
 		//	Now loop through the lap list, compute the sector times and store them in SplitPoints[]
 		for(vector<CExtendedLap*>::iterator i = lstLaps.begin(); i != lstLaps.end(); i++)
 		{
-			//	Get the data points for this lap, and compare the sector times to the Reference Lap (m_pReferenceLap)
-			CExtendedLap* pLap = *i;
-		
-			//	Get the points from the Selected Lap for computation
-			const vector<TimePoint2D>& lstLapPoints = pLap->GetPoints();
-
+			CExtendedLap* pLap = *i;	//	Get the data points for this lap, and compare the sector times to the Reference Lap (m_pReferenceLap)
+			const vector<TimePoint2D>& lstLapPoints = pLap->GetPoints();	//	Get the points from the Selected Lap for computation
 			pLap->GetString(szLapString[w], NUMCHARS(szLapString)); //   Timestamp of this lap, to used to name it
-			if (_tcslen(szLapString[w]) <= 30)
-			{
-				swprintf(szLapString[w], NUMCHARS(szLapString[w]), L"%s\t", szLapString[w]);	//	Add a TAB mark for formatting
-			}
-			else
-			{
-				swprintf(szLapString[w], 39, szLapString[w]);	//	Truncate the Timestamp string for formatting
-			}
+
+			//	Let's load the Listview row titles with this result
+			wchar_t result[MAX_PATH] ;
+			p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+			p_ADlvi.iItem = w;	//	Which Lap subscript
+			p_ADlvi.iSubItem = 0;	//	Which Sector subscript (0 = Lap Name string)
+			p_ADlvi.lParam = 0;
+			swprintf(result,NUMCHARS(result), szLapString[w]);
+			p_ADlvi.pszText = result;
+			p_ADlvi.cchTextMax = wcslen(result);
+			ListView_InsertItem(m_sfLapOpts.hWndLap[0], &p_ADlvi);	//	Using the lap time stamp/string for its name
 
 			const IDataChannel* pDistance = pLap->GetChannel(DATA_CHANNEL_DISTANCE);
-
 			int iLapStartTime = lstLapPoints[0].iTime;
 
-	//	Sector Loop
+			//	Sector Loop
 			//	Now loop through the split points and determine lap times for each sector
-			for(int s = 1; s <= cSectors; s++)
+			for(s = 1; s <= cSectors; s++)
 			{
-				//	Get the Split Point iTime and it's distance value
-				const int SectorStartTime =  m_sfLapOpts.m_SplitPoints[s].m_sfSectorTime;
-				const double dSectorDistance = pReferenceDistance->GetValue((int)SectorStartTime);
-
-				//	First iTime for the lap array
+				const int SectorStartTime =  m_sfLapOpts.m_SplitPoints[s].m_sfSectorTime;	//	Get the Split Point iTime and it's distance value
+				const double dSectorDistance = pReferenceDistance->GetValue((int)SectorStartTime);	//	First iTime for the lap array
 				bool b_SectorFlag = false;
 				double dLastLapDist = 0;
-	//	Interpolation Loop
+
+				//	Interpolation Loop
 				//	Now go through the lap array and find the 2 points that span the dSectorDistance distance
 				for (int x = 1; x < lstLapPoints.size(); x++)
 				{
@@ -2347,7 +2353,15 @@ void UpdateSectors()
 								{
 									float dSectorTime = dEstimatedElapsedTime - (double)iLapStartTime;
 									//	Now that we have computed the Sector Time, let's build the Sector times string
-									swprintf(szString[w], NUMCHARS(szString[w]), L"%s\t%4.2f", szString[w], dSectorTime/1000);
+									//	Now that we have computed the Sector Time, let's put it in the Sector times string
+									if ( dSectorTime > 1 )	//	1 used for roundoff error
+									{
+										swprintf(szSectorTime, NUMCHARS(szSectorTime), L"%4.2f", dSectorTime/1000);
+									}
+									else
+									{
+										swprintf(szSectorTime, NUMCHARS(szSectorTime), L"", NULL);
+									}
 									iLapStartTime = dEstimatedElapsedTime;
 									dLastLapDist = dSectorDistance;
 									break;
@@ -2359,7 +2373,15 @@ void UpdateSectors()
 							const int iLastTime = lstLapPoints[x-1].iTime;
 							float dSectorTime = iLastTime - (double)iLapStartTime;
 							//	Now that we have computed the Sector Time, let's build the Sector times string
-							swprintf(szString[w], NUMCHARS(szString[w]), L"%s\t%4.2f", szString[w], dSectorTime/1000);
+							//	Now that we have computed the Sector Time, let's put it in the Sector times string
+							if ( dSectorTime > 1 )	//	1 used for roundoff error
+							{
+								swprintf(szSectorTime, NUMCHARS(szSectorTime), L"%4.2f", dSectorTime/1000);
+							}
+							else
+							{
+								swprintf(szSectorTime, NUMCHARS(szSectorTime), L"", NULL);
+							}
 							iLapStartTime = iLastTime;
 							dLastLapDist = dSectorDistance;
 							break;
@@ -2371,31 +2393,63 @@ void UpdateSectors()
 						const int iLastTime = lstLapPoints[lstLapPoints.size()-1].iTime;
 						float dSectorTime = iLastTime - (double)iLapStartTime;
 						//	Now that we have computed the Sector Time, let's build the Sector times string
-						swprintf(szString[w], NUMCHARS(szString[w]), L"%s\t%4.2f", szString[w], dSectorTime/1000);
+						//	Now that we have computed the Sector Time, let's put it in the Sector times string
+						if ( dSectorTime > 1 )	//	1 used for roundoff error
+						{
+							swprintf(szSectorTime, NUMCHARS(szSectorTime), L"%4.2f", dSectorTime/1000);
+						}
+						else
+						{
+							swprintf(szSectorTime, NUMCHARS(szSectorTime), L"", NULL);
+						}
 						iLapStartTime = iLastTime;
 						dLastLapDist = dSectorDistance;
 						break;
 					}
 				}	//	End Interpolation Loop
-			}	//	End Sector Loop
 
-			//	Now that we have computed the Sector Time, let's Display them
-			{
-				swprintf(szLapString[w], NUMCHARS(szLapString[w]), L"%s %s", szLapString[w], szString[w]);
-				SendMessage(m_sfLapOpts.hWndLap[w], WM_SETTEXT, 0, (LPARAM)szLapString[w]);
-			}
+					//	Insert the item into the Listview
+					p_ADlvi.mask = LVIF_TEXT;
+					p_ADlvi.iItem = w;	//	Which Lap subscript
+					p_ADlvi.iSubItem = s;	//	Which Sector subscript incremented to be positioned correctly
+					p_ADlvi.lParam = s;
+					swprintf(result,NUMCHARS(result), szSectorTime);
+					p_ADlvi.pszText = result;
+					p_ADlvi.cchTextMax = wcslen(result);
+					ListView_SetItem(m_sfLapOpts.hWndLap[0], &p_ADlvi);
+
+
+			}	//	End Sector Loop
 			//	Increment "w" counter and do the next lap
 			w++;
 			if (w >= MaxLaps) break;	//	Stop building these if we already have as many as we need.
-		}
+		}	//	Lap Loop end
+
 		//	Clean up any old lap sector times if user chose fewer laps to display
 		for (int x = w; x < MaxLaps; x++)
 		{
-			swprintf(szLapString[x], NUMCHARS(szLapString[x]), L"Lap %i:", x + 1);
-			SendMessage(m_sfLapOpts.hWndLap[x], WM_SETTEXT, 0, (LPARAM)szLapString[x]);
-		}
+			wchar_t result[MAX_PATH] = {NULL};	//	Null string
+			//	Let's load the Listview row titles with this result
+			p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
+			p_ADlvi.iItem = x;	//	Which Lap subscript
+			p_ADlvi.iSubItem = 0;	//	Which Sector subscript (0 = Lap Name string)
+			p_ADlvi.lParam = 0;
+			p_ADlvi.pszText = result;
+			p_ADlvi.cchTextMax = wcslen(result);
+			ListView_InsertItem(m_sfLapOpts.hWndLap[0], &p_ADlvi);	//	Using a null string for the name
 
-	//	End Lap Loop
+			for (int z = 1; z <= cSectors; z++)
+			{
+				//	Insert the item into the Listview
+				p_ADlvi.mask = LVIF_TEXT;
+				p_ADlvi.iItem = x;	//	Which Lap subscript
+				p_ADlvi.iSubItem = z;	//	Which Sector subscript incremented to be positioned correctly
+				p_ADlvi.lParam = z;
+				p_ADlvi.pszText = result;
+				p_ADlvi.cchTextMax = wcslen(result);
+				ListView_SetItem(m_sfLapOpts.hWndLap[0], &p_ADlvi);
+			}
+		}
 	  }
   }
    

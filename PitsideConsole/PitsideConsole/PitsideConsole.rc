@@ -94,15 +94,7 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Sector Times"
 FONT 9, "MS Shell Dlg"
 BEGIN
-	CONTROL    "", IDC_SHOW_SECTORS, WC_LISTVIEW, WS_TABSTOP | LVS_REPORT | LVS_SHOWSELALWAYS, 5,0,370,96
-//    LTEXT      "\t\tLap ID\t\t\tSect 1\tSect 2\tSect 3\tSect 4\tSect 5\tSect 6\tSect 7\tSect 8\tSect 9", IDC_SHOW_SECTORS,5,0,370,12
-//    LTEXT      "Lap 1", IDC_SHOW_LAP0, 5,15,375,12
-//	LTEXT      "Lap 2", IDC_SHOW_LAP1, 5,27,375,12
-//    LTEXT      "Lap 3", IDC_SHOW_LAP2, 5,39,375,12
-//    LTEXT      "Lap 4", IDC_SHOW_LAP3, 5,51,375,12
-//	LTEXT      "Lap 5", IDC_SHOW_LAP4, 5,63,375,12
-//    LTEXT      "Lap 6", IDC_SHOW_LAP5, 5,75,375,12
-//    LTEXT      "Lap 7", IDC_SHOW_LAP6, 5,87,375,12
+	CONTROL    "", IDC_SHOW_SECTORS, WC_LISTVIEW, WS_TABSTOP | LVS_REPORT | LVS_SHOWSELALWAYS, 0,0,375,96
 END
 
 // dialog for selecting which race in a DB we want to use
