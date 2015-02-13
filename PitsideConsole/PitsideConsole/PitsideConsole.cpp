@@ -509,7 +509,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
     SendMessage(hWndIp, WM_SETTEXT, 0, (LPARAM)szTemp);
 
 	switch(uMsg)
-	  {
+	{
 	    case WM_INITDIALOG:
       {
         m_hWnd = hWnd;
@@ -2358,7 +2358,8 @@ void UpdateSectors()
 	//	End Lap Loop
 	  }
   }
-void UpdateValues()
+   
+  void UpdateValues()
   {
 	//	Update the data channels that are being displayed as values
 	//	List of highlighted laps
@@ -2486,11 +2487,66 @@ void UpdateValues()
 				CWarningDlg dlgWarning(&sfResult, m_szYString);
 				ArtShowDialog<IDD_WARNING>(&dlgWarning);
 				fWarnedOnce = false;
+/*
+				TCHAR szMessage[1024] = L"";
+				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
+//				HWND hWndWarning = NULL; UINT uWarningMsg = NULL; WPARAM wWarningParam = NULL; LPARAM lWarningParam = NULL;
+				HWND hwndGoto = NULL;  // Window handle of dialog box  
+				DLGPROC Warning = NULL;
+//				DLGPROC Warning(HWND hwndGoto, UINT uWarningMsg, WPARAM wWarningMsg, LPARAM lWarningMsg);
+				if (!IsWindow(hwndGoto)) 
+				{ 
+					hwndGoto = CreateDialog(NULL, MAKEINTRESOURCE (IDD_WARNING), m_hWnd, Warning ( hwndGoto, uWarningMsg, wWarningParam, lWarningParam ) ); 
+					swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
+					HWND hWndWarning = GetDlgItem(hwndGoto, IDC_WARNING1);
+					SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
+					ShowWindow(hwndGoto, SW_SHOW); 
+					Sleep (5000);
+//					Warning( hWndWarning, m_uMsg, m_wParam, m_lParam );
+					EndDialog(hwndGoto,0);
+				} 
+*/
 			}
 		}
     }
   }
-  void UpdateDisplays()
+
+//	Processing routine for Data Channel warning dialog
+LRESULT WarningProc(HWND c_hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	switch(uMsg)
+	{
+		case WM_INITDIALOG:
+		{
+//			TCHAR szMessage[1024] = L"";
+//			swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
+//			HWND hWndWarning = GetDlgItem(c_hWnd, IDC_WARNING1);
+//			SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
+			MessageBeep(MB_OK);	//	Play a warning sound
+			break;
+		}
+		case WM_COMMAND:
+		{
+			switch(LOWORD(wParam))
+			{
+			case IDOK:
+			{
+				EndDialog(c_hWnd,0);
+				return TRUE;
+			}
+			}
+			break;
+		} // end WM_COMMAND
+		case WM_CLOSE:
+		{
+			EndDialog(c_hWnd,0);
+			break;
+		}
+	}
+	return FALSE;
+}
+
+void UpdateDisplays()
   {
     m_sfLapPainter.Refresh();
 	m_sfSubDisplay.Refresh();
