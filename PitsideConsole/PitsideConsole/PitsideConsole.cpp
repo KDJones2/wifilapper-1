@@ -500,6 +500,8 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
     {
       return 0;
     }
+//	TranslateMessage(&msg);		//	Keyboard input handlers. Needs a MSG type variable, which Pitside doesn't support right now
+//	DispatchMessage(&msg); 
 
 	//	Update and show Current Lap Time
     TCHAR szTemp[512], szLap[512];
@@ -556,11 +558,46 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		return 0;
       }
       case WM_CLOSE:
-        EndDialog(hWnd,0);
+        DestroyWindow(hWnd);
+		EndDialog(hWnd,0);
         return 0;
-      case WM_MOUSEWHEEL:
-      {
-        short iDist = HIWORD(wParam);
+/*	  case WM_KEYDOWN:	//	Process to capture keystrokes. Currently doesn't work, probably needs
+	  {
+		switch(wParam)
+		{
+			case MK_RIGHT | MK_CONTROL:	//	Ctrl + Right cursor
+			case MK_RIGHT:	//	Ctrl + Right cursor
+			if(GetAsyncKeyState(VK_CONTROL))
+			{
+				short iDist = HIWORD(wParam);
+				m_sfLapOpts.iZoomLevels += 1;
+				UpdateUI(UPDATE_MAP);
+				return 0;
+			}
+			case MK_LEFT | MK_CONTROL:	//	Ctrl + Right cursor
+			case MK_LEFT:	//	Ctrl + Right cursor
+			if(GetAsyncKeyState(VK_CONTROL))
+			{
+				short iDist = HIWORD(wParam);
+				m_sfLapOpts.iZoomLevels -= 1;
+				UpdateUI(UPDATE_MAP);
+				return 0;
+			}
+			case MK_SPACE:
+			{
+				m_sfLapOpts.flWindowShiftX = 0;
+				m_sfLapOpts.flWindowShiftY = 0;
+				m_sfLapOpts.iZoomLevels = 0;	//	Reset the zoom level
+				UpdateUI(UPDATE_MAP);
+				return 0;
+			}
+			// more keys here
+		}
+	  return 0;
+	  }	*/
+	  case WM_MOUSEWHEEL:
+	  {
+       short iDist = HIWORD(wParam);
         m_sfLapOpts.iZoomLevels += (iDist/WHEEL_DELTA);
         UpdateUI(UPDATE_MAP);
         return 0;
@@ -577,22 +614,86 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
         lastX = x;
         lastY = y;
 
-        if(IS_FLAG_SET(wParam, MK_LBUTTON))
-        {
-          // they're dragging!
-          m_sfLapOpts.flWindowShiftX += moveX;
-          m_sfLapOpts.flWindowShiftY -= moveY;
-        }
-        if(IS_FLAG_SET(wParam, MK_MBUTTON))
-        {
-          // Dynamic update of All Data display
-		  UpdateUI(UPDATE_ALLDATA);
+		switch(wParam)
+		{
+			case MK_CONTROL:	//	Ctrl + Mouse movement
+			{
+			   short iDist = HIWORD(wParam);
+				m_sfLapOpts.iZoomLevels += - moveY;
+				UpdateUI(UPDATE_MAP);
+				break;
+			}
+			case MK_LBUTTON:
+			{
+			  // they're dragging!
+			  m_sfLapOpts.flWindowShiftX += moveX;
+			  m_sfLapOpts.flWindowShiftY -= moveY;
+			  break;
+			}
+			case MK_MBUTTON:
+			{
+			  // Dynamic update of All Data display
+			  UpdateUI(UPDATE_ALLDATA);
+			  break;
+			}
 		}
         UpdateUI(UPDATE_MAP);
         return 0;
       }
       case WM_LBUTTONDOWN:
-      {
+     {
+		 switch(wParam)
+		 {
+		  case MK_CONTROL | MK_LBUTTON:	//	CTRL + Left Mouse button click
+			{
+				DLGPROC ShowAllData = NULL;
+				if (!GetDlgItem(hWnd_AllData, IDC_ALLDATADISPLAY))	//	Make sure that the display isn't already showing
+				{ 
+					//	Create the window for displaying all of the data points for the selected laps
+					INITCOMMONCONTROLSEX InitCtrlEx;
+					InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
+					InitCtrlEx.dwICC = ICC_PROGRESS_CLASS;
+					InitCommonControlsEx(&InitCtrlEx);
+					hWnd_AllData = CreateDialog(NULL, MAKEINTRESOURCE (IDD_ALLDATADISPLAY), hWnd, ShowAllData);
+					AD_hWnd = GetDlgItem(hWnd_AllData,IDC_ALLDATADISPLAY);	//	Hot Laps listview
+					SetWindowPlacement(hWnd_AllData, &w_AllDataWindow);
+
+					//	Set up the AllData list box columns
+					vector<wstring> lstCols;
+					vector<int> lstWidths;
+					lstCols.push_back(L"Data Channel");
+					lstCols.push_back(L"Lap 1");
+					lstCols.push_back(L"Lap 2");
+					lstCols.push_back(L"Lap 3");
+					lstCols.push_back(L"Lap 4");
+					lstCols.push_back(L"Lap 5");
+					lstCols.push_back(L"Lap 6");
+					lstCols.push_back(L"Lap 7");
+					lstCols.push_back(L"Lap 8");
+					lstCols.push_back(L"Lap 9");
+					lstCols.push_back(L"Lap 10");
+					lstWidths.push_back(130);
+					lstWidths.push_back(60);
+					lstWidths.push_back(60);
+					lstWidths.push_back(60);
+					lstWidths.push_back(60);
+					lstWidths.push_back(60);
+					lstWidths.push_back(60);
+					lstWidths.push_back(60);
+					lstWidths.push_back(60);
+					lstWidths.push_back(60);
+					lstWidths.push_back(60);
+
+					m_sfListBox.Init(AD_hWnd,lstCols,lstWidths);	//	Initialize and show the listview
+					ShowWindow(hWnd_AllData, SW_SHOW); 
+				} 
+
+				UpdateUI(UPDATE_MAP | UPDATE_ALLDATA);
+				return TRUE;
+			}
+			break;
+			// more keys here
+		}
         const int x = LOWORD(lParam);
         const int y = HIWORD(lParam);
         // figure out if we should put focus on the main map
@@ -655,6 +756,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
         return TRUE;
       }
 	  case WM_MBUTTONDBLCLK:
+	  case WM_LBUTTONDBLCLK:
 	  {
 		  //	If the window showing all of the lap data is present, let's kill it
 		  if (hWnd_AllData)
