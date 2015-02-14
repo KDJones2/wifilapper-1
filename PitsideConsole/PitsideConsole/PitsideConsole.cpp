@@ -491,6 +491,8 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 	HWND hWnd_AllData;			//	AllData window control handle
 	HWND AD_hWnd;				//	AllData listview control handle
 	LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
+	HWND hWndShowSplits;		//	Show Sectors window control handle
+	HWND HC_ShowSplits;			//	Handle to the Splits listview control
 
   LRESULT DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   {
@@ -514,6 +516,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 	    case WM_INITDIALOG:
       {
         m_hWnd = hWnd;
+		hWndShowSplits = NULL;
         {
           vector<wstring> lstCols;
           vector<int> lstWidths;
@@ -919,66 +922,57 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				return TRUE;
 			}
 
-			static HWND ShowSplitsHandle;
 			const int cSectors = 9;	//	Maximum numbers of Split Times
 			const int MaxLaps = 7;	//	Maximum number of laps to display
-			if (!IsWindow(ShowSplitsHandle) && m_sfLapOpts.fDrawSplitPoints)
+			if (!IsWindow(hWndShowSplits) && m_sfLapOpts.fDrawSplitPoints)
 			{
 				//	Create non-modal dialog to display the sector times window if DrawSplitPoints is TRUE
-				HWND hwndSplits = NULL;  // Window handle of non-modal dialog box 
 				DLGPROC ShowSplits = NULL;
-				if (!IsWindow(hwndSplits)) 
-				{ 
-					//	Let's get the handle for the display control in this window
-					m_sfLapOpts.hWndLap[0] = GetDlgItem(hwndSplits, IDC_SHOW_SECTORS);
 
-					//	Create the window for displaying sector times for the selected laps
-					INITCOMMONCONTROLSEX InitCtrlEx;
-					InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
-					InitCtrlEx.dwICC = ICC_PROGRESS_CLASS;
-					InitCommonControlsEx(&InitCtrlEx);
-					hwndSplits = CreateDialog(NULL, MAKEINTRESOURCE (IDD_SHOWSECTORS), hWnd, ShowSplits);
-					m_sfLapOpts.hWndLap[0] = GetDlgItem(hwndSplits,IDC_SHOW_SECTORS);	//	Sector Times listview
-					SetWindowPlacement(hwndSplits, &w_SectorTimesWindow);	//	Maintains the location of the Sector Times window
+				//	Create the window for displaying sector times for the selected laps
+				INITCOMMONCONTROLSEX InitCtrlEx;
+				InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
+				InitCtrlEx.dwICC = ICC_PROGRESS_CLASS;
+				InitCommonControlsEx(&InitCtrlEx);
+				hWndShowSplits = CreateDialog(NULL, MAKEINTRESOURCE (IDD_SHOWSECTORS), hWnd, ShowSplits);	//	Create resource
+				HC_ShowSplits = GetDlgItem(hWndShowSplits, IDC_SHOW_SECTORS);	//	Let's get the handle for the display control in this window
+				SetWindowPlacement(hWndShowSplits, &w_SectorTimesWindow);	//	Maintains the location of the Sector Times window
 
-					//	Set up the Sector Times list box columns
-					vector<wstring> lstCols;
-					vector<int> lstWidths;
-					lstCols.push_back(L"Lap ID");
-					lstCols.push_back(L"1");
-					lstCols.push_back(L"2");
-					lstCols.push_back(L"3");
-					lstCols.push_back(L"4");
-					lstCols.push_back(L"5");
-					lstCols.push_back(L"6");
-					lstCols.push_back(L"7");
-					lstCols.push_back(L"8");
-					lstCols.push_back(L"9");
-					lstWidths.push_back(195);
-					lstWidths.push_back(40);
-					lstWidths.push_back(40);
-					lstWidths.push_back(40);
-					lstWidths.push_back(40);
-					lstWidths.push_back(40);
-					lstWidths.push_back(40);
-					lstWidths.push_back(40);
-					lstWidths.push_back(40);
-					lstWidths.push_back(40);
+				//	Set up the Sector Times list box columns
+				vector<wstring> lstCols;
+				vector<int> lstWidths;
+				lstCols.push_back(L"Lap ID");
+				lstCols.push_back(L"1");
+				lstCols.push_back(L"2");
+				lstCols.push_back(L"3");
+				lstCols.push_back(L"4");
+				lstCols.push_back(L"5");
+				lstCols.push_back(L"6");
+				lstCols.push_back(L"7");
+				lstCols.push_back(L"8");
+				lstCols.push_back(L"9");
+				lstWidths.push_back(195);
+				lstWidths.push_back(40);
+				lstWidths.push_back(40);
+				lstWidths.push_back(40);
+				lstWidths.push_back(40);
+				lstWidths.push_back(40);
+				lstWidths.push_back(40);
+				lstWidths.push_back(40);
+				lstWidths.push_back(40);
+				lstWidths.push_back(40);
 
-					ShowSplitsHandle = hwndSplits;  //	Tracker for handle address 
-					m_sfListBox.Init(m_sfLapOpts.hWndLap[0],lstCols,lstWidths);	//	Initialize and show the listview control
-					ShowWindow(hwndSplits, SW_SHOW); 
-				} 
+				m_sfListBox.Init(HC_ShowSplits,lstCols,lstWidths);	//	Initialize and show the Sector Splits window
+				ShowWindow(hWndShowSplits, SW_SHOW); 
 			}
 			else if (!m_sfLapOpts.fDrawSplitPoints)
 			{
-				  //	If the window showing all of the lap data is present, let's kill it
-				  if (m_sfLapOpts.hWndLap[0])
+				  if (HC_ShowSplits)	//	If the window showing all of the lap data is present, let's kill it
 				  {
-					  if (GetWindowPlacement(ShowSplitsHandle, &w_SectorTimesWindow) )
+					  if (GetWindowPlacement(hWndShowSplits, &w_SectorTimesWindow) )
 					  {
-						  DestroyWindow(ShowSplitsHandle);
-						  ShowSplitsHandle = NULL;
+						  DestroyWindow(hWndShowSplits);
+						  hWndShowSplits = NULL;
 					  }
 				  }
 			}
@@ -2256,6 +2250,7 @@ private:
 			return sum;
 		}
 	}
+
 void UpdateSectors()
   {
 	//	Update the Sector Times display
@@ -2263,9 +2258,10 @@ void UpdateSectors()
 	//  Lap run through the Ref Lap Time/Distance array and interpolate the iTime at the equivalent distance
 	//  Coding is similar to TimeSlip
 
-	if (m_pReferenceLap != NULL)	//	First, let's make sure that we have a Reference Lap, or let's not perform this
+	if ( m_pReferenceLap != NULL && m_sfLapOpts.fDrawSplitPoints )	//	First, let's make sure that we have a Reference Lap, or let's not perform this
 	{
-		ListView_DeleteAllItems(m_sfLapOpts.hWndLap[0]);	//	Clear the list before displaying the update
+		HC_ShowSplits = GetDlgItem(hWndShowSplits, IDC_SHOW_SECTORS);	//	Let's get the handle for the display control in this window
+		ListView_DeleteAllItems(HC_ShowSplits);	//	Clear the list before displaying the update
 		const int cSectors = 9;	//	The maximum number of Sectors to display, gated by display area
 		const int MaxLaps = 9;	//	Maximum number of laps to display
 		int w = 0;	//	Lap tracker for Sector display
@@ -2300,7 +2296,7 @@ void UpdateSectors()
 			swprintf(result,NUMCHARS(result), szLapString[w]);
 			p_ADlvi.pszText = result;
 			p_ADlvi.cchTextMax = wcslen(result);
-			ListView_InsertItem(m_sfLapOpts.hWndLap[0], &p_ADlvi);	//	Using the lap time stamp/string for its name
+			ListView_InsertItem(HC_ShowSplits, &p_ADlvi);	//	Using the lap time stamp/string for its name
 
 			const IDataChannel* pDistance = pLap->GetChannel(DATA_CHANNEL_DISTANCE);
 			int iLapStartTime = lstLapPoints[0].iTime;
@@ -2408,40 +2404,12 @@ void UpdateSectors()
 					swprintf(result,NUMCHARS(result), szSectorTime);
 					p_ADlvi.pszText = result;
 					p_ADlvi.cchTextMax = wcslen(result);
-					ListView_SetItem(m_sfLapOpts.hWndLap[0], &p_ADlvi);
-
+					ListView_SetItem(HC_ShowSplits, &p_ADlvi);
 
 			}	//	End Sector Loop
-			//	Increment "w" counter and do the next lap
-			w++;
+			w++;	//	Increment "w" counter and do the next lap
 			if (w >= MaxLaps) break;	//	Stop building these if we already have as many as we need.
 		}	//	Lap Loop end
-
-		//	Clean up any old lap sector times if user chose fewer laps to display
-		for (int x = w; x < MaxLaps; x++)
-		{
-			wchar_t result[MAX_PATH] = {NULL};	//	Null string
-			//	Let's load the Listview row titles with this result
-			p_ADlvi.mask = LVIF_TEXT | LVIF_PARAM;
-			p_ADlvi.iItem = x;	//	Which Lap subscript
-			p_ADlvi.iSubItem = 0;	//	Which Sector subscript (0 = Lap Name string)
-			p_ADlvi.lParam = 0;
-			p_ADlvi.pszText = result;
-			p_ADlvi.cchTextMax = wcslen(result);
-			ListView_InsertItem(m_sfLapOpts.hWndLap[0], &p_ADlvi);	//	Using a null string for the name
-
-			for (int z = 1; z <= cSectors; z++)
-			{
-				//	Insert the item into the Listview
-				p_ADlvi.mask = LVIF_TEXT;
-				p_ADlvi.iItem = x;	//	Which Lap subscript
-				p_ADlvi.iSubItem = z;	//	Which Sector subscript incremented to be positioned correctly
-				p_ADlvi.lParam = z;
-				p_ADlvi.pszText = result;
-				p_ADlvi.cchTextMax = wcslen(result);
-				ListView_SetItem(m_sfLapOpts.hWndLap[0], &p_ADlvi);
-			}
-		}
 	  }
   }
    
