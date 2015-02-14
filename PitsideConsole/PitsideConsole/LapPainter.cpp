@@ -45,27 +45,26 @@ void CLapPainter::OGL_Paint()
   const CExtendedLap* pLap = NULL;
   switch(eDisplayStyle)
   {
-  case LAPDISPLAYSTYLE_MAP:
-    glViewport(0,0,RECT_WIDTH(&rcClient), RECT_HEIGHT(&rcClient));
-    DrawLapLines(sfLapOpts);	//	Draws the lap as a map on primary display
-    break;
-  case LAPDISPLAYSTYLE_TRACTIONCIRCLE:
-    glViewport(0,0,RECT_WIDTH(&rcClient), RECT_HEIGHT(&rcClient));
-	DrawTractionCircle(sfLapOpts, true);	//	Draw the traction circle graph if the window is active
-    break;
-  case LAPDISPLAYSTYLE_PLOT:
-    DrawGeneralGraph(sfLapOpts, true);	//	Draws the data graphs on the primary display
-	break;
-  case LAPDISPLAYSTYLE_RECEPTION:
-    DrawReceptionMap(sfLapOpts);	//	Draws the reception map on the primary display
-    break;
-  case LAPDISPLAYSTYLE_NOLAPS:
-    // user doesn't have any laps selected, so we should tell them to select some
-    DrawSelectLapsPrompt();
-    break;
+	  case LAPDISPLAYSTYLE_MAP:
+		glViewport(0,0,RECT_WIDTH(&rcClient), RECT_HEIGHT(&rcClient));
+		DrawLapLines(sfLapOpts);	//	Draws the lap as a map on primary display
+		break;
+	  case LAPDISPLAYSTYLE_TRACTIONCIRCLE:
+		glViewport(0,0,RECT_WIDTH(&rcClient), RECT_HEIGHT(&rcClient));
+		DrawTractionCircle(sfLapOpts, true);	//	Draw the traction circle graph if the window is active
+		break;
+	  case LAPDISPLAYSTYLE_PLOT:
+		DrawGeneralGraph(sfLapOpts, true);	//	Draws the data graphs on the primary display
+		break;
+	  case LAPDISPLAYSTYLE_RECEPTION:
+		DrawReceptionMap(sfLapOpts);	//	Draws the reception map on the primary display
+		break;
+	  case LAPDISPLAYSTYLE_NOLAPS:
+		// user doesn't have any laps selected, so we should tell them to select some
+		DrawSelectLapsPrompt();
+		break;
   }
-  
-	SwapBuffers( OGL_GetDC() );
+  SwapBuffers( OGL_GetDC() );
 }
   
 void CLapPainter::DrawReceptionMap(const LAPSUPPLIEROPTIONS& sfLapOpts) const

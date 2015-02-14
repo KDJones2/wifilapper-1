@@ -2380,7 +2380,6 @@ void UpdateSectors()
 						//	We've reached the end of the loop. Dump the last point as the last sector time, if other conditions failed
 						const int iLastTime = lstLapPoints[lstLapPoints.size()-1].iTime;
 						float dSectorTime = iLastTime - (double)iLapStartTime;
-						//	Now that we have computed the Sector Time, let's build the Sector times string
 						//	Now that we have computed the Sector Time, let's put it in the Sector times string
 						if ( dSectorTime > 1 )	//	1 used for roundoff error
 						{
@@ -2396,15 +2395,15 @@ void UpdateSectors()
 					}
 				}	//	End Interpolation Loop
 
-					//	Insert the item into the Listview
-					p_ADlvi.mask = LVIF_TEXT;
-					p_ADlvi.iItem = w;	//	Which Lap subscript
-					p_ADlvi.iSubItem = s;	//	Which Sector subscript incremented to be positioned correctly
-					p_ADlvi.lParam = s;
-					swprintf(result,NUMCHARS(result), szSectorTime);
-					p_ADlvi.pszText = result;
-					p_ADlvi.cchTextMax = wcslen(result);
-					ListView_SetItem(HC_ShowSplits, &p_ADlvi);
+				//	Insert the item into the Listview
+				p_ADlvi.mask = LVIF_TEXT;
+				p_ADlvi.iItem = w;	//	Which Lap subscript
+				p_ADlvi.iSubItem = s;	//	Which Sector subscript incremented to be positioned correctly
+				p_ADlvi.lParam = s;
+				swprintf(result,NUMCHARS(result), szSectorTime);
+				p_ADlvi.pszText = result;
+				p_ADlvi.cchTextMax = wcslen(result);
+				ListView_SetItem(HC_ShowSplits, &p_ADlvi);
 
 			}	//	End Sector Loop
 			w++;	//	Increment "w" counter and do the next lap
