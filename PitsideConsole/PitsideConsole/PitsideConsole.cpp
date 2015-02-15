@@ -642,58 +642,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
       }
       case WM_LBUTTONDOWN:
      {
-		 switch(wParam)
-		 {
-		  case MK_CONTROL | MK_LBUTTON:	//	CTRL + Left Mouse button click
-			{
-				DLGPROC ShowAllData = NULL;
-				if (!GetDlgItem(hWnd_AllData, IDC_ALLDATADISPLAY))	//	Make sure that the display isn't already showing
-				{ 
-					//	Create the window for displaying all of the data points for the selected laps
-					INITCOMMONCONTROLSEX InitCtrlEx;
-					InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
-					InitCtrlEx.dwICC = ICC_PROGRESS_CLASS;
-					InitCommonControlsEx(&InitCtrlEx);
-					hWnd_AllData = CreateDialog(NULL, MAKEINTRESOURCE (IDD_ALLDATADISPLAY), hWnd, ShowAllData);
-					AD_hWnd = GetDlgItem(hWnd_AllData,IDC_ALLDATADISPLAY);	//	Hot Laps listview
-					SetWindowPlacement(hWnd_AllData, &w_AllDataWindow);
-
-					//	Set up the AllData list box columns
-					vector<wstring> lstCols;
-					vector<int> lstWidths;
-					lstCols.push_back(L"Data Channel");
-					lstCols.push_back(L"Lap 1");
-					lstCols.push_back(L"Lap 2");
-					lstCols.push_back(L"Lap 3");
-					lstCols.push_back(L"Lap 4");
-					lstCols.push_back(L"Lap 5");
-					lstCols.push_back(L"Lap 6");
-					lstCols.push_back(L"Lap 7");
-					lstCols.push_back(L"Lap 8");
-					lstCols.push_back(L"Lap 9");
-					lstCols.push_back(L"Lap 10");
-					lstWidths.push_back(130);
-					lstWidths.push_back(60);
-					lstWidths.push_back(60);
-					lstWidths.push_back(60);
-					lstWidths.push_back(60);
-					lstWidths.push_back(60);
-					lstWidths.push_back(60);
-					lstWidths.push_back(60);
-					lstWidths.push_back(60);
-					lstWidths.push_back(60);
-					lstWidths.push_back(60);
-
-					m_sfListBox.Init(AD_hWnd,lstCols,lstWidths);	//	Initialize and show the listview
-					ShowWindow(hWnd_AllData, SW_SHOW); 
-				} 
-
-				UpdateUI(UPDATE_MAP | UPDATE_ALLDATA);
-				return TRUE;
-			}
-			break;
-			// more keys here
-		}
         const int x = LOWORD(lParam);
         const int y = HIWORD(lParam);
         // figure out if we should put focus on the main map
@@ -758,15 +706,62 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 	  case WM_MBUTTONDBLCLK:
 	  case WM_LBUTTONDBLCLK:
 	  {
-		  //	If the window showing all of the lap data is present, let's kill it
-		  if (hWnd_AllData)
+		  if ( GetDlgItem(hWnd_AllData, IDC_ALLDATADISPLAY) )	//	If the window showing all of the lap data is present, let's kill it
 		  {
-			  if (GetWindowPlacement(hWnd_AllData, &w_AllDataWindow) )
-			  {
-				  DestroyWindow(hWnd_AllData);
-				  hWnd_AllData = NULL;
-				  AD_hWnd = NULL;
-			  }
+			if (GetWindowPlacement(hWnd_AllData, &w_AllDataWindow) )
+			{
+			  DestroyWindow(hWnd_AllData);
+			  hWnd_AllData = NULL;
+			  AD_hWnd = NULL;
+			}
+			return TRUE;
+		  }
+		  else	//	If the window showing all of the lap data isn't there, let's create it
+		  {
+			DLGPROC ShowAllData = NULL;
+			if (!GetDlgItem(hWnd_AllData, IDC_ALLDATADISPLAY))	//	Make sure that the display isn't already showing
+			{ 
+				//	Create the window for displaying all of the data points for the selected laps
+				INITCOMMONCONTROLSEX InitCtrlEx;
+				InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
+				InitCtrlEx.dwICC = ICC_PROGRESS_CLASS;
+				InitCommonControlsEx(&InitCtrlEx);
+				hWnd_AllData = CreateDialog(NULL, MAKEINTRESOURCE (IDD_ALLDATADISPLAY), hWnd, ShowAllData);
+				AD_hWnd = GetDlgItem(hWnd_AllData,IDC_ALLDATADISPLAY);	//	Hot Laps listview
+				SetWindowPlacement(hWnd_AllData, &w_AllDataWindow);
+
+				//	Set up the AllData list box columns
+				vector<wstring> lstCols;
+				vector<int> lstWidths;
+				lstCols.push_back(L"Data Channel");
+				lstCols.push_back(L"Lap 1");
+				lstCols.push_back(L"Lap 2");
+				lstCols.push_back(L"Lap 3");
+				lstCols.push_back(L"Lap 4");
+				lstCols.push_back(L"Lap 5");
+				lstCols.push_back(L"Lap 6");
+				lstCols.push_back(L"Lap 7");
+				lstCols.push_back(L"Lap 8");
+				lstCols.push_back(L"Lap 9");
+				lstCols.push_back(L"Lap 10");
+				lstWidths.push_back(130);
+				lstWidths.push_back(60);
+				lstWidths.push_back(60);
+				lstWidths.push_back(60);
+				lstWidths.push_back(60);
+				lstWidths.push_back(60);
+				lstWidths.push_back(60);
+				lstWidths.push_back(60);
+				lstWidths.push_back(60);
+				lstWidths.push_back(60);
+				lstWidths.push_back(60);
+
+				m_sfListBox.Init(AD_hWnd,lstCols,lstWidths);	//	Initialize and show the listview
+				ShowWindow(hWnd_AllData, SW_SHOW); 
+			} 
+
+			UpdateUI(UPDATE_MAP | UPDATE_ALLDATA);
+			return TRUE;
 		  }
 	  }
       case WM_NOTIFY:
@@ -913,6 +908,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           case ID_OPTIONS_SHOWREFERENCELAP:
           {
             m_fShowReferenceLap = !m_fShowReferenceLap;
+            m_sfLapOpts.bShowReferenceLap = m_fShowReferenceLap;
             UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_DASHBOARD | UPDATE_VALUES);
             return TRUE;
           }
@@ -2926,7 +2922,11 @@ void UpdateDisplays()
     {
 		lstLaps.push_back(m_pReferenceLap);
     }
-
+/*	else
+	{
+		lstLaps.push_back(m_pReferenceLap);	//	Push the reference lap anyway, so that we can get the lap Split Points
+	}
+*/
 
     return lstLaps;
   }
