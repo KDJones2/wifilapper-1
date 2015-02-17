@@ -89,7 +89,7 @@ enum LAPSORTSTYLE
 struct LAPSUPPLIEROPTIONS
 {
 public:
-  LAPSUPPLIEROPTIONS() : eUnitPreference(UNIT_PREFERENCE_MPH),bXAxis_KM(false),fDrawSplitPoints(false),fDrawGuides(true),fDrawLines(true),fColorScheme(false),fIOIOHardcoded(true),flWindowShiftX(0),flWindowShiftY(0),iZoomLevels(0),bTractionCircle(false)
+  LAPSUPPLIEROPTIONS() : eUnitPreference(UNIT_PREFERENCE_MPH),bXAxis_KM(false),fDrawSplitPoints(false),fDrawGuides(true),fDrawLines(true),fColorScheme(false),fIOIOHardcoded(true),flWindowShiftX(0),flWindowShiftY(0),iZoomLevels(0),bTractionCircle(false),bShowReferenceLap(true)
   {
   }
   UNIT_PREFERENCE eUnitPreference;
@@ -110,6 +110,7 @@ public:
   LAPSORTSTYLE eSortPreference;
   bool bTractionCircle;		//	Whether or not to display the Traction Circle display
   bool bSmoothYesNo;	//	Whether or not to smooth the accelerometer graphs
+  bool bShowReferenceLap;	//	Whether or not the Reference Lap is displayed
 };
 
 
