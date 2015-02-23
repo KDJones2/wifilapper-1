@@ -489,77 +489,73 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 }
 ///////////////////////////////////////////////////////////////////////////////////
 //	Tentative code for Custom Draw of ListViews implementation
+	LRESULT ProcessCustomDraw (LPARAM lParam, INT i_Color)
+	{
+		LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
 
-						LRESULT ProcessCustomDraw (LPARAM lParam, INT i_Color)
-						{
-							LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
-
-							switch(lplvcd->nmcd.dwDrawStage) 
-							{
-								case CDDS_PREPAINT : //Before the paint cycle begins
-									//request notifications for individual listview items
-									return CDRF_NOTIFYITEMDRAW;
+		switch(lplvcd->nmcd.dwDrawStage) 
+		{
+			case CDDS_PREPAINT : //	Before the paint cycle begins
+				return CDRF_NOTIFYITEMDRAW;	//	Request notifications for individual listview items
             
-								case CDDS_ITEMPREPAINT: //Before an item is drawn
-									{
-										return CDRF_NOTIFYSUBITEMDRAW;
-									}
-									break;
+			case CDDS_ITEMPREPAINT: //	Before an item is drawn
+				{
+					return CDRF_NOTIFYSUBITEMDRAW;	//	Request notifications for individual listview SubItems
+				}
+				break;
     
-								case CDDS_SUBITEM | CDDS_ITEMPREPAINT: //Before a subitem is drawn
-									{
-										//	switch(lplvcd->iSubItem)
-										switch(i_Color)
-										{
-											case 0:
-											{
-											  //	Black letters, clear background (Default)
-											  lplvcd->clrText   = RGB(0,0,0);
-											  lplvcd->clrTextBk = RGB(255,255,255);
-											  return CDRF_NEWFONT;
-											}
-											break;
-                    
-											case 1:
-											{
-											  //	Red background, white letters
-											  lplvcd->clrText   = RGB(255,255,255);
-											  lplvcd->clrTextBk = RGB(240,55,23);
-											  return CDRF_NEWFONT;
-											}
-											break;  
-
-											case 2:
-											{
-											  //	Green background, black letters
-											  lplvcd->clrText   = RGB(0,0,0);
-											  lplvcd->clrTextBk = RGB(155,255,80);
-											  return CDRF_NEWFONT;
-											}
-											break;
-											case 3:
-											{
-											  //	Blue background, white letters
-											  lplvcd->clrText   = RGB(255,255,255);
-											  lplvcd->clrTextBk = RGB(20,20,220);
-											  return CDRF_NEWFONT;
-											}
-											break;
-
-											case 4:
-											{
-											  //	Black letters, Light Grey background (Default)
-											  lplvcd->clrText   = RGB(0,0,0);
-											  lplvcd->clrTextBk = RGB(150,255,255);
-											  return CDRF_NEWFONT;
-											}
-											break;
-										}
- 
-									}
-							}
-							return CDRF_DODEFAULT;
+			case CDDS_SUBITEM | CDDS_ITEMPREPAINT: //	Before a subitem is drawn
+				{
+					//	switch(lplvcd->iSubItem)
+					switch(i_Color)
+					{
+						case 0:
+						{
+							//	Black letters, clear background (Default)
+							lplvcd->clrText   = RGB(0,0,0);
+							lplvcd->clrTextBk = RGB(255,255,255);
+							return CDRF_NEWFONT;
 						}
+						break;
+                    
+						case 1:
+						{
+							//	Red background, white letters
+							lplvcd->clrText   = RGB(255,255,255);
+							lplvcd->clrTextBk = RGB(240,55,23);
+							return CDRF_NEWFONT;
+						}
+						break;  
+
+						case 2:
+						{
+							//	Green background, black letters
+							lplvcd->clrText   = RGB(0,0,0);
+							lplvcd->clrTextBk = RGB(155,255,80);
+							return CDRF_NEWFONT;
+						}
+						break;
+						case 3:
+						{
+							//	Blue background, white letters
+							lplvcd->clrText   = RGB(255,255,255);
+							lplvcd->clrTextBk = RGB(20,20,220);
+							return CDRF_NEWFONT;
+						}
+						break;
+						case 4:
+						{
+							//	Black letters, Light Grey background (Default)
+							lplvcd->clrText   = RGB(0,0,0);
+							lplvcd->clrTextBk = RGB(240,240,255);
+							return CDRF_NEWFONT;
+						}
+						break;
+					}
+				}
+		}
+		return CDRF_DODEFAULT;
+	}
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
