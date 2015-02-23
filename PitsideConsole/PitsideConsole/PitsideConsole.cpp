@@ -513,9 +513,9 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 										{
 											case 0:
 											{
-											  //	Black letters, Light Blue background (Default)
+											  //	Black letters, clear background (Default)
 											  lplvcd->clrText   = RGB(0,0,0);
-											  lplvcd->clrTextBk = RGB(150,255,255);
+											  lplvcd->clrTextBk = RGB(255,255,255);
 											  return CDRF_NEWFONT;
 											}
 											break;
@@ -542,6 +542,15 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 											  //	Blue background, white letters
 											  lplvcd->clrText   = RGB(255,255,255);
 											  lplvcd->clrTextBk = RGB(20,20,220);
+											  return CDRF_NEWFONT;
+											}
+											break;
+
+											case 4:
+											{
+											  //	Black letters, Light Grey background (Default)
+											  lplvcd->clrText   = RGB(0,0,0);
+											  lplvcd->clrTextBk = RGB(150,255,255);
 											  return CDRF_NEWFONT;
 											}
 											break;
@@ -873,7 +882,14 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			case NM_CUSTOMDRAW:
 			{
 				LPNMLVCUSTOMDRAW  lplvcd = (LPNMLVCUSTOMDRAW)lParam;
-				INT i_Color = 0;
+				enum i_Color
+				{
+					CLEAR,
+					RED,
+					GREEN,
+					BLUE,
+					LTGREY
+				};
 				switch (wParam)
 				{
 					case IDC_XAXIS:
@@ -881,41 +897,35 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 	//                if(pnm->hdr.hwndFrom == HC_ShowSplits &&pnm->hdr.code == NM_CUSTOMDRAW)
 					// if(pnm->hdr.hwndFrom == hWnd)
 					{
-						i_Color = 1;
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, i_Color));
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, LTGREY));
 	//					return ProcessCustomDraw(lParam);
 						return TRUE;
 					}
 					// else if( pnm->hdr.hwndFrom == hWnd_AllData)
 					case IDC_ALLDATADISPLAY:
 					{
-						i_Color = 2;
-						SetWindowLong(hWnd_AllData, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, i_Color));
+						SetWindowLong(hWnd_AllData, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, CLEAR));
 						return TRUE;
 					}
 					case IDC_SHOW_SECTORS:
 					{
-						i_Color = 2;
-						SetWindowLong(hWndShowSplits, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, i_Color));
+						SetWindowLong(hWndShowSplits, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, GREEN));
 						return TRUE;
 					}
 					// else if( pnm->hdr.hwndFrom == hWndShowSplits)
 					case IDC_LAPS:
 					{
-						i_Color = 3;
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, i_Color));
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, CLEAR));
 						return TRUE;
 					}
 					case IDC_DATAVALUES:
 					{
-						i_Color = 3;
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, i_Color));
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, CLEAR));
 						return TRUE;
 					}
 					default:
 					{
-						i_Color = 0;
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, i_Color));
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, CLEAR));
 						return TRUE;
 					}
 				}
@@ -1163,7 +1173,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			}
 
 			const int cSectors = 9;	//	Maximum numbers of Split Times
-			const int MaxLaps = 7;	//	Maximum number of laps to display
+			const int MaxLaps = 8;	//	Maximum number of laps to display
 			if (!IsWindow(hWndShowSplits) && m_sfLapOpts.fDrawSplitPoints)
 			{
 				//	Create non-modal dialog to display the sector times window if DrawSplitPoints is TRUE
@@ -2584,7 +2594,7 @@ void UpdateSectors()
 		HDC HC_Rect = GetDC(hWndShowSplits);	//	HDC for the display control
 		ListView_DeleteAllItems(HC_ShowSplits);	//	Clear the list before displaying the update
 		const int cSectors = 9;	//	The maximum number of Sectors to display, gated by display area
-		const int MaxLaps = 9;	//	Maximum number of laps to display
+		const int MaxLaps = 8;	//	Maximum number of laps to display
 		struct i_BestSectors
 		{
 			int iItem;
@@ -2594,7 +2604,7 @@ void UpdateSectors()
 		float i_TheoreticalBestLap[cSectors + 1];	//	+1 For the final Split Point
 		for (int a = 0; a < cSectors + 1; a++)
 		{
-			i_TheoreticalBestLap[a] = 999999;	//	Initialize the Theorectical Best Lap
+			i_TheoreticalBestLap[a] = 999999.0f;	//	Initialize the Theorectical Best Lap
 		}
 		int w = 0;	//	Lap tracker for Sector display
 		int s = 0;	//	Sector tracker for Listview
