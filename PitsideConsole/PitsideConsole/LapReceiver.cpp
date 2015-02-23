@@ -945,12 +945,7 @@ DWORD LoadFromSQLiteThreadProc(LPVOID pvParam)
   return 0;
 }
 
-void LoadFromSQLite
-(
-  LPCTSTR lpszSQL, 
-  int iRaceId, 
-  ILapReceiver* pRecv
-)
+void LoadFromSQLite( LPCTSTR lpszSQL, int iRaceId, ILapReceiver* pRecv )
 {
   DASSERT(iRaceId >= 0);
 
