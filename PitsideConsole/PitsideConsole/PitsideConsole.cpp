@@ -574,8 +574,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
     {
       return 0;
     }
-//	TranslateMessage(&msg);		//	Keyboard input handlers. Needs a MSG type variable, which Pitside doesn't support right now
-//	DispatchMessage(&msg); 
 
 	//	Update and show Current Lap Time
     TCHAR szTemp[512], szLap[512];
@@ -632,43 +630,11 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		return 0;
       }
       case WM_CLOSE:
+	  {
         DestroyWindow(hWnd);
 		EndDialog(hWnd,0);
         return 0;
-/*	  case WM_KEYDOWN:	//	Process to capture keystrokes. Currently doesn't work, probably needs
-	  {
-		switch(wParam)
-		{
-			case MK_RIGHT | MK_CONTROL:	//	Ctrl + Right cursor
-			case MK_RIGHT:	//	Ctrl + Right cursor
-			if(GetAsyncKeyState(VK_CONTROL))
-			{
-				short iDist = HIWORD(wParam);
-				m_sfLapOpts.iZoomLevels += 1;
-				UpdateUI(UPDATE_MAP);
-				return 0;
-			}
-			case MK_LEFT | MK_CONTROL:	//	Ctrl + Right cursor
-			case MK_LEFT:	//	Ctrl + Right cursor
-			if(GetAsyncKeyState(VK_CONTROL))
-			{
-				short iDist = HIWORD(wParam);
-				m_sfLapOpts.iZoomLevels -= 1;
-				UpdateUI(UPDATE_MAP);
-				return 0;
-			}
-			case MK_SPACE:
-			{
-				m_sfLapOpts.flWindowShiftX = 0;
-				m_sfLapOpts.flWindowShiftY = 0;
-				m_sfLapOpts.iZoomLevels = 0;	//	Reset the zoom level
-				UpdateUI(UPDATE_MAP);
-				return 0;
-			}
-			// more keys here
-		}
-	  return 0;
-	  }	*/
+	  }
 	  case WM_MOUSEWHEEL:
 	  {
        short iDist = HIWORD(wParam);
@@ -886,6 +852,21 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					BLUE,
 					LTGREY
 				};
+//				if( hWndShowSplits = GetWindow( m_hWnd, IDD_SHOWSECTORS ) )	//	Create resource
+//				HC_ShowSplits = GetDlgItem( hWndShowSplits, IDC_SHOW_SECTORS );	//	Let's get the handle for the display control in this window
+//				if( hWnd_AllData = GetWindow( m_hWnd, IDD_ALLDATADISPLAY ) )
+//				AD_hWnd = GetDlgItem( hWnd_AllData, IDC_ALLDATADISPLAY );	//	All Data listview control
+
+				if( pnm->hdr.hwndFrom == AD_hWnd)	//	First see if this is from the All Data Display LV control
+				{
+					SetWindowLong(hWnd_AllData, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, GREEN));
+					return TRUE;
+				}
+				else if( pnm->hdr.hwndFrom == HC_ShowSplits)	//	See if this is from the Sector Display LV control
+				{
+					SetWindowLong(hWndShowSplits, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, GREEN));
+					return TRUE;
+				}
 				switch (wParam)
 				{
 					case IDC_XAXIS:
@@ -895,17 +876,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					{
 						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, LTGREY));
 	//					return ProcessCustomDraw(lParam);
-						return TRUE;
-					}
-					// else if( pnm->hdr.hwndFrom == hWnd_AllData)
-					case IDC_ALLDATADISPLAY:
-					{
-						SetWindowLong(hWnd_AllData, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, CLEAR));
-						return TRUE;
-					}
-					case IDC_SHOW_SECTORS:
-					{
-						SetWindowLong(hWndShowSplits, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, GREEN));
 						return TRUE;
 					}
 					// else if( pnm->hdr.hwndFrom == hWndShowSplits)
@@ -919,9 +889,19 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, CLEAR));
 						return TRUE;
 					}
+					case IDC_ALLDATADISPLAY:	//	First see if this is from the All Data Display LV control
+					{
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, GREEN));
+						return TRUE;
+					}
+					case IDC_SHOW_SECTORS:	//	See if this is from the Sector Display LV control
+					{
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, GREEN));
+						return TRUE;
+					}
 					default:
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, CLEAR));
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, BLUE));
 						return TRUE;
 					}
 				}
@@ -1028,6 +1008,30 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           case ID_OPTIONS_MS:
           {
             m_sfLapOpts.eUnitPreference = UNIT_PREFERENCE_MS;
+            UpdateUI(UPDATE_MAP | UPDATE_MENU);
+            return TRUE;
+          }
+          case ID_OPTIONS_VERTICAL_LANDSCAPE:
+          {
+            m_sfLapOpts.e_Orientation = VERTICAL_LANDSCAPE;
+            UpdateUI(UPDATE_MAP | UPDATE_MENU);
+            return TRUE;
+          }
+          case ID_OPTIONS_VERTICAL_PORTRAIT:
+          {
+            m_sfLapOpts.e_Orientation = VERTICAL_PORTRAIT;
+            UpdateUI(UPDATE_MAP | UPDATE_MENU);
+            return TRUE;
+          }
+          case ID_OPTIONS_FLAT_LANDSCAPE:
+          {
+            m_sfLapOpts.e_Orientation = FLAT_LANDSCAPE;
+            UpdateUI(UPDATE_MAP | UPDATE_MENU);
+            return TRUE;
+          }
+          case ID_OPTIONS_FLAT_PORTRAIT:
+          {
+            m_sfLapOpts.e_Orientation = FLAT_PORTRAIT;
             UpdateUI(UPDATE_MAP | UPDATE_MENU);
             return TRUE;
           }
@@ -1173,9 +1177,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			if (!IsWindow(hWndShowSplits) && m_sfLapOpts.fDrawSplitPoints)
 			{
 				//	Create non-modal dialog to display the sector times window if DrawSplitPoints is TRUE
-				//INT_PTR CALLBACK ShowSplits;
 				DLGPROC ShowSplits = NULL;
-
 				//	Create the window for displaying sector times for the selected laps
 				INITCOMMONCONTROLSEX InitCtrlEx;
 				InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -2910,8 +2912,8 @@ void UpdateSectors()
 					GetChannelValue(eChannel,m_sfLapOpts.eUnitPreference,flMin,szMin,NUMCHARS(szMin));
 					GetChannelValue(eChannel,m_sfLapOpts.eUnitPreference,flMax,szMax,NUMCHARS(szMax));
 					//	Need to convert these from char to wchar_t
-					swprintf(w_szMin, NUMCHARS(w_szMin), L"S", szMin);
-					swprintf(w_szMax, NUMCHARS(w_szMax), L"S", szMax);
+					swprintf(w_szMin, NUMCHARS(w_szMin), L"%S", szMin);
+					swprintf(w_szMax, NUMCHARS(w_szMax), L"%S", szMax);
 
 					//	Now display the results in the ListView (max of cLabels)
 					if (w < cLabels)
@@ -2972,35 +2974,35 @@ void UpdateSectors()
 			{
 				//	Display a warning dialog box about an alarm being triggered.
 				fWarnedOnce = true;
-				WARNING_RESULT sfResult;
-				CWarningDlg dlgWarning(&sfResult, m_szYString);
-				ArtShowDialog<IDD_WARNING>(&dlgWarning);
-				fWarnedOnce = false;
-/*
+//				WARNING_RESULT sfResult;
+//				CWarningDlg dlgWarning(&sfResult, m_szYString);
+//				ArtShowDialog<IDD_WARNING>(&dlgWarning);
+
 				//	Attempt at a Modal display of this message, not working currently
 				TCHAR szMessage[1024] = L"";
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
-				HWND hWndWarning = NULL; UINT uWarningMsg = NULL; WPARAM wWarningParam = NULL; LPARAM lWarningParam = NULL;
+				UINT uWarningMsg = NULL; WPARAM wWarningParam = NULL; LPARAM lWarningParam = NULL;
 				HWND hwndGoto = NULL;  // Window handle of dialog box  
-				DLGPROC Warning = NULL;
-//				DLGPROC Warning(HWND hwndGoto, UINT uWarningMsg, WPARAM wWarningMsg, LPARAM lWarningMsg);
-				if (!IsWindow(hwndGoto)) 
-				{ 
-					hwndGoto = CreateDialog(NULL, MAKEINTRESOURCE (IDD_WARNING), m_hWnd, (DLGPROC)Warning ( m_hWnd, uWarningMsg, wWarningParam, lWarningParam ) ); 
-					swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
-					HWND hWndWarning = GetDlgItem(hwndGoto, IDC_WARNING1);
-					SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
-					ShowWindow(hwndGoto, SW_SHOW); 
-					Sleep (5000);
-//					Warning( hWndWarning, m_uMsg, m_wParam, m_lParam );
-					EndDialog(hwndGoto,0);
-				} 
-*/
+				hwndGoto = CreateDialog(NULL, MAKEINTRESOURCE (IDD_WARNING), m_hWnd, (DLGPROC)WarningProc ( m_hWnd, uWarningMsg, wWarningParam, lWarningParam ) ); 
+				HWND hWndWarning = GetDlgItem(hwndGoto, IDC_WARNING1);
+				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
+				SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
+				ShowWindow(hwndGoto, SW_SHOW); 
+
+				fWarnedOnce = false;
 			}
 		}
     }
   }
-
+INT_PTR CALLBACK WarningProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+  if(g_pUI)
+  {
+    return g_pUI->DlgProc(hWnd,uMsg,wParam,lParam);
+  }
+  return FALSE;
+}
+/*
 //	Processing routine for Data Channel warning dialog
 INT_PTR CALLBACK WarningProc(HWND c_hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -3008,12 +3010,12 @@ INT_PTR CALLBACK WarningProc(HWND c_hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 	{
 		case WM_INITDIALOG:
 		{
-//			TCHAR szMessage[1024] = L"";
-//			swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
-//			HWND hWndWarning = GetDlgItem(c_hWnd, IDC_WARNING1);
-//			SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
+			TCHAR szMessage[1024] = L"";
+			swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): ");
+			HWND hWndWarning = GetDlgItem(c_hWnd, IDC_WARNING1);
+			SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
 			MessageBeep(MB_OK);	//	Play a warning sound
-			break;
+			return TRUE;
 		}
 		case WM_COMMAND:
 		{
@@ -3025,17 +3027,17 @@ INT_PTR CALLBACK WarningProc(HWND c_hWnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 				return TRUE;
 			}
 			}
-			break;
+			return FALSE;
 		} // end WM_COMMAND
 		case WM_CLOSE:
 		{
 			EndDialog(c_hWnd,0);
-			break;
+			return TRUE;
 		}
 	}
 	return FALSE;
 }
-
+*/
 void UpdateDisplays()
   {
     m_sfLapPainter.Refresh();
@@ -3055,6 +3057,7 @@ void UpdateDisplays()
   {
     HMENU hWndMenu = GetMenu(m_hWnd);
     HMENU hSubMenu = GetSubMenu(hWndMenu, 2);
+    HMENU hSubMenu2 = GetSubMenu(hWndMenu, 3);
 
     CheckMenuHelper(hSubMenu, ID_OPTIONS_KMH, m_sfLapOpts.eUnitPreference == UNIT_PREFERENCE_KMH);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_MPH, m_sfLapOpts.eUnitPreference == UNIT_PREFERENCE_MPH);
@@ -3070,6 +3073,10 @@ void UpdateDisplays()
     CheckMenuHelper(hSubMenu, ID_OPTIONS_BACKGROUND, m_sfLapOpts.fColorScheme);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_IOIO5VSCALE, m_sfLapOpts.fIOIOHardcoded);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_ELAPSEDTIME, m_sfLapOpts.fElapsedTime);
+	CheckMenuHelper(hSubMenu2, ID_OPTIONS_VERTICAL_LANDSCAPE, m_sfLapOpts.e_Orientation == VERTICAL_LANDSCAPE);
+	CheckMenuHelper(hSubMenu2, ID_OPTIONS_VERTICAL_PORTRAIT, m_sfLapOpts.e_Orientation == VERTICAL_PORTRAIT);
+	CheckMenuHelper(hSubMenu2, ID_OPTIONS_FLAT_LANDSCAPE, m_sfLapOpts.e_Orientation == FLAT_LANDSCAPE);
+	CheckMenuHelper(hSubMenu2, ID_OPTIONS_FLAT_PORTRAIT, m_sfLapOpts.e_Orientation == FLAT_PORTRAIT);
   }
 
   vector<CExtendedLap*> GetSortedLaps(LAPSORTSTYLE eSortStyle)

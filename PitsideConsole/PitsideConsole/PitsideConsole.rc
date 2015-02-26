@@ -471,6 +471,13 @@ POPUP "&Graphing"
 		MENUITEM SEPARATOR
 		MENUITEM "Plotting Options...",ID_OPTIONS_PLOTPREFS
     END
+	POPUP "&Phone Orientation"
+    BEGIN
+        MENUITEM "Vertical/Landscape", ID_OPTIONS_VERTICAL_LANDSCAPE
+        MENUITEM "Vertical/Portrait", ID_OPTIONS_VERTICAL_PORTRAIT
+        MENUITEM "Flat/Landscape", ID_OPTIONS_FLAT_LANDSCAPE
+        MENUITEM "Flat/Portrait", ID_OPTIONS_FLAT_PORTRAIT
+	END
 	POPUP "&Timing"
     BEGIN
         MENUITEM "Timing and Scoring", ID_TIMINGSCORING

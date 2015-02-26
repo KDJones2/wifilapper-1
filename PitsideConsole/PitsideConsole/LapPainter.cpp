@@ -165,8 +165,9 @@ void CLapPainter::DrawSelectLapsPromptShort() const
   glScalef(1.0f, 0.90f, 1.0f);	//	Keep the same scaling - KDJ
   glOrtho(0, RECT_WIDTH(&rcClient),0, RECT_HEIGHT(&rcClient),-1.0,1.0);
 
-  DrawText(0.0, 70, "Click X-Accel");
-  DrawText(0.0, 40, "to display");
+  DrawText(0.0, 80, "Click ");
+  DrawText(0.0, 50, "X/Y/Z-Accel");
+  DrawText(0.0, 20, "to display");
 
   glPopMatrix();
 }
@@ -912,13 +913,40 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 	
 }
 
-
 void CLapPainter::DrawTractionCircle(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHighlightXAxis)
 {
   vector<CExtendedLap*> lstLaps = m_pLapSupplier->GetLapsToShow();
-
+  //	Let's check on which orientation the phone is in so that the Traction Circle is displayed correctly
+  //	Vertical/Landscape: X = X-Accel, Y=Y-Accel; Vertical/Portrait: X = Z-Accel, Y=Y-Accel; Flat/Landscape: X=X-Accel, Y=Z-Accel; Flat/Portrait: X=Z-Axis, Y=X-Axis
   DATA_CHANNEL eX;
-  eX = DATA_CHANNEL_X_ACCEL;
+  DATA_CHANNEL DataY;
+  switch (sfLapOpts.e_Orientation)
+  {
+	  case VERTICAL_LANDSCAPE:
+	  {
+		eX = DATA_CHANNEL_X_ACCEL;
+		DataY = DATA_CHANNEL_Y_ACCEL;
+		break;
+	  }
+	  case VERTICAL_PORTRAIT:
+	  {
+		eX = DATA_CHANNEL_Z_ACCEL;
+		DataY = DATA_CHANNEL_Y_ACCEL;
+		break;
+	  }
+	  case FLAT_LANDSCAPE:
+	  {
+		eX = DATA_CHANNEL_X_ACCEL;
+		DataY = DATA_CHANNEL_Z_ACCEL;
+		break;
+	  }
+	  case FLAT_PORTRAIT:
+	  {
+		eX = DATA_CHANNEL_Z_ACCEL;
+		DataY = DATA_CHANNEL_X_ACCEL;
+		break;
+	  }
+  }
   set<DATA_CHANNEL> setY;
   map<DATA_CHANNEL,float> mapMinY, mapMinYTemp;
   map<DATA_CHANNEL,float> mapMaxY, mapMaxYTemp;
@@ -938,8 +966,6 @@ void CLapPainter::DrawTractionCircle(const LAPSUPPLIEROPTIONS& sfLapOpts, bool f
       DATA_CHANNEL eDataX = eX;
       const IDataChannel* pDataX = pLap->GetChannel(eDataX);
       if(!pDataX || !pDataX->IsValid() || pDataX->GetData().size() <= 0) continue;
-
-      DATA_CHANNEL DataY = DATA_CHANNEL_Y_ACCEL;
       {
 //////////////////////////////////
 		b_TransformY = false;
