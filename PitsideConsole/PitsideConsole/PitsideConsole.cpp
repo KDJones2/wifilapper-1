@@ -489,7 +489,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 }
 ///////////////////////////////////////////////////////////////////////////////////
 //	Tentative code for Custom Draw of ListViews implementation
-	LRESULT ProcessCustomDraw (LPARAM lParam, INT i_Color)
+	LRESULT ProcessCustomDraw (LPARAM lParam, WPARAM wParam, INT i_Color)
 	{
 		LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
 
@@ -859,12 +859,12 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 
 				if( pnm->hdr.hwndFrom == AD_hWnd)	//	First see if this is from the All Data Display LV control
 				{
-					SetWindowLong(hWnd_AllData, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, GREEN));
+					SetWindowLong(hWnd_AllData, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GREEN));
 					return TRUE;
 				}
 				else if( pnm->hdr.hwndFrom == HC_ShowSplits)	//	See if this is from the Sector Display LV control
 				{
-					SetWindowLong(hWndShowSplits, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, GREEN));
+					SetWindowLong(hWndShowSplits, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GREEN));
 					return TRUE;
 				}
 				switch (wParam)
@@ -874,34 +874,34 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 	//                if(pnm->hdr.hwndFrom == HC_ShowSplits &&pnm->hdr.code == NM_CUSTOMDRAW)
 					// if(pnm->hdr.hwndFrom == hWnd)
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, LTGREY));
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, LTGREY));
 	//					return ProcessCustomDraw(lParam);
 						return TRUE;
 					}
 					// else if( pnm->hdr.hwndFrom == hWndShowSplits)
 					case IDC_LAPS:
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, CLEAR));
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, CLEAR));	//	No LV coloring for Laps list
 						return TRUE;
 					}
 					case IDC_DATAVALUES:
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, CLEAR));
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, CLEAR));	//	No LV coloring for Values Display
 						return TRUE;
 					}
 					case IDC_ALLDATADISPLAY:	//	First see if this is from the All Data Display LV control
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, GREEN));
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GREEN));
 						return TRUE;
 					}
 					case IDC_SHOW_SECTORS:	//	See if this is from the Sector Display LV control
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, GREEN));
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GREEN));
 						return TRUE;
 					}
 					default:
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, BLUE));
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, BLUE));	//	Color Blue if process gets here (unlikely)
 						return TRUE;
 					}
 				}
@@ -2496,10 +2496,9 @@ private:
 					}
 				}	//	End Lap Loop
 			}	//	End Test Loop
-		}
+		}	//	End of Dialog present conditional
 		return;
   }
-  
   
   float fAverage(DATA_CHANNEL eChannel, const IDataChannel* pChannel, float flVal)
 	{
@@ -2804,7 +2803,9 @@ void UpdateSectors()
 		}
 	  }
   }
-   
+
+//  virtual INT_PTR CALLBACK WarningProc(HWND, UINT, WPARAM, LPARAM);	//	Declarative function statement for Values Warning dialog
+
   void UpdateValues()
   {
 	//	Update the data channels that are being displayed as values
@@ -2891,6 +2892,12 @@ void UpdateSectors()
 							//	Build the failing channels string for output
 							swprintf(m_szYString,NUMCHARS(m_szYString),L"%s\n%s",m_szYString, m_szWarningChannel);
 						}
+						else
+						{
+							//	Reset the ListView coordinates for painting of this value
+							i_WarningCoord[w][1] = 0;	//	Reset Minimum value
+							i_WarningCoord[w][2] = 0;	//	Reset Maximum value
+						}
 					  }
 					  else
 					  {
@@ -2898,6 +2905,9 @@ void UpdateSectors()
 						  flMin=0.0f;
 						  flMax=0.0f;
 						  flAvg=0.0f;
+						  //	Reset the ListView coordinates for painting of this value
+						  i_WarningCoord[w][1] = 0;	//	Reset Minimum value
+						  i_WarningCoord[w][2] = 0;	//	Reset Maximum value
 					  }
 					}
 
@@ -2925,7 +2935,7 @@ void UpdateSectors()
 						p_ADlvi.lParam = 0;
 						p_ADlvi.pszText = szChannelName;
 						p_ADlvi.cchTextMax = wcslen(szChannelName);
-						ListView_InsertItem(hWndDataValues, &p_ADlvi);	//	Using a null string for the name
+						ListView_InsertItem(hWndDataValues, &p_ADlvi);
 
 						wchar_t result[MAX_PATH] = {NULL};	//	Null string
 						//	Insert the item into the Listview
@@ -2941,7 +2951,7 @@ void UpdateSectors()
 						//	Insert the item into the Listview
 						p_ADlvi.mask = LVIF_TEXT;
 						p_ADlvi.iItem = w;	//	Which Data Value subscript (Max = cLabels)
-						p_ADlvi.iSubItem = 2;	//	Which Sector subscript incremented to be positioned correctly
+						p_ADlvi.iSubItem = 2;	//	Which Subitem subscript
 						p_ADlvi.lParam = 2;
 						swprintf(result,NUMCHARS(result), L"%S", szMax);
 						p_ADlvi.pszText = result;
@@ -2951,7 +2961,7 @@ void UpdateSectors()
 						//	Insert the item into the Listview
 						p_ADlvi.mask = LVIF_TEXT;
 						p_ADlvi.iItem = w;	//	Which Data Value subscript (Max = cLabels)
-						p_ADlvi.iSubItem = 3;	//	Which Sector subscript incremented to be positioned correctly
+						p_ADlvi.iSubItem = 3;	//	Which Subitem subscript
 						p_ADlvi.lParam = 3;
 						swprintf(result,NUMCHARS(result), L"%3.1f", flAvg);
 						p_ADlvi.pszText = result;
@@ -2974,10 +2984,10 @@ void UpdateSectors()
 			{
 				//	Display a warning dialog box about an alarm being triggered.
 				fWarnedOnce = true;
-//				WARNING_RESULT sfResult;
-//				CWarningDlg dlgWarning(&sfResult, m_szYString);
-//				ArtShowDialog<IDD_WARNING>(&dlgWarning);
-
+				WARNING_RESULT sfResult;
+				CWarningDlg dlgWarning(&sfResult, m_szYString);
+				ArtShowDialog<IDD_WARNING>(&dlgWarning);
+/*
 				//	Attempt at a Modal display of this message, not working currently
 				TCHAR szMessage[1024] = L"";
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
@@ -2988,7 +2998,7 @@ void UpdateSectors()
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
 				SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
 				ShowWindow(hwndGoto, SW_SHOW); 
-
+*/
 				fWarnedOnce = false;
 			}
 		}

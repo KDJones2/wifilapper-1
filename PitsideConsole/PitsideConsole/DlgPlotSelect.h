@@ -86,7 +86,7 @@ enum LAPSORTSTYLE
 	SORTSTYLE_BYLAPTIME, // sort by lap time.  1:12.15 comes before 1:13.45
 };
 
-enum e_Orientation
+enum ORIENTATION	//	These are phone orientatino ENUMS, for setting up the Traction Circle display inside LapPainter.cpp
 {
 	VERTICAL_LANDSCAPE,
 	VERTICAL_PORTRAIT,
@@ -119,7 +119,7 @@ public:
   bool bTractionCircle;		//	Whether or not to display the Traction Circle display
   bool bSmoothYesNo;	//	Whether or not to smooth the accelerometer graphs
   bool bShowReferenceLap;	//	Whether or not the Reference Lap is displayed
-  int e_Orientation;	//	Phone orientation when installed in the car
+  ORIENTATION e_Orientation;	//	Phone orientation when installed in the car
 };
 
 
