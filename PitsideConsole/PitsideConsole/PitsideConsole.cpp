@@ -602,7 +602,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           vector<wstring> lstCols;
           vector<int> lstWidths;
           CExtendedLap::GetStringHeadersYAxis(lstCols,lstWidths);
-          m_sfYAxis.Init(GetDlgItem(m_hWnd, IDC_YAXIS),lstCols,lstWidths);
+          m_sfYAxis.Init2(GetDlgItem(m_hWnd, IDC_YAXIS),lstCols,lstWidths);
         }
         {
           vector<wstring> lstCols;
@@ -614,7 +614,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           vector<wstring> lstCols;
           vector<int> lstWidths;
           CExtendedLap::GetStringHeaders(lstCols,lstWidths);
-          m_sfLapList.Init(GetDlgItem(m_hWnd, IDC_LAPS), lstCols,lstWidths);
+          m_sfLapList.Init2(GetDlgItem(m_hWnd, IDC_LAPS), lstCols,lstWidths);
         }
         m_sfLapPainter.Init(GetDlgItem(hWnd,IDC_DISPLAY));
         m_sfSubDisplay.Init(GetDlgItem(hWnd,IDC_SUBDISPLAY));
@@ -777,7 +777,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				  NMITEMACTIVATE* pDetails = (NMITEMACTIVATE*)notifyHeader;
 				  if(pDetails->iItem >= 0)
 				  {
-					UpdateUI(UPDATE_MAP | UPDATE_DASHBOARD | UPDATE_VALUES);
+					  UpdateUI(UPDATE_MAP | UPDATE_DASHBOARD | UPDATE_VALUES);
 				  }
 				  return TRUE;
 				}
@@ -805,21 +805,21 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
               const set<LPARAM> sel = m_sfXAxis.GetSelectedItemsData();
               if(sel.size() == 1)
               {
-                m_eXChannel = (DATA_CHANNEL)*sel.begin();
+                m_eXChannel = (DATA_CHANNEL)*sel.begin();	//	Just take the first selected item for our choice
                 NMITEMACTIVATE* pDetails = (NMITEMACTIVATE*)notifyHeader;
-                if(pDetails->iItem >= 0)
+                if(pDetails->iItem >= 0)	//	Single select Listview, requires special handling
                 {
                   UpdateUI(UPDATE_MAP | UPDATE_DASHBOARD | UPDATE_VALUES);
                 }
               }
-              return TRUE;
+			  return TRUE;
             }
             break;
           case IDC_YAXIS:
             switch(notifyHeader->code)
             {
             case LVN_ITEMCHANGED:
-              const set<LPARAM> sel = m_sfYAxis.GetSelectedItemsData();
+              const set<LPARAM> sel = m_sfYAxis.GetSelectedItemsData2();
               if(sel.size() >= 1)
               {
                 m_lstYChannels.clear();
@@ -1668,7 +1668,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           }
           case ID_DATA_DASHWARE:	//	Save the data to a .CSV file
           {
-            set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData();
+            set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData2();
             if(setSelectedData.size() > 0)
             {
               TCHAR szFilename[MAX_PATH];
@@ -1749,7 +1749,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           case IDC_SETREFERENCE:
           {
             // they want to set a given lap as a reference lap
-            set<LPARAM> setSelected = m_sfLapList.GetSelectedItemsData();
+            set<LPARAM> setSelected = m_sfLapList.GetSelectedItemsData2();
             if(setSelected.size() == 1)
             {
               CExtendedLap* pNewRefLap = (CExtendedLap*)*(setSelected.begin());
@@ -1971,7 +1971,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
   }
   void UpdateUI_Internal(DWORD fdwUpdateFlags)
   {
-    set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData();
+    set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData2();
 	vector<CExtendedLap*> laps = GetSortedLaps(m_sfLapOpts.eSortPreference); // translates our m_mapLaps into a vector sorted by time
 	// do some memory cleanup
 	for(int x = 0;x < laps.size(); x++)
@@ -2606,7 +2606,7 @@ void UpdateSectors()
 		int w = 0;	//	Lap tracker for Sector display
 		int s = 0;	//	Sector tracker for Listview
 
-		set<LPARAM> setSelected = m_sfLapList.GetSelectedItemsData();	//	Get the list of highlighted lap time ID's
+		set<LPARAM> setSelected = m_sfLapList.GetSelectedItemsData2();	//	Get the list of highlighted lap time ID's
 		vector<CExtendedLap*> lstLaps = GetLapsToShow();	//	Load the CExtendedLap data for the lap list
 
 		//	Get the points from the Ref Lap for computation
@@ -2810,7 +2810,7 @@ void UpdateSectors()
   {
 	//	Update the data channels that are being displayed as values
 	//	List of highlighted laps
-	set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData();
+	set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData2();
     if(setSelectedData.size() > 0)
     {
 	  HWND hWndDataValues = GetDlgItem(m_hWnd, IDC_DATAVALUES);	//	Get the handle for the control
@@ -3146,7 +3146,7 @@ void UpdateDisplays()
 
   void ApplyDriverNameToSelectedLaps(ILapReceiver* pLapDB)
   {
-    set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData();
+    set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData2();
     for(set<LPARAM>::iterator i = setSelectedData.begin(); i != setSelectedData.end(); i++)
     {
       // the ints of this set are actually pointers to CExtendedLap objects
@@ -3185,7 +3185,7 @@ void UpdateDisplays()
   
   virtual vector<CExtendedLap*> GetAllLaps() const override
   {
-    set<LPARAM> setSelectedLaps = m_sfLapList.GetSelectedItemsData();
+    set<LPARAM> setSelectedLaps = m_sfLapList.GetSelectedItemsData2();
     vector<CExtendedLap*> lstLaps;
     for(map<int,CExtendedLap*>::const_iterator i = m_mapLaps.begin(); i != m_mapLaps.end(); i++)
     {
@@ -3197,7 +3197,7 @@ void UpdateDisplays()
   }
   virtual vector<CExtendedLap*> GetLapsToShow() const override
   {
-    set<LPARAM> setSelectedLaps = m_sfLapList.GetSelectedItemsData();
+    set<LPARAM> setSelectedLaps = m_sfLapList.GetSelectedItemsData2();
     vector<CExtendedLap*> lstLaps;
     map<wstring,CExtendedLap*> mapFastestDriver;
     CExtendedLap* pFastest = NULL;
