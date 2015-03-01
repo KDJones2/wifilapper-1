@@ -210,9 +210,7 @@ LRESULT CDlgTimingScoring::DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 		scoringLstWidths.push_back(30);
 		scoringLstWidths.push_back(145);
 		scoringLstWidths.push_back(95);
-//		TS_hWnd = GetDlgItem(hWnd,IDC_RACESCORING);	//	Race Timing listview
 		sfListBox.Init(TS_hWnd,scoringLstCols,scoringLstWidths);
-//		tmStartRace = NULL;	//	No races started at window initialization
 		HWND hWnd_Comment = GetDlgItem(hWnd, IDC_RACE_COMMENT);
 		SetDlgItemText(hWnd, IDC_RACE_COMMENT, szTitle);
 

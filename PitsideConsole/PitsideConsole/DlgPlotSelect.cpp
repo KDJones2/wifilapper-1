@@ -35,7 +35,7 @@ void LoadLaps(ILapReceiver* pReceiver, int m_iRaceId)
 
 vector<CExtendedLap*> GetAllLaps()
   {
-    set<LPARAM> setSelectedLaps = m_LapList.GetSelectedItemsData();
+    set<LPARAM> setSelectedLaps = m_LapList.GetSelectedItemsData2();
     vector<CExtendedLap*> lstLaps;
     for(map<int,CExtendedLap*>::const_iterator i = m_mapLaps.begin(); i != m_mapLaps.end(); i++)
     {
