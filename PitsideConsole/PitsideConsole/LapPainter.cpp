@@ -1308,7 +1308,8 @@ void CLapPainter::MakeColor(const CExtendedLap* pLap, bool RefLapFlag, float* pR
 			*pG = RandDouble(); 
 			*pB = RandDouble(); 
 		} 
-		while(*pR + *pG + *pB < 0.5); 
+//		while(*pR + *pG + *pB < 0.4); 
+		while(*pR * *pG * *pB < 0.34); 
 		glColor3d( *pR, *pG, *pB ); // Final color to use.  Tells opengl to draw the following in the colour we just made up
 	}
 	else
@@ -1319,15 +1320,16 @@ void CLapPainter::MakeColor(const CExtendedLap* pLap, bool RefLapFlag, float* pR
 			*pG = RandDouble(); 
 			*pB = RandDouble(); 
 		} 
-		while(*pR + *pG + *pB > 2.5); 
+//		while(*pR + *pG + *pB > 2.6); 
+		while(*pR * *pG * *pB > 0.35); 
 		glColor3d( *pR, *pG, *pB ); // Final color to use.  Tells opengl to draw the following in the colour we just made up
 	}
 	//	Check if this the is the Reference Lap. If so, change the color to full White/Black
 	if (RefLapFlag && m_pLapSupplier->GetDisplayOptions().fColorScheme)	//	Background color is black, make Reference Lap white
 	{
-		*pR = 0.95; *pG = 0.95; *pB = 0.95;
+		*pR = 0.90; *pG = 0.90; *pB = 0.90;
 	}
-	else if (RefLapFlag)	//	Background color is black, make Reference Lap white
+	else if (RefLapFlag)	//	Background color is Grey, make Reference Lap Black
 	{
 		*pR = 0.0; *pG = 0.0; *pB = 0.0;
 	}

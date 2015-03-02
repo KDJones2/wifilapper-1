@@ -351,6 +351,53 @@ void SetRaceId(int iRaceId[50])
 		hdc =pd.hDC;
 		return hdc ;
 	}
+  struct ICOLOR
+  {
+	  int pRed;
+	  int pGreen;
+	  int pBlue;
+  };
+
+  // Function for setting highlighting color, making sure that there is enough contrast to a black background
+    ICOLOR MakeColor2(const CExtendedLap* pLap, bool RefLapFlag) 
+	{ 
+	srand((int)pLap);	//  <-- makes sure that we randomize the colours consistently, so that lap plots don't change colour from draw to draw... 
+	double pR, pG, pB;
+	if (m_sfLapOpts.fColorScheme)	//	Background color is black, let's determine the color for this lap
+	{
+		do 
+		{ 
+			pR = RandDouble(); 
+			pG = RandDouble(); 
+			pB = RandDouble(); 
+		} 
+		while(pR * pG * pB < 0.34); 
+	}
+	else
+	{
+		do 
+		{ 
+			pR = RandDouble(); 
+			pG = RandDouble(); 
+			pB = RandDouble(); 
+		} 
+		while(pR * pG * pB > 0.35); 
+	}
+	//	Check if this the is the Reference Lap. If so, change the color to full White/Black
+	if (RefLapFlag && m_sfLapOpts.fColorScheme)	//	Background color is black, make Reference Lap white
+	{
+		pR = 0.90; pG = 0.90; pB = 0.90;
+	}
+	else if (RefLapFlag)	//	Background color is Grey, make Reference Lap Black
+	{
+		pR = 0.0; pG = 0.0; pB = 0.0;
+	}
+	ICOLOR iColor = {0};
+	iColor.pRed = pR * 255;
+	iColor.pGreen = pG * 255;
+	iColor.pBlue = pB * 255; // Final color to use.
+	return iColor; // Final color to use.
+}
 
 int copyBitmapToClipboard(char *bitmapBuffer, size_t buflen)
 {
@@ -487,77 +534,161 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
   // Return the modified DevMode structure.
   return pDevMode;
 }
-///////////////////////////////////////////////////////////////////////////////////
-//	Tentative code for Custom Draw of ListViews implementation
+
+//	Code for Custom Draw of ListViews implementation
 	LRESULT ProcessCustomDraw (LPARAM lParam, WPARAM wParam, INT i_Color)
 	{
 		LPNMLVCUSTOMDRAW lplvcd = (LPNMLVCUSTOMDRAW)lParam;
+
+		//	Let's first set the CustomDraw color, sent in through i_Color
+		switch(i_Color)
+		{
+			case 0:
+			{
+				//	Black letters, clear background (Default)
+				lplvcd->clrText   = RGB(0,0,0);
+				lplvcd->clrTextBk = RGB(255,255,255);
+				break;
+			}
+			case 1:
+			{
+				//	Red background, white letters
+				lplvcd->clrText   = RGB(255,255,255);
+				lplvcd->clrTextBk = RGB(240,55,23);
+				break;
+			}
+			case 2:
+			{
+				//	Green background, black letters
+				lplvcd->clrText   = RGB(0,0,0);
+				lplvcd->clrTextBk = RGB(155,255,80);
+				break;
+			}
+			case 3:
+			{
+				//	Light Yellow background, black letters
+				lplvcd->clrText   = RGB(0,0,0);
+				lplvcd->clrTextBk = RGB(255,255,190);
+				break;
+			}
+			case 4:
+			{
+				//	Light Grey background, Black letters (Default)
+				lplvcd->clrText   = RGB(0,0,0);
+				lplvcd->clrTextBk = RGB(240,240,255);
+				break;
+			}
+			case 5:
+			{
+				//	Light Green background, Black letters
+				lplvcd->clrText   = RGB(0,0,0);
+				lplvcd->clrTextBk = RGB(210,255,200);
+				break;
+			}
+			case 6:
+			{
+				//	Light Red background, Black letters
+				lplvcd->clrText   = RGB(0,0,0);
+				lplvcd->clrTextBk = RGB(255,210,255);
+				break;
+			}
+			case 7:
+			{
+				//	Return with the color of the lap, based upon the pLap number
+				ICOLOR iColor = {0};
+				iColor = MakeColor2( (CExtendedLap*)lParam, false);
+				lplvcd->clrText   = RGB(iColor.pRed,iColor.pGreen,iColor.pBlue);
+				lplvcd->clrTextBk = RGB(255,255,255);
+				break;
+			}
+		}
 
 		switch(lplvcd->nmcd.dwDrawStage) 
 		{
 			case CDDS_PREPAINT : //	Before the paint cycle begins
 				return CDRF_NOTIFYITEMDRAW;	//	Request notifications for individual listview items
-            
 			case CDDS_ITEMPREPAINT: //	Before an item is drawn
-				{
-					return CDRF_NOTIFYSUBITEMDRAW;	//	Request notifications for individual listview SubItems
-				}
-				break;
-    
+				return CDRF_NOTIFYSUBITEMDRAW;	//	Request notifications for individual listview SubItems
 			case CDDS_SUBITEM | CDDS_ITEMPREPAINT: //	Before a subitem is drawn
 				{
-					//	switch(lplvcd->iSubItem)
-					switch(i_Color)
+					switch(wParam)
 					{
-						case 0:
+					case IDC_LAPS:
 						{
-							//	Black letters, clear background (Default)
-							lplvcd->clrText   = RGB(0,0,0);
-							lplvcd->clrTextBk = RGB(255,255,255);
-							return CDRF_NEWFONT;
+							switch(lplvcd->iSubItem)
+							{
+								case 0:
+								{
+									//	Black letters, clear background (Default)
+									lplvcd->clrText   = RGB(0,0,0);
+									lplvcd->clrTextBk = RGB(255,255,255);
+									return CDRF_NEWFONT;
+								}
+								case 1:
+								{
+									//	Black letters, Light Grey background (Default)
+									lplvcd->clrText   = RGB(0,0,0);
+									lplvcd->clrTextBk = RGB(240,240,255);
+									return CDRF_NEWFONT;
+								}
+								case 2:
+								{
+									//	Black letters, clear background (Default)
+									lplvcd->clrText   = RGB(0,0,0);
+									lplvcd->clrTextBk = RGB(255,255,255);
+									return CDRF_NEWFONT;
+								}
+							}
+							return CDRF_NEWFONT;	//	Return the font/painting color
 						}
-						break;
-                    
-						case 1:
+					case IDC_YAXIS:
 						{
-							//	Red background, white letters
-							lplvcd->clrText   = RGB(255,255,255);
-							lplvcd->clrTextBk = RGB(240,55,23);
-							return CDRF_NEWFONT;
+							return CDRF_NEWFONT;	//	Return the font/painting color
 						}
-						break;  
-
-						case 2:
+					case IDC_XAXIS:
 						{
-							//	Green background, black letters
-							lplvcd->clrText   = RGB(0,0,0);
-							lplvcd->clrTextBk = RGB(155,255,80);
-							return CDRF_NEWFONT;
+							return CDRF_NEWFONT;	//	Return the font/painting color
 						}
-						break;
-						case 3:
+					case IDC_DATAVALUES:
 						{
-							//	Blue background, white letters
-							lplvcd->clrText   = RGB(255,255,255);
-							lplvcd->clrTextBk = RGB(20,20,220);
-							return CDRF_NEWFONT;
+							switch(lplvcd->iSubItem)	//	Paint each column a different background color
+							{
+								case 0:
+								{
+									//	Black letters, clear background (Default)
+									lplvcd->clrText   = RGB(0,0,0);
+									lplvcd->clrTextBk = RGB(255,255,255);
+									return CDRF_NEWFONT;
+								}
+								case 1:
+								{
+									//	Black letters, Light Grey background (Default)
+									lplvcd->clrText   = RGB(0,0,0);
+									lplvcd->clrTextBk = RGB(240,240,255);
+									return CDRF_NEWFONT;
+								}
+								case 2:
+								{
+									//	Black letters, clear background (Default)
+									lplvcd->clrText   = RGB(0,0,0);
+									lplvcd->clrTextBk = RGB(255,255,255);
+									return CDRF_NEWFONT;
+								}
+								case 3:
+								{
+									//	Black letters, Light Grey background (Default)
+									lplvcd->clrText   = RGB(0,0,0);
+									lplvcd->clrTextBk = RGB(240,240,255);
+									return CDRF_NEWFONT;
+								}
+								break;  
+							}
 						}
-						break;
-						case 4:
-						{
-							//	Black letters, Light Grey background (Default)
-							lplvcd->clrText   = RGB(0,0,0);
-							lplvcd->clrTextBk = RGB(240,240,255);
-							return CDRF_NEWFONT;
-						}
-						break;
 					}
 				}
 		}
 		return CDRF_DODEFAULT;
 	}
-
-/////////////////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////////////
 	HWND hWnd_AllData;			//	AllData window control handle
@@ -844,19 +975,23 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			case NM_CUSTOMDRAW:
 			{
 				LPNMLVCUSTOMDRAW  lplvcd = (LPNMLVCUSTOMDRAW)lParam;
-				enum i_Color
+				enum ICOLOR
 				{
 					CLEAR,
 					RED,
 					GREEN,
-					BLUE,
-					LTGREY
+					LTYELLOW,
+					LTGREY,
+					LTGREEN,
+					LTRED,
+					GLCOLOR
 				};
 //				if( hWndShowSplits = GetWindow( m_hWnd, IDD_SHOWSECTORS ) )	//	Create resource
 //				HC_ShowSplits = GetDlgItem( hWndShowSplits, IDC_SHOW_SECTORS );	//	Let's get the handle for the display control in this window
 //				if( hWnd_AllData = GetWindow( m_hWnd, IDD_ALLDATADISPLAY ) )
 //				AD_hWnd = GetDlgItem( hWnd_AllData, IDC_ALLDATADISPLAY );	//	All Data listview control
 
+				int pRed=0, pGreen=0, pBlue=0;
 				if( pnm->hdr.hwndFrom == AD_hWnd)	//	First see if this is from the All Data Display LV control
 				{
 					SetWindowLong(hWnd_AllData, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GREEN));
@@ -870,23 +1005,26 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				switch (wParam)
 				{
 					case IDC_XAXIS:
+					{
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, LTYELLOW));
+						return TRUE;
+					}
 					case IDC_YAXIS:
 	//                if(pnm->hdr.hwndFrom == HC_ShowSplits &&pnm->hdr.code == NM_CUSTOMDRAW)
 					// if(pnm->hdr.hwndFrom == hWnd)
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, LTGREY));
-	//					return ProcessCustomDraw(lParam);
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, LTGREEN));
 						return TRUE;
 					}
 					// else if( pnm->hdr.hwndFrom == hWndShowSplits)
 					case IDC_LAPS:
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, CLEAR));	//	No LV coloring for Laps list
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GLCOLOR));	//	Let the process color columns individually
 						return TRUE;
 					}
 					case IDC_DATAVALUES:
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, CLEAR));	//	No LV coloring for Values Display
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, CLEAR));	//	Let the process color columns individually
 						return TRUE;
 					}
 					case IDC_ALLDATADISPLAY:	//	First see if this is from the All Data Display LV control
@@ -901,7 +1039,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					}
 					default:
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, BLUE));	//	Color Blue if process gets here (unlikely)
+						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GLCOLOR));	//	Color Light Grey if process gets here (unlikely)
 						return TRUE;
 					}
 				}
@@ -925,12 +1063,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 							lplvcd->clrText = RGB(0,0,0);	//	Black text
 							lplvcd->clrTextBk = RGB(255,255,255);	//	White background
 						}
-
-	//					At this point, you can change the background colors for the item
-	//					and any subitems and return CDRF_NEWFONT. If the list-view control
-	//					is in report mode, you can simply return CDRF_NOTIFYSUBITEMDRAW
-	//					to customize the item's subitems individually 
-
 						if (pnm->hdr.hwndFrom == HC_ShowSplits || pnm->hdr.hwndFrom == AD_hWnd)
 						{
 							return CDRF_NOTIFYSUBITEMDRAW;	//	Returns this to start the SubItem painting
@@ -951,20 +1083,15 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 							lplvcd->clrText = RGB(0,0,0);	//	Black text
 							lplvcd->clrTextBk = RGB(230,20,20);	//	Red background
 						}
+						return CDRF_NEWFONT;
 
-	//					This notification is received only if you are in report mode and
-	//					returned CDRF_NOTIFYSUBITEMDRAW in the previous step. At
-	//					this point, you can change the background colors for the
-	//					subitem and return CDRF_NEWFONT.
-
-						return CDRF_NEWFONT;    
 					default:
 						return CDRF_DODEFAULT;
 				}
 			}
 			default:
 				return CDRF_DODEFAULT;
-		}
+		}	//	End of Listview Customdraw Notify header switch
       } // end body of case WM_NOTIFY
 	  case WM_COMMAND:
       {
@@ -989,7 +1116,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
             }
             return TRUE;
           }
-		      case IDOK:
+		  case IDOK:
           {
 			  return TRUE;
           }
