@@ -371,9 +371,9 @@ void SetRaceId(int iRaceId[50])
 			pG = RandDouble(); 
 			pB = RandDouble(); 
 		} 
-		while(pR * pG * pB < 0.34); 
+		while(pR + pG + pB < 1.20 || pR + pG + pB > 2.25); //	Alpha conditions only
 	}
-	else
+	else	//	Background is grey, find colors with enough contrast to display
 	{
 		do 
 		{ 
@@ -381,12 +381,12 @@ void SetRaceId(int iRaceId[50])
 			pG = RandDouble(); 
 			pB = RandDouble(); 
 		} 
-		while(pR * pG * pB > 0.35); 
+		while(pR * pG * pB > 0.45 && pR + pG + pB < 0.75 && pR * pG > 0.75); //	Combination of Alpha and color conditions
 	}
 	//	Check if this the is the Reference Lap. If so, change the color to full White/Black
 	if (RefLapFlag && m_sfLapOpts.fColorScheme)	//	Background color is black, make Reference Lap white
 	{
-		pR = 0.90; pG = 0.90; pB = 0.90;
+		pR = 0.95; pG = 0.95; pB = 0.95;
 	}
 	else if (RefLapFlag)	//	Background color is Grey, make Reference Lap Black
 	{
@@ -613,7 +613,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				{
 					switch(wParam)
 					{
-					case IDC_LAPS:
+/*					case IDC_LAPS:
 						{
 							switch(lplvcd->iSubItem)
 							{
@@ -641,7 +641,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 							}
 							return CDRF_NEWFONT;	//	Return the font/painting color
 						}
-					case IDC_YAXIS:
+*/					case IDC_YAXIS:
 						{
 							return CDRF_NEWFONT;	//	Return the font/painting color
 						}
@@ -975,7 +975,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			case NM_CUSTOMDRAW:
 			{
 				LPNMLVCUSTOMDRAW  lplvcd = (LPNMLVCUSTOMDRAW)lParam;
-				enum ICOLOR
+				enum I_COLOR
 				{
 					CLEAR,
 					RED,
@@ -1019,7 +1019,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					// else if( pnm->hdr.hwndFrom == hWndShowSplits)
 					case IDC_LAPS:
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GLCOLOR));	//	Let the process color columns individually
+//						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GLCOLOR));	//	Let the process color columns individually
 						return TRUE;
 					}
 					case IDC_DATAVALUES:
@@ -1039,7 +1039,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					}
 					default:
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GLCOLOR));	//	Color Light Grey if process gets here (unlikely)
+//						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GLCOLOR));	//	Color Light Grey if process gets here (unlikely)
 						return TRUE;
 					}
 				}
@@ -3118,9 +3118,9 @@ void UpdateSectors()
 				//	Attempt at a Modal display of this message, not working currently
 				TCHAR szMessage[1024] = L"";
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
-				UINT uWarningMsg = NULL; WPARAM wWarningParam = NULL; LPARAM lWarningParam = NULL;
+//				UINT uWarningMsg = NULL; WPARAM wWarningParam = NULL; LPARAM lWarningParam = NULL;
 				HWND hwndGoto = NULL;  // Window handle of dialog box  
-				hwndGoto = CreateDialog(NULL, MAKEINTRESOURCE (IDD_WARNING), m_hWnd, (DLGPROC)WarningProc ( m_hWnd, uWarningMsg, wWarningParam, lWarningParam ) ); 
+				hwndGoto = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE (IDD_WARNING), m_hWnd, (DLGPROC)WarningProc ); 
 				HWND hWndWarning = GetDlgItem(hwndGoto, IDC_WARNING1);
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
 				SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
@@ -3133,9 +3133,11 @@ void UpdateSectors()
   }
 INT_PTR CALLBACK WarningProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+  IUI* mapDialogs;
   if(g_pUI)
   {
-    return g_pUI->DlgProc(hWnd,uMsg,wParam,lParam);
+//    return g_pUI->DlgProc(hWnd,uMsg,wParam,lParam);
+	return mapDialogs->DlgProc(hWnd,uMsg,wParam,lParam);
   }
   return FALSE;
 }
