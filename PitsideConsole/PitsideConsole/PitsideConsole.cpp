@@ -843,7 +843,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		  }
 		  else	//	If the window showing all of the lap data isn't there, let's create it
 		  {
-			// INT_PTR CALLBACK ShowAllData;
 			DLGPROC ShowAllData = NULL;
 			if (!GetDlgItem(hWnd_AllData, IDC_ALLDATADISPLAY))	//	Make sure that the display isn't already showing
 			{ 
@@ -852,13 +851,8 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
 				InitCtrlEx.dwICC = ICC_PROGRESS_CLASS;
 				InitCommonControlsEx(&InitCtrlEx);
-				hWnd_AllData = CreateDialog(NULL, MAKEINTRESOURCE (IDD_ALLDATADISPLAY), hWnd, (DLGPROC)ShowAllData);
+				hWnd_AllData = CreateDialog(NULL, MAKEINTRESOURCE (IDD_ALLDATADISPLAY), m_hWnd, (DLGPROC)ShowAllData);
 				AD_hWnd = GetDlgItem(hWnd_AllData,IDC_ALLDATADISPLAY);	//	All Data listview control
-//				RECT rcClient;
-//				GetClientRect (AD_hWnd, &rcClient); 
-//				AD_hWnd = CreateWindowEx(WS_EX_TOPMOST, WC_LISTVIEW, NULL, WS_CHILD | WS_VISIBLE | LVS_REPORT, 5, 20, rcClient.right-rcClient.left, rcClient.bottom-rcClient.top, AD_chWnd, NULL, NULL, NULL);
-//				DWORD dw = NULL;
-//				if (!hWnd_AllData) dw = GetLastError();
 				SetWindowPlacement(hWnd_AllData, &w_AllDataWindow);
 
 				//	Set up the AllData list box columns
@@ -986,21 +980,27 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					LTRED,
 					GLCOLOR
 				};
-//				if( hWndShowSplits = GetWindow( m_hWnd, IDD_SHOWSECTORS ) )	//	Create resource
-//				HC_ShowSplits = GetDlgItem( hWndShowSplits, IDC_SHOW_SECTORS );	//	Let's get the handle for the display control in this window
-//				if( hWnd_AllData = GetWindow( m_hWnd, IDD_ALLDATADISPLAY ) )
-//				AD_hWnd = GetDlgItem( hWnd_AllData, IDC_ALLDATADISPLAY );	//	All Data listview control
-
-				int pRed=0, pGreen=0, pBlue=0;
-				if( pnm->hdr.hwndFrom == AD_hWnd)	//	First see if this is from the All Data Display LV control
+				if( GetWindow( m_hWnd, GW_ENABLEDPOPUP) )	//	Get the handle of any popup window, IDD_SHOWSECTORS or IDD_ALLDATADISPLAY
 				{
-					SetWindowLong(hWnd_AllData, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GREEN));
-					return TRUE;
-				}
-				else if( pnm->hdr.hwndFrom == HC_ShowSplits)	//	See if this is from the Sector Display LV control
-				{
-					SetWindowLong(hWndShowSplits, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GREEN));
-					return TRUE;
+					HWND hWndEnabledWindow = GetWindow( m_hWnd, GW_ENABLEDPOPUP);
+					if ( GetDlgItem( hWndEnabledWindow, IDC_SHOW_SECTORS ) )	//	IDD_SHOWSECTORS is the Window resource here
+					{
+						HC_ShowSplits = GetDlgItem( hWndShowSplits, IDC_SHOW_SECTORS);	//	Let's get the handle for the display control in this window
+						if( pnm->hdr.hwndFrom == HC_ShowSplits)	//	See if this is from the Sector Display LV control
+						{
+							SetWindowLong(hWndShowSplits, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GREEN));
+							return TRUE;
+						}
+					}
+					else if( GetDlgItem( hWndEnabledWindow, IDC_ALLDATADISPLAY ) )	//	IDD_ALLDATADISPLAY is the Window resource here
+					{
+						AD_hWnd = GetDlgItem( hWndEnabledWindow, IDC_ALLDATADISPLAY );	//	All Data listview control
+						if( pnm->hdr.hwndFrom == AD_hWnd)	//	First see if this is from the All Data Display LV control
+						{
+							SetWindowLong(hWnd_AllData, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GREEN));
+							return TRUE;
+						}
+					}
 				}
 				switch (wParam)
 				{
@@ -1010,13 +1010,10 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 						return TRUE;
 					}
 					case IDC_YAXIS:
-	//                if(pnm->hdr.hwndFrom == HC_ShowSplits &&pnm->hdr.code == NM_CUSTOMDRAW)
-					// if(pnm->hdr.hwndFrom == hWnd)
 					{
 						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, LTGREEN));
 						return TRUE;
 					}
-					// else if( pnm->hdr.hwndFrom == hWndShowSplits)
 					case IDC_LAPS:
 					{
 //						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GLCOLOR));	//	Let the process color columns individually
@@ -1039,7 +1036,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					}
 					default:
 					{
-//						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, GLCOLOR));	//	Color Light Grey if process gets here (unlikely)
 						return TRUE;
 					}
 				}
@@ -1310,7 +1306,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
 				InitCtrlEx.dwICC = ICC_PROGRESS_CLASS;
 				InitCommonControlsEx(&InitCtrlEx);
-				hWndShowSplits = CreateDialog(NULL, MAKEINTRESOURCE (IDD_SHOWSECTORS), hWnd, (DLGPROC)ShowSplits);	//	Create resource
+				hWndShowSplits = CreateDialog(NULL, MAKEINTRESOURCE (IDD_SHOWSECTORS), m_hWnd, (DLGPROC)ShowSplits);	//	Create resource
 				HC_ShowSplits = GetDlgItem(hWndShowSplits, IDC_SHOW_SECTORS);	//	Let's get the handle for the display control in this window
 				SetWindowPlacement(hWndShowSplits, &w_SectorTimesWindow);	//	Maintains the location of the Sector Times window
 
@@ -1812,7 +1808,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				HWND hwndGoto = NULL;  // Window handle of dialog box  
 				if (!IsWindow(hwndGoto)) 
 				{ 
-					hwndGoto = CreateDialog(NULL, MAKEINTRESOURCE (IDD_PROGRESS), hWnd, working); 
+					hwndGoto = CreateDialog(NULL, MAKEINTRESOURCE (IDD_PROGRESS), m_hWnd, working); 
 					ShowWindow(hwndGoto, SW_SHOW); 
 				} 
 
@@ -3114,18 +3110,18 @@ void UpdateSectors()
 				WARNING_RESULT sfResult;
 				CWarningDlg dlgWarning(&sfResult, m_szYString);
 				ArtShowDialog<IDD_WARNING>(&dlgWarning);
-/*
+
 				//	Attempt at a Modal display of this message, not working currently
 				TCHAR szMessage[1024] = L"";
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
 //				UINT uWarningMsg = NULL; WPARAM wWarningParam = NULL; LPARAM lWarningParam = NULL;
 				HWND hwndGoto = NULL;  // Window handle of dialog box  
-				hwndGoto = CreateDialog(GetModuleHandle(NULL), MAKEINTRESOURCE (IDD_WARNING), m_hWnd, (DLGPROC)WarningProc ); 
+				hwndGoto = CreateWindow(GetModuleHandle(NULL), MAKEINTRESOURCE (IDD_WARNING), m_hWnd, WarningProc ); 
 				HWND hWndWarning = GetDlgItem(hwndGoto, IDC_WARNING1);
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
 				SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
 				ShowWindow(hwndGoto, SW_SHOW); 
-*/
+
 				fWarnedOnce = false;
 			}
 		}
@@ -3133,11 +3129,11 @@ void UpdateSectors()
   }
 INT_PTR CALLBACK WarningProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  IUI* mapDialogs;
+//  IUI* mapDialogs;
   if(g_pUI)
   {
-//    return g_pUI->DlgProc(hWnd,uMsg,wParam,lParam);
-	return mapDialogs->DlgProc(hWnd,uMsg,wParam,lParam);
+    return g_pUI->DlgProc(hWnd,uMsg,wParam,lParam);
+//	return mapDialogs->DlgProc(hWnd,uMsg,wParam,lParam);
   }
   return FALSE;
 }
