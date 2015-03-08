@@ -3110,7 +3110,7 @@ void UpdateSectors()
 				WARNING_RESULT sfResult;
 				CWarningDlg dlgWarning(&sfResult, m_szYString);
 				ArtShowDialog<IDD_WARNING>(&dlgWarning);
-
+/*
 				//	Attempt at a Modal display of this message, not working currently
 				TCHAR szMessage[1024] = L"";
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
@@ -3121,7 +3121,7 @@ void UpdateSectors()
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
 				SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
 				ShowWindow(hwndGoto, SW_SHOW); 
-
+*/
 				fWarnedOnce = false;
 			}
 		}
