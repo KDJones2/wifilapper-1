@@ -3116,7 +3116,9 @@ void UpdateSectors()
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
 //				UINT uWarningMsg = NULL; WPARAM wWarningParam = NULL; LPARAM lWarningParam = NULL;
 				HWND hwndGoto = NULL;  // Window handle of dialog box  
-				hwndGoto = CreateWindow(GetModuleHandle(NULL), MAKEINTRESOURCE (IDD_WARNING), m_hWnd, WarningProc ); 
+				HINSTANCE hInstance;
+				LPCWSTR szName[MAX_PATH] = {NULL};
+				hwndGoto = CreateWindow(NULL, NULL, WS_POPUP, 30, 50, 100, 100, m_hWnd, NULL, hInstance, WarningProc ); 
 				HWND hWndWarning = GetDlgItem(hwndGoto, IDC_WARNING1);
 				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
 				SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
