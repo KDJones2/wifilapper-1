@@ -269,9 +269,9 @@ class CMainUI : public IUI,public ILapSupplier
 {
 public:
   CMainUI() 
-    : m_sfLapPainter(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_MAINDISPLAY), 
-      m_sfSubDisplay(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_SUBDISPLAY), 
-      m_sfTractionDisplay(/*static_cast<IUI*>(this), */static_cast<ILapSupplier*>(this),SUPPLIERID_TRACTIONCIRCLEDISPLAY), 
+    : m_sfLapPainter(static_cast<ILapSupplier*>(this),SUPPLIERID_MAINDISPLAY), 
+      m_sfSubDisplay(static_cast<ILapSupplier*>(this),SUPPLIERID_SUBDISPLAY), 
+      m_sfTractionDisplay(static_cast<ILapSupplier*>(this),SUPPLIERID_TRACTIONCIRCLEDISPLAY), 
 	  m_eLapDisplayStyle(LAPDISPLAYSTYLE_PLOT),		//	Make data plot the default initial view
       m_fShowTractionCircle(false),
 	  m_fSmooth(false),
@@ -712,7 +712,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		  }
 		  else	//	If the window showing all of the lap data isn't there, let's create it
 		  {
-			// INT_PTR CALLBACK ShowAllData;
 			DLGPROC ShowAllData = NULL;
 			if (!GetDlgItem(hWnd_AllData, IDC_ALLDATADISPLAY))	//	Make sure that the display isn't already showing
 			{ 
@@ -723,11 +722,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				InitCommonControlsEx(&InitCtrlEx);
 				hWnd_AllData = CreateDialog(NULL, MAKEINTRESOURCE (IDD_ALLDATADISPLAY), hWnd, (DLGPROC)ShowAllData);
 				AD_hWnd = GetDlgItem(hWnd_AllData,IDC_ALLDATADISPLAY);	//	All Data listview control
-//				RECT rcClient;
-//				GetClientRect (AD_hWnd, &rcClient); 
-//				AD_hWnd = CreateWindowEx(WS_EX_TOPMOST, WC_LISTVIEW, NULL, WS_CHILD | WS_VISIBLE | LVS_REPORT, 5, 20, rcClient.right-rcClient.left, rcClient.bottom-rcClient.top, AD_chWnd, NULL, NULL, NULL);
-//				DWORD dw = NULL;
-//				if (!hWnd_AllData) dw = GetLastError();
 				SetWindowPlacement(hWnd_AllData, &w_AllDataWindow);
 
 				//	Set up the AllData list box columns
@@ -852,10 +846,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					BLUE,
 					LTGREY
 				};
-//				if( hWndShowSplits = GetWindow( m_hWnd, IDD_SHOWSECTORS ) )	//	Create resource
-//				HC_ShowSplits = GetDlgItem( hWndShowSplits, IDC_SHOW_SECTORS );	//	Let's get the handle for the display control in this window
-//				if( hWnd_AllData = GetWindow( m_hWnd, IDD_ALLDATADISPLAY ) )
-//				AD_hWnd = GetDlgItem( hWnd_AllData, IDC_ALLDATADISPLAY );	//	All Data listview control
 
 				if( pnm->hdr.hwndFrom == AD_hWnd)	//	First see if this is from the All Data Display LV control
 				{
@@ -871,17 +861,13 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				{
 					case IDC_XAXIS:
 					case IDC_YAXIS:
-	//                if(pnm->hdr.hwndFrom == HC_ShowSplits &&pnm->hdr.code == NM_CUSTOMDRAW)
-					// if(pnm->hdr.hwndFrom == hWnd)
 					{
 						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, LTGREY));
-	//					return ProcessCustomDraw(lParam);
 						return TRUE;
 					}
-					// else if( pnm->hdr.hwndFrom == hWndShowSplits)
 					case IDC_LAPS:
 					{
-						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, CLEAR));	//	No LV coloring for Laps list
+//						SetWindowLong(hWnd, DWL_MSGRESULT, (LONG)ProcessCustomDraw(lParam, wParam, CLEAR));	//	No LV coloring for Laps list
 						return TRUE;
 					}
 					case IDC_DATAVALUES:
@@ -912,8 +898,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 						return CDRF_NOTIFYITEMDRAW;
 
 					case CDDS_ITEMPREPAINT:
-	//					if ( lplvcd->nmcd.lItemlParam == b_GreyColor)	//	Let's paint it with grey background
-	//					if ( (int)lplvcd->nmcd.dwItemSpec%2 == b_GreyColor)	//	Let's paint it with grey background
 						if ( b_GreyColor)	//	Let's paint it with grey background
 						{
 							lplvcd->clrText = RGB(0,0,0);	//	Black text
@@ -2266,12 +2250,6 @@ private:
 				int iLap = 0;	//	Tracking variable for which Lap we are on in the loop
 				int iChannel = 0;	//	Tracking variable for which Y-Channel we are on within each lap
 				int iTotChannel = 0;	//	The number of Y Data channels in the Listview
-//				SendMessage(AD_hWnd,WM_PAINT, (WPARAM)AD_Rect, (LPARAM)d_LGreyColor);	//	Start the painting routines
-//				EraseAlternatingRowBkgnds (AD_hWnd, AD_Rect);
-//				SendMessage(HC_ShowSplits,LVM_SETTEXTBKCOLOR, 0,(LPARAM)CLR_NONE);	//	Clear current LV background color
-//				SendMessage ( AD_hWnd, LVM_SETTEXTCOLOR, 0, (LPARAM)d_BlackColor);
-//				SendMessage(AD_hWnd,LVM_SETBKIMAGE,0,(LPARAM)(LPLVBKIMAGE)&plvbki);	//	Set background color of LV
-//				SendMessage(AD_hWnd,LVM_SETEXTENDEDLISTVIEWSTYLE,0,LVS_EX_FULLROWSELECT); // Set style
 				//	Loop through each lap and pick up all of their values for each data channel
 				for(vector<CExtendedLap*>::iterator a = lstLaps.begin(); a != lstLaps.end(); a++)
 				{
@@ -2545,25 +2523,19 @@ void EraseAlternatingRowBkgnds (HWND hWnd, HDC hDC)
     HBRUSH    brushCol1,    //    1st colour
             brushCol2;    //    2nd colour
 
-//    create coloured brushes
-    brushCol1 = CreateSolidBrush (GetSysColor (COLOR_WINDOW));
+    brushCol1 = CreateSolidBrush (GetSysColor (COLOR_WINDOW));	//    create coloured brushes
     brushCol2 = CreateSolidBrush (colorShade (GetSysColor (COLOR_WINDOW), 90.0));
-//    get horizontal dimensions of row
-    GetClientRect (hWnd, &rect);
-//    number of displayed rows
-    iItems = ListView_GetCountPerPage (hWnd);
-//    first visible row
-    iTop = ListView_GetTopIndex (hWnd);
+    GetClientRect (hWnd, &rect);	//    get horizontal dimensions of row
+    iItems = ListView_GetCountPerPage (hWnd);	//    number of displayed rows
+    iTop = ListView_GetTopIndex (hWnd);		//    first visible row
     ListView_GetItemPosition (hWnd, iTop, &pt);
 
     for (int i=iTop ; i<=iTop+iItems ; i++) 
 	{
-//        set row vertical dimensions
-        rect.top = pt.y;
+        rect.top = pt.y;	//        set row vertical dimensions
         ListView_GetItemPosition (hWnd, i+1, &pt);
         rect.bottom = pt.y;
-//        fill row with appropriate colour
-        FillRect (hDC, &rect, (i % 2) ? brushCol2 : brushCol1);
+        FillRect (hDC, &rect, (i % 2) ? brushCol2 : brushCol1);		//	fill row with appropriate colour
     }
     
 //    cleanup
@@ -2620,12 +2592,8 @@ void UpdateSectors()
 		float dSectorTime = 0;	//	Initialize the Sector Times variable
 		BOOL b_LineColor = false;	//	Flag for making alternating rows different colors
 
-//		SendMessage(HC_ShowSplits,LVM_SETTEXTBKCOLOR,0,(LPARAM)CLR_NONE);	//	Clear current LV background color
-//		SendMessage ( HC_ShowSplits,LVM_SETTEXTCOLOR,0,(LPARAM)d_BlackColor);
-//		SendMessage(HC_ShowSplits,WM_PAINT,0,(LPARAM)CLR_NONE);	//	Start the painting routines
 		SendMessage(HC_ShowSplits,LVM_SETBKIMAGE,0,(LPARAM)(LPLVBKIMAGE)&plvbki);	//	Set background color of LV
 		SendMessage(HC_ShowSplits,LVM_SETEXTENDEDLISTVIEWSTYLE,0,LVS_EX_FULLROWSELECT); // Set style
-//		EraseAlternatingRowBkgnds (HC_ShowSplits, HC_Rect);
 
 		//	Lap Loop
 		//	Now loop through the lap list, compute the sector times and store them in SplitPoints[]
@@ -2688,7 +2656,6 @@ void UpdateSectors()
 								if(dEstimatedElapsedTime >= 0)
 								{
 									dSectorTime = dEstimatedElapsedTime - (double)iLapStartTime;
-									//	Now that we have computed the Sector Time, let's build the Sector times string
 									//	Now that we have computed the Sector Time, let's put it in the Sector times string
 									if ( dSectorTime > 1 )	//	1 used for roundoff error
 									{
@@ -2708,7 +2675,6 @@ void UpdateSectors()
 						{
 							const int iLastTime = lstLapPoints[x-1].iTime;
 							dSectorTime = iLastTime - (double)iLapStartTime;
-							//	Now that we have computed the Sector Time, let's build the Sector times string
 							//	Now that we have computed the Sector Time, let's put it in the Sector times string
 							if ( dSectorTime > 1 )	//	1 used for roundoff error
 							{
@@ -2803,8 +2769,6 @@ void UpdateSectors()
 		}
 	  }
   }
-
-//  virtual INT_PTR CALLBACK WarningProc(HWND, UINT, WPARAM, LPARAM);	//	Declarative function statement for Values Warning dialog
 
   void UpdateValues()
   {
@@ -2987,67 +2951,11 @@ void UpdateSectors()
 				WARNING_RESULT sfResult;
 				CWarningDlg dlgWarning(&sfResult, m_szYString);
 				ArtShowDialog<IDD_WARNING>(&dlgWarning);
-/*
-				//	Attempt at a Modal display of this message, not working currently
-				TCHAR szMessage[1024] = L"";
-				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
-				UINT uWarningMsg = NULL; WPARAM wWarningParam = NULL; LPARAM lWarningParam = NULL;
-				HWND hwndGoto = NULL;  // Window handle of dialog box  
-				hwndGoto = CreateDialog(NULL, MAKEINTRESOURCE (IDD_WARNING), m_hWnd, (DLGPROC)WarningProc ( m_hWnd, uWarningMsg, wWarningParam, lWarningParam ) ); 
-				HWND hWndWarning = GetDlgItem(hwndGoto, IDC_WARNING1);
-				swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): \n%s", m_szYString);
-				SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
-				ShowWindow(hwndGoto, SW_SHOW); 
-*/
 				fWarnedOnce = false;
 			}
 		}
     }
   }
-INT_PTR CALLBACK WarningProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-  if(g_pUI)
-  {
-    return g_pUI->DlgProc(hWnd,uMsg,wParam,lParam);
-  }
-  return FALSE;
-}
-/*
-//	Processing routine for Data Channel warning dialog
-INT_PTR CALLBACK WarningProc(HWND c_hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	switch(uMsg)
-	{
-		case WM_INITDIALOG:
-		{
-			TCHAR szMessage[1024] = L"";
-			swprintf(szMessage, NUMCHARS(szMessage), L"One or more of the alarm limits has been triggered\n\nCheck your Data Value parameters!!\n\nFailing Channel(s): ");
-			HWND hWndWarning = GetDlgItem(c_hWnd, IDC_WARNING1);
-			SendMessage(hWndWarning, WM_SETTEXT, NUMCHARS(szMessage), (LPARAM)szMessage);
-			MessageBeep(MB_OK);	//	Play a warning sound
-			return TRUE;
-		}
-		case WM_COMMAND:
-		{
-			switch(LOWORD(wParam))
-			{
-			case IDOK:
-			{
-				EndDialog(c_hWnd,0);
-				return TRUE;
-			}
-			}
-			return FALSE;
-		} // end WM_COMMAND
-		case WM_CLOSE:
-		{
-			EndDialog(c_hWnd,0);
-			return TRUE;
-		}
-	}
-	return FALSE;
-}
-*/
 void UpdateDisplays()
   {
     m_sfLapPainter.Refresh();
@@ -3066,8 +2974,8 @@ void UpdateDisplays()
   void UpdateMenus()
   {
     HMENU hWndMenu = GetMenu(m_hWnd);
-    HMENU hSubMenu = GetSubMenu(hWndMenu, 2);
-    HMENU hSubMenu2 = GetSubMenu(hWndMenu, 3);
+    HMENU hSubMenu = GetSubMenu(hWndMenu, 2);	//	Graphing... menu
+    HMENU hSubMenu2 = GetSubMenu(hWndMenu, 3);	//	Phone Orientation... menu
 
     CheckMenuHelper(hSubMenu, ID_OPTIONS_KMH, m_sfLapOpts.eUnitPreference == UNIT_PREFERENCE_KMH);
     CheckMenuHelper(hSubMenu, ID_OPTIONS_MPH, m_sfLapOpts.eUnitPreference == UNIT_PREFERENCE_MPH);

@@ -200,20 +200,21 @@ public:
         if(ListView_GetItem(m_hWnd,&sfItem))	//	If item is exists, let's check it against the setData set for a match
         {
 		  DASSERT(sfItem.lParam);
-          if(setData.find(sfItem.lParam) != end(setData))
+		  //	See if the item is part of the selected set
+          if( setData.find(sfItem.lParam) != end(setData) )
           {
             // found the item in the selection set, so make it selected and checkbox checked
             sfItem.state |= LVIS_SELECTED;
             sfItem.stateMask |= LVIS_SELECTED | LVIS_STATEIMAGEMASK;
-            ListView_SetItem(m_hWnd,&sfItem);
-			ListView_SetCheckState(m_hWnd,ixItem,true);	//	Check the checkbox
+            ListView_SetItem(m_hWnd,&sfItem);				//	Highlight the lap
+			ListView_SetCheckState(m_hWnd,ixItem,true);		//	Check the checkbox
           }
           else
           {
             // this item is not supposed to be selected
             sfItem.state &= ~LVIS_SELECTED;
-            sfItem.stateMask &= ~LVIS_SELECTED | LVIS_STATEIMAGEMASK;
-            ListView_SetItem(m_hWnd, &sfItem);
+            sfItem.stateMask &= ~LVIS_SELECTED & ~LVIS_STATEIMAGEMASK;
+            ListView_SetItem(m_hWnd, &sfItem);				//	Unhighlight the lap
 			ListView_SetCheckState(m_hWnd,ixItem,false);	//	Uncheck the checkbox
           }
         }
@@ -259,7 +260,45 @@ public:
     int ixSelect = -1;
 	int iCount = 0;
 	int iTotCount = ListView_GetItemCount(m_hWnd);	//	Returns the number of items in the Listview
-	ixSelect = SendMessage(m_hWnd, LVM_GETNEXTITEM, ixSelect, LVNI_SELECTED);
+/*
+	//	First let's clean up the selected or deselected the items and associated checkboxes
+	do
+	{
+		ixSelect = SendMessage(m_hWnd, LVM_GETNEXTITEM, ixSelect, LVNI_SELECTED);	//	Go through all of the selected items sequentially
+//		ixSelect = SendMessage(m_hWnd, LVM_GETNEXTITEM, ixSelect, LVNI_ALL);	//	Go through all of the LV items sequentially
+		if(ixSelect >= 0)
+		{
+			LVITEM sfItem = {0};
+			sfItem.iItem = ixSelect;
+			sfItem.iSubItem = 0;
+			sfItem.stateMask = LVIS_SELECTED | LVIS_STATEIMAGEMASK;
+			sfItem.mask = LVIF_STATE | LVIF_PARAM;
+			if( ListView_GetItem(m_hWnd,&sfItem) )	//	Item exists!
+			{
+				if ( ListView_GetItemState(m_hWnd,sfItem.iItem, LVIS_SELECTED) )	//	Item is selected
+				{
+					// Item is highlighted
+					ListView_SetCheckState(m_hWnd,sfItem.iItem, true);	//	Check the checkbox for this item
+					ListView_SetItemState(m_hWnd,sfItem.iItem, LVIS_SELECTED, LVIS_SELECTED);	//	Highlight the item
+					DASSERT(sfItem.lParam != NULL);
+					ret.insert(sfItem.lParam);		//	Add the item to the selected Set
+				}
+				else if ( !ListView_GetItemState(m_hWnd,sfItem.iItem, LVIS_SELECTED) )	//	Item is not highlighted, should not hit this
+				{
+					// Item is not highlighted
+					ListView_SetCheckState(m_hWnd,sfItem.iItem, false);	//	Uncheck the checkbox for this item
+					ListView_SetItemState(m_hWnd,sfItem.iItem, ~LVIS_SELECTED, LVIS_SELECTED);	//	Unhighlight the item
+					ret.erase(sfItem.lParam);		//	Remove this item from the set
+				}
+			}
+			else 
+			{
+				DASSERT(FALSE); 
+				break;
+			} // Added by KDJ to prevent locks when no data is passed
+		}
+	} while(ixSelect >= 0);	
+	//	Now let's find any other items that have their checkboxes checked, and add them to the set
     for(iCount = 0; iCount < iTotCount; iCount++)	//	Let's clean up the Checkboxes and Selected items
     {
         LVITEM sfItem = {0};
@@ -271,15 +310,39 @@ public:
 		ListView_GetItem(m_hWnd,&sfItem);	//	Get the details about the item and store the lParam
 		if(ListView_GetCheckState(m_hWnd,sfItem.iItem))	//	Check box is checked, let's highlight the item
 		{
-			ListView_SetItemState(m_hWnd,sfItem.iItem, LVIS_SELECTED, LVIS_SELECTED);	//	Highlight the checked lap
+			ListView_SetItemState(m_hWnd,sfItem.iItem, LVIS_SELECTED, LVIS_SELECTED);	//	Highlight the checked item
 			DASSERT(sfItem.lParam != NULL);
 			ret.insert(sfItem.lParam);
 		}
-		else if(!ListView_GetCheckState(m_hWnd,sfItem.iItem) && ListView_GetItemState(m_hWnd,sfItem.iItem,LVIS_SELECTED))	//	Check box is not checked, let's unhighlight the item
+		else if(!ListView_GetCheckState(m_hWnd,sfItem.iItem) )	//	Checkbox is not checked, let's unhighlight the item
 		{
-			ListView_SetItemState(m_hWnd,sfItem.iItem, 0, LVIS_SELECTED);	//	Deselect the highlighted lap
+			ListView_SetItemState(m_hWnd,sfItem.iItem, ~LVIS_SELECTED, LVIS_SELECTED);	//	Deselect the highlighted item
+			DASSERT(sfItem.lParam != NULL);
+			ret.erase(sfItem.lParam);		//	Remove this item from the set
 		}
     }
+*/
+	for(iCount = 0; iCount < iTotCount; iCount++)	//	Let's clean up the Checkboxes and Selected items
+    {
+        LVITEM sfItem = {0};
+        sfItem.iItem = iCount;
+        sfItem.iSubItem = 0;
+        sfItem.stateMask = LVIS_SELECTED | LVIS_STATEIMAGEMASK;
+        sfItem.mask = LVIF_STATE | LVIF_PARAM;
+        // found an item!
+		ListView_GetItem(m_hWnd,&sfItem);	//	Get the details about the item and store the lParam
+		if(ListView_GetCheckState(m_hWnd,sfItem.iItem))	//	Check box is checked, let's highlight the item
+		{
+			ListView_SetItemState(m_hWnd,sfItem.iItem, LVIS_SELECTED, LVIS_SELECTED);	//	Highlight the checked item
+			DASSERT(sfItem.lParam != NULL);
+			ret.insert(sfItem.lParam);
+		}
+		else if(!ListView_GetCheckState(m_hWnd,sfItem.iItem) && ListView_GetItemState(m_hWnd,sfItem.iItem,LVIS_SELECTED))	//	Check box is not checked, let's unhighlight this item
+		{
+			ListView_SetItemState(m_hWnd,sfItem.iItem, ~LVIS_SELECTED, LVIS_SELECTED);	//	Unhighlight this item
+		}
+    }
+
     return ret;	//	Return the set of items
   }
 private:
