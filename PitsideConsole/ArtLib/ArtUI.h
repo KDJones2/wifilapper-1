@@ -57,7 +57,7 @@ public:
         SendMessage(m_hWnd,LVM_INSERTCOLUMN,x,(LPARAM)&LvCol); // Insert/Show the coloum
       }
     }
-	ListView_SetExtendedListViewStyleEx(m_hWnd, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
+	ListView_SetExtendedListViewStyleEx(m_hWnd, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS);
   }
 
   //	Original Listview initialization function for non-checkbox Listviews
@@ -94,7 +94,7 @@ public:
         SendMessage(m_hWnd,LVM_INSERTCOLUMN,x,(LPARAM)&LvCol); // Insert/Show the coloum
       }
     }
-	ListView_SetExtendedListViewStyleEx(m_hWnd, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
+	ListView_SetExtendedListViewStyleEx(m_hWnd, LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS, LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS);
   }
   void AddString(LPCTSTR lpszString, int iData)
   {

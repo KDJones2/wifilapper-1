@@ -1308,10 +1308,10 @@ void CLapPainter::MakeColor(const CExtendedLap* pLap, bool RefLapFlag, float* pR
 			*pG = RandDouble(); 
 			*pB = RandDouble(); 
 		} 
-		while(*pR + *pG + *pB < 0.5); 
+		while(*pR + *pG + *pB < 1.20f || *pR + *pG + *pB > 2.25f ); 
 		glColor3d( *pR, *pG, *pB ); // Final color to use.  Tells opengl to draw the following in the colour we just made up
 	}
-	else
+	else	//	Background color is light grey, keep these colors low enough alpha to provide contrast
 	{
 		do 
 		{ 
@@ -1319,15 +1319,15 @@ void CLapPainter::MakeColor(const CExtendedLap* pLap, bool RefLapFlag, float* pR
 			*pG = RandDouble(); 
 			*pB = RandDouble(); 
 		} 
-		while(*pR + *pG + *pB > 2.5); 
+		while(*pR * *pG * *pB > 0.45 && *pR + *pG + *pB > 0.75 && *pR * *pG > 0.75); 
 		glColor3d( *pR, *pG, *pB ); // Final color to use.  Tells opengl to draw the following in the colour we just made up
 	}
 	//	Check if this the is the Reference Lap. If so, change the color to full White/Black
 	if (RefLapFlag && m_pLapSupplier->GetDisplayOptions().fColorScheme)	//	Background color is black, make Reference Lap white
 	{
-		*pR = 0.95; *pG = 0.95; *pB = 0.95;
+		*pR = 0.90; *pG = 0.90; *pB = 0.90;
 	}
-	else if (RefLapFlag)	//	Background color is black, make Reference Lap white
+	else if (RefLapFlag)	//	Background color is Grey, make Reference Lap Black
 	{
 		*pR = 0.0; *pG = 0.0; *pB = 0.0;
 	}
