@@ -345,6 +345,35 @@ public:
 
     return ret;	//	Return the set of items
   }
+
+  set<LPARAM> GetSelectedItemsData3() const	//	Version to capture the Lap List for multi-select choices more efficiently
+  {
+	set<LPARAM> ret;
+    int ixSelect = -1;
+    do
+    {
+      ixSelect = SendMessage(m_hWnd, LVM_GETNEXTITEM, ixSelect, LVNI_SELECTED);
+      if(ixSelect >= 0) 
+      {
+        LVITEM sfItem = {0};
+        sfItem.iItem = ixSelect;
+        sfItem.iSubItem = 0;
+        sfItem.stateMask = LVIS_SELECTED;
+        sfItem.mask = LVIF_STATE | LVIF_PARAM;
+
+        if(ListView_GetItem(m_hWnd,&sfItem))
+        {
+          // found an item!
+          DASSERT(sfItem.lParam != NULL);
+          ret.insert(sfItem.lParam);
+        }
+		else {DASSERT(FALSE); break;}		// Added by KDJ to prevent locks when no data is passed
+      }
+    } while(ixSelect >= 0);
+
+	return ret;	//	Return the set of items
+  }
+
 private:
   HWND m_hWnd;
   int m_cColumns; // used for debugging

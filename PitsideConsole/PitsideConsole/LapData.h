@@ -130,9 +130,9 @@ static bool SetDistance(int b_KmOrLat)	//	Function to set X-Axis units in either
   static void GetStringHeaders(vector<wstring>& lstCols, vector<int>& lstWidths)
   {
     lstCols.push_back(L"Time");
-    lstWidths.push_back(73);
+    lstWidths.push_back(60);
     lstCols.push_back(L"Laptime");
-    lstWidths.push_back(55);
+    lstWidths.push_back(60);
     lstCols.push_back(L"Comment");
     lstWidths.push_back(75);
   }
