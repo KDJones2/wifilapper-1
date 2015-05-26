@@ -275,39 +275,34 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 					break;
 				}
 			}
+        if(mapMinYTemp.find(eType) == mapMinYTemp.end())
         {
-          mapMinYTemp[eType] = min(pChannel->GetMin(),mapMinYTemp[eType]);
-          mapMaxYTemp[eType] = max(pChannel->GetMax(),mapMaxYTemp[eType]);
+          mapMinYTemp[eType] = min(pChannel->GetMin(),m_pLapSupplier->GetDataHardcodedMin(eType));
+          mapMaxYTemp[eType] = max(pChannel->GetMax(),m_pLapSupplier->GetDataHardcodedMax(eType));
+        }
+        else
+		{
+          mapMinYTemp[eType] = min(pChannel->GetMin(),mapMinYTemp[eType]);	//	Make the minimum the least of the min of this lap, or the previous ones
+          mapMaxYTemp[eType] = max(pChannel->GetMax(),mapMaxYTemp[eType]);	//	Make the maximum the greater of the max of this lap, or the previous ones
 		}
 ////////////////////////////////
 		//	Adding transformation functions here for Min/MaxY
-	  //	This needs to be fixed, NOT CORRECT FOR SETTING THE BOUNDS
-//		if (b_TransformY == true && mapMinYTemp[eType] > (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue))
 		if (b_TransformY == true && (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue) > (float)PolynomialFilter(mapMaxYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue))		
 		{
 			mapMinY[eType] = (float)PolynomialFilter(mapMaxYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue);
-		}
-		else if (b_TransformY == true)
-		{
-			mapMinY[eType] = (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue);
-		}
-		else
-		{
-			mapMinY[eType] = mapMinYTemp[eType];
-		}
-
-		if (b_TransformY == true && (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue) > (float)PolynomialFilter(mapMaxYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue))
-		{
 			mapMaxY[eType] = (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue);
 		}
 		else if (b_TransformY == true)
 		{
+			mapMinY[eType] = (float)PolynomialFilter(mapMinYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue);
 			mapMaxY[eType] = (float)PolynomialFilter(mapMaxYTemp[eType], sfLapOpts.m_PlotPrefs[i_TransInt].fTransAValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransBValue, sfLapOpts.m_PlotPrefs[i_TransInt].fTransCValue);
 		}
 		else
 		{
+			mapMinY[eType] = mapMinYTemp[eType];
 			mapMaxY[eType] = mapMaxYTemp[eType];
 		}
+
 ////////////////////////////////
         if (ValueDisplay == false)
 	    {
