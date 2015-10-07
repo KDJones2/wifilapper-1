@@ -204,7 +204,7 @@ public:
           if( setData.find(sfItem.lParam) != end(setData) )
           {
             // found the item in the selection set, so make it selected and checkbox checked
-            sfItem.state |= LVIS_SELECTED;
+            sfItem.state |= LVIS_FOCUSED | LVIS_SELECTED;
             sfItem.stateMask |= LVIS_SELECTED | LVIS_STATEIMAGEMASK;
             ListView_SetItem(m_hWnd,&sfItem);				//	Highlight the lap
 			ListView_SetCheckState(m_hWnd,ixItem,true);		//	Check the checkbox
@@ -212,7 +212,7 @@ public:
           else
           {
             // this item is not supposed to be selected
-            sfItem.state &= ~LVIS_SELECTED;
+            sfItem.state &= ~LVIS_SELECTED & ~LVIS_FOCUSED;
             sfItem.stateMask &= ~LVIS_SELECTED & ~LVIS_STATEIMAGEMASK;
             ListView_SetItem(m_hWnd, &sfItem);				//	Unhighlight the lap
 			ListView_SetCheckState(m_hWnd,ixItem,false);	//	Uncheck the checkbox

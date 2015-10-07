@@ -803,7 +803,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
                 NMITEMACTIVATE* pDetails = (NMITEMACTIVATE*)notifyHeader;
                 if(pDetails->iItem >= 0)	//	Single select Listview, requires special handling
                 {
-                  UpdateUI(UPDATE_MAP | UPDATE_DASHBOARD | UPDATE_VALUES);
+                  UpdateUI(UPDATE_MAP | UPDATE_MENU | UPDATE_DASHBOARD | UPDATE_VALUES);
                 }
               }
 			  return TRUE;
@@ -824,7 +824,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
                 NMITEMACTIVATE* pDetails = (NMITEMACTIVATE*)notifyHeader;
                 if(pDetails->iItem >= 0)
                 {
-                  UpdateUI(UPDATE_MAP | UPDATE_DASHBOARD | UPDATE_VALUES);
+                  UpdateUI(UPDATE_MAP | UPDATE_MENU | UPDATE_DASHBOARD | UPDATE_VALUES);
                 }
               }
               return TRUE;
@@ -1120,7 +1120,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				  m_iRaceId[0] = sfResult.iRaceId;
 				  ClearUILaps();
 				  LoadLaps(g_pLapDB);
-				  UpdateUI(UPDATE_ALL);
+				  UpdateUI(UPDATE_MAP | UPDATE_MENU | UPDATE_DASHBOARD );
 				}
 				bEditSessions = false;
 			}
@@ -1136,7 +1136,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				CPlotSelectDlg dlgPlot(g_pLapDB, &sfResult, m_iRaceId[0], &m_sfLapOpts);
 				ArtShowDialog<IDD_PLOTPREFS>(&dlgPlot);
 				bSetPlot = false;
-				UpdateUI(UPDATE_ALL);
+				UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_DASHBOARD | UPDATE_VALUES);
 			}
 			return TRUE;
 		  }		
@@ -1211,7 +1211,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			}
 			if(!sfResult.fCancelled)
             {
-			  UpdateUI(UPDATE_ALL);
+			  UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_TRACTIONCIRCLE | UPDATE_DASHBOARD);
 			}
             return TRUE;
 		  }		
@@ -1235,7 +1235,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			ABOUT_RESULT sfResult;
 			CAboutDlg dlgAbout(&sfResult);
 			ArtShowDialog<IDD_ABOUT>(&dlgAbout);
-			UpdateUI(UPDATE_ALL);
+			UpdateUI(UPDATE_MENU | UPDATE_MAP | UPDATE_TRACTIONCIRCLE | UPDATE_DASHBOARD);
 			return TRUE;
 		  }		
           case ID_OPTIONS_TRACTIONCIRCLE:
@@ -1582,7 +1582,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				DeleteObject(hdcMemDC);
 				ReleaseDC(NULL,hdcSource);
 				ReleaseDC(hWnd,hdcWindow);
-				UpdateUI(UPDATE_DASHBOARD | UPDATE_LIST | UPDATE_MENU | UPDATE_ALL);
+				UpdateUI(UPDATE_ALL);
 //			    InitAxes(setSelectedChannels);
 				return TRUE;
           }
@@ -1708,7 +1708,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
             }
             return TRUE;
           }
-          case IDC_DISPLAYTYPE_RECEPTION:
+/*          case IDC_DISPLAYTYPE_RECEPTION:
           {
             switch(HIWORD(wParam))
             {
@@ -1719,7 +1719,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
             }
             return TRUE;
           }
-          case IDC_DISPLAYTYPE_PLOT:
+*/          case IDC_DISPLAYTYPE_PLOT:
           {
             switch(HIWORD(wParam))
             {
@@ -1760,23 +1760,24 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
             {
             case BN_CLICKED:
               ApplyDriverNameToSelectedLaps(::g_pLapDB);
-              UpdateUI(UPDATE_ALL); //the list causes everything to redraw
+              UpdateUI(UPDATE_LIST | UPDATE_DASHBOARD); // Redraw the laplist and buttons
               break;
             }
             return TRUE;
           }
-          case IDC_CLEARSELECTION:
+/*          case IDC_CLEARCOMMENT:	//	This button clears the comment field
           {
             switch(HIWORD(wParam))
             {
 				case BN_CLICKED:
-				  m_sfLapList.Clear();
-				  UpdateUI(UPDATE_ALL);
+				  m_szCommentText[0] = '\0';
+				  SendMessage(GetDlgItem(m_hWnd, IDC_COMMENTTEXT), WM_SETTEXT, NUMCHARS(m_szCommentText), (LPARAM)m_szCommentText);
+//				  UpdateUI(UPDATE_ALL);
 				  break;
             }
             return TRUE;
           }
-          case IDC_COMMENTTEXT:
+*/          case IDC_COMMENTTEXT:
           {
             switch(HIWORD(wParam))
             {
@@ -1979,14 +1980,15 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		vector<CExtendedLap*> laps = GetSortedLaps(m_sfLapOpts.eSortPreference); // translates our m_mapLaps into a vector sorted by time
 		for(int x = 0;x < laps.size(); x++)
 		{
-		vector<wstring> lstStrings;
-		laps[x]->GetStrings(lstStrings);
-		m_sfLapList.AddStrings(lstStrings, (LPARAM)laps[x]);
+			vector<wstring> lstStrings;
+			laps[x]->GetStrings(lstStrings);
+			m_sfLapList.AddStrings(lstStrings, (LPARAM)laps[x]);
 		}
 		m_sfLapList.SetSelectedData(setSelectedData);
 		if(laps.size() > 0)
 		{
-		m_sfLapList.MakeVisible((LPARAM)laps[laps.size()-1]);
+			m_sfLapList.MakeVisible((LPARAM)laps[laps.size()-1]);	//	Always set the last lap as visible in the Lap List
+//			m_sfLapList.MakeVisible( (LPARAM)m_sfLapList.GetSelectedItemsData3() );
 		}
     }
     if(IS_FLAG_SET(fdwUpdateFlags, UPDATE_VALUES))
@@ -2222,7 +2224,8 @@ private:
   void HandleResize(SIZE sNewSize)
   {
     HandleCtlResize(sNewSize, IDC_DISPLAY, true, true); // main display window
-    HandleCtlResize(sNewSize, IDC_SUBDISPLAY, false, false); // sub display window
+//    HandleCtlResize(sNewSize, IDC_SUBDISPLAY, false, false); // sub display window
+    HandleCtlResize(sNewSize, IDC_SUBDISPLAY, true, false); // sub display window
     HandleCtlResize(sNewSize, IDC_LAPS, false, true); // lap list
     HandleCtlResize(sNewSize, IDC_TRACTIONCIRCLEMAP, false, false); // Traction circle window
   }
@@ -2499,49 +2502,6 @@ private:
 			return sum;
 		}
 	}
-
-COLORREF colorShade (COLORREF c, float fPercent)
-//	create a darker shade (by fPercent %) of a given colour
-{
-	return RGB ((BYTE) ((float) GetRValue (c) * fPercent / 100.0),
-					(BYTE) ((float) GetGValue (c) * fPercent / 100.0),
-					(BYTE) ((float) GetBValue (c) * fPercent / 100.0));
-}
-
-void EraseAlternatingRowBkgnds (HWND hWnd, HDC hDC)
-//    re-draw row backgrounds with the appropriate background colour
-{
-	COLORREF d_BlackColor = RGB(0, 0, 0);	//	Black
-	COLORREF d_WhiteColor = RGB(255, 255, 255);	//	White
-	COLORREF d_RedColor = RGB(230, 20, 20);	//	Red
-	COLORREF d_GreenColor = RGB(20, 230, 20);	//	Green
-	COLORREF d_LGreyColor = RGB(200, 200, 200);	//	Light Grey
-    RECT    rect;        //    row rectangle
-    POINT    pt;
-    int     iItems,
-            iTop;
-    HBRUSH    brushCol1,    //    1st colour
-            brushCol2;    //    2nd colour
-
-    brushCol1 = CreateSolidBrush (GetSysColor (COLOR_WINDOW));	//    create coloured brushes
-    brushCol2 = CreateSolidBrush (colorShade (GetSysColor (COLOR_WINDOW), 90.0));
-    GetClientRect (hWnd, &rect);	//    get horizontal dimensions of row
-    iItems = ListView_GetCountPerPage (hWnd);	//    number of displayed rows
-    iTop = ListView_GetTopIndex (hWnd);		//    first visible row
-    ListView_GetItemPosition (hWnd, iTop, &pt);
-
-    for (int i=iTop ; i<=iTop+iItems ; i++) 
-	{
-        rect.top = pt.y;	//        set row vertical dimensions
-        ListView_GetItemPosition (hWnd, i+1, &pt);
-        rect.bottom = pt.y;
-        FillRect (hDC, &rect, (i % 2) ? brushCol2 : brushCol1);		//	fill row with appropriate colour
-    }
-    
-//    cleanup
-    DeleteObject (brushCol1);
-    DeleteObject (brushCol2);
-}  
 
 void UpdateSectors()
   {
