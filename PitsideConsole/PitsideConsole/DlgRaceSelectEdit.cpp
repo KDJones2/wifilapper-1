@@ -125,6 +125,26 @@ LRESULT CRaceSelectEditDlg::DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
         {
 		  //	Let's make sure that the user really wants to do this.
 		  RENAMEDLG_RESULT sfResult;
+		  set<LPARAM> setSelected = sfListBox.GetSelectedItemsData2();
+		  if(setSelected.size() >= 1)
+		  {
+			  //   Get the current Race Name to insert into edit dialog
+			  int iFirstRaceId = -1;
+			  for(set<LPARAM>::const_iterator i = setSelected.begin(); i != setSelected.end(); i++)
+			  {
+				// Let's find the race name in the database to display in the edit dialog
+				vector<RACEDATA> lstRaces = m_pLapDB->GetRaces();
+      
+				for(int x = 0;x < lstRaces.size(); x++)
+				{
+					if( lstRaces[x].raceId == *i)
+					{
+						wcscpy_s( sfResult.szName, NUMCHARS(sfResult.szName), lstRaces[x].strName.c_str() );	//	Copy the string to the sfResult pointer
+						break;
+					}
+				}
+			  }
+		  }
 		  CRenameDlg dlgRaceRename(&sfResult);
 		  ArtShowDialog<IDD_RACENAMECHANGE>(&dlgRaceRename);
 		  if(!sfResult.fCancelled)

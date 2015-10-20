@@ -72,11 +72,28 @@ namespace DashWare
       int msStartTime = INT_MAX; // start time and end time for this lap (gotten by looking at start and end time for data channels)
       int msEndTime = -INT_MAX;
 
+		//	Go through all of the mapped data channels to determine the msStart and msEnd times for this lap, based upon all data available
+		  for(int y = 0; y < DATA_CHANNEL_COUNT; y++)
+		  {
+			const IDataChannel* pChannel = g_pLapDB->GetDataChannel(pLap->GetLapId(),(DATA_CHANNEL)y);
+			DASSERT(pChannel->IsValid());	//	Ensure that channel doesn't cause execution issues
+//			  DASSERT(pChannel->IsLocked() && pChannel->IsValid());
+//			  if(pChannel && pChannel->IsLocked() && pChannel->IsValid())
+			if(pChannel && pChannel->IsValid())
+			{
+			  mapChannels[(DATA_CHANNEL)y] = pChannel;
+			}
+			else
+			{
+			  DASSERT(FALSE);
+			}
+	     }
+
 	  //	Go through all of the mapped data channels to determine the msStart and msEnd times for this lap, based upon all data available
 	  for(map<DATA_CHANNEL, const IDataChannel*>::iterator i = begin(mapChannels); i != end(mapChannels); i++)
       {
-		const IDataChannel* pDC = g_pLapDB->GetDataChannel(pLap->GetLapId(),(DATA_CHANNEL)i->first);
-//        const IDataChannel* pDC = mapChannels[i->first];	//	Removed this as it didn't give the correct lap times
+//		const IDataChannel* pDC = g_pLapDB->GetDataChannel(pLap->GetLapId(),(DATA_CHANNEL)i->first);
+        const IDataChannel* pDC = mapChannels[i->first];	//	Removed this as it didn't give the correct lap times
         if(pDC)
         {
           msStartTime = min(pDC->GetStartTimeMs(),msStartTime);
@@ -114,10 +131,11 @@ namespace DashWare
           out << "," << szTemp;
 
 		  //	For all of the hard coded channels, loop through them to get the data channel value at this point in time
-          for(map<DATA_CHANNEL,const IDataChannel*>::iterator i = begin(mapChannels); i != end(mapChannels); i++)
+//		  const ILap* pLap_temp = g_pLapDB->GetLap(pLap->GetLapId());	//	Get the data for this lap/channel
+		  for(map<DATA_CHANNEL,const IDataChannel*>::iterator i = begin(mapChannels); i != end(mapChannels); i++)
           {
-			const IDataChannel* pDC = g_pLapDB->GetDataChannel(pLap->GetLapId(),(DATA_CHANNEL)i->first);	//	Get the data for this lap/channel
-//            const IDataChannel* pDC = i->second;	//	Removed this as it didn't give the correct lap data
+//			const IDataChannel* pDC_temp = g_pLapDB->GetDataChannel(pLap->GetLapId(),(DATA_CHANNEL)i->first);	//	Get the data for this lap/channel
+            const IDataChannel* pDC = i->second;	//	Removed this as it didn't give the correct lap data
             if(pDC)
             {
               float flValue = pDC->GetValue(msQuery);
