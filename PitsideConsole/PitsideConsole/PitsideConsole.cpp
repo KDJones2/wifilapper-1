@@ -956,7 +956,11 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 	    {
           case IDC_SENDMESSAGE:
           {
-            MESSAGEDLG_RESULT sfResult;
+            static MESSAGEDLG_RESULT sfResult;
+			if(wcslen(sfResult.szMessage) <= 0)
+			{
+				wcscpy_s( sfResult.szMessage, L"Pit Now");	//	Add default string if nothing is there
+			}
             CMessageDlg dlgMessage(&sfResult);
             
             HWND hWndButton = GetDlgItem(this->m_hWnd,IDC_SENDMESSAGE);
