@@ -89,18 +89,21 @@ namespace DashWare
 			}
 	     }
 
+      const IDataChannel* pDC = mapChannels[DATA_CHANNEL_VELOCITY];	//	Use the Velocity data channel to set time boundary conditions for this lap
 	  //	Go through all of the mapped data channels to determine the msStart and msEnd times for this lap, based upon all data available
-	  for(map<DATA_CHANNEL, const IDataChannel*>::iterator i = begin(mapChannels); i != end(mapChannels); i++)
+/*	  for(map<DATA_CHANNEL, const IDataChannel*>::iterator i = begin(mapChannels); i != end(mapChannels); i++)
       {
-//		const IDataChannel* pDC = g_pLapDB->GetDataChannel(pLap->GetLapId(),(DATA_CHANNEL)i->first);
-        const IDataChannel* pDC = mapChannels[i->first];	//	Removed this as it didn't give the correct lap times
+//		const IDataChannel* pDC = g_pLapDB->GetDataChannel(pLap->GetLapId(),(DATA_CHANNEL)i->first);	//	This is a huge memory hog
+        const IDataChannel* pDC = mapChannels[i->first];	//	Not sure if this gives the correct lap times
         if(pDC)
         {
           msStartTime = min(pDC->GetStartTimeMs(),msStartTime);
-          msEndTime = max(pDC->GetEndTimeMs(),msEndTime);
+//          msEndTime = max(pDC->GetEndTimeMs(),msEndTime);
         }
       }
-      msEndTime = max(msEndTime, msStartTime + pLap->GetTime()*1000);
+*/
+      msStartTime = pDC->GetStartTimeMs();
+	  msEndTime = max(msEndTime, msStartTime + pLap->GetTime()*1000);
 
 	  const vector<TimePoint2D>& lstPoints = pLap->GetPoints();	  //	List of points for this lap
 	  float flRunningAverage[DATA_CHANNEL_COUNT] = {0.0f};
@@ -135,7 +138,7 @@ namespace DashWare
 		  for(map<DATA_CHANNEL,const IDataChannel*>::iterator i = begin(mapChannels); i != end(mapChannels); i++)
           {
 //			const IDataChannel* pDC_temp = g_pLapDB->GetDataChannel(pLap->GetLapId(),(DATA_CHANNEL)i->first);	//	Get the data for this lap/channel
-            const IDataChannel* pDC = i->second;	//	Removed this as it didn't give the correct lap data
+            const IDataChannel* pDC = i->second;	//	Not sure if this gives the correct lap data
             if(pDC)
             {
               float flValue = pDC->GetValue(msQuery);
