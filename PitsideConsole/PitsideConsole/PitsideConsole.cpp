@@ -627,6 +627,26 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
         InitBaseWindowPos();
 
 		tmLast = timeGetTime();	//	Initialize time lap was received
+
+		// Find all of the Names of the selected Race Sessions for addition to title bar
+		vector<RACEDATA> lstRaces = g_pLapDB->GetRaces();
+		TCHAR lstSessions[MAX_PATH] = {NULL};
+		for(int x = 0;x < lstRaces.size(); x++)
+		{
+			for (int z = 0; z < 50; z++)
+			{
+				if ( m_iRaceId[z] == lstRaces[x].raceId )
+				{
+					_snwprintf(lstSessions, NUMCHARS(lstSessions), L"%s | %s", lstSessions, lstRaces[x].strName.c_str());
+					break;
+				}
+			}
+		}
+		
+		TCHAR szTemp[MAX_PATH] = {NULL};
+	    _snwprintf(szTemp, NUMCHARS(szTemp), L"Pitside - %s%s", m_szPath, lstSessions);
+		SetWindowText(m_hWnd, szTemp );	//	Change the title bar to show the file name and Session(s) opened
+    
 		return 0;
       }
       case WM_CLOSE:
@@ -1102,6 +1122,26 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				  ClearUILaps();
 				  LoadLaps(g_pLapDB);
 				  UpdateUI(UPDATE_ALL);
+
+				  // Find all of the Names of the selected Race Sessions for addition to title bar
+				  vector<RACEDATA> lstRaces = g_pLapDB->GetRaces();
+				  TCHAR lstSessions[MAX_PATH] = {NULL};
+				  for(int x = 0;x < lstRaces.size(); x++)
+				  {
+						for (int z = 0; z < 50; z++)
+						{
+							if ( m_iRaceId[z] == lstRaces[x].raceId )
+							{
+								_snwprintf(lstSessions, NUMCHARS(lstSessions), L"%s | %s", lstSessions, lstRaces[x].strName.c_str());
+								break;
+							}
+						}
+				  }
+		
+				  TCHAR szTemp[MAX_PATH] = {NULL};
+				  _snwprintf(szTemp, NUMCHARS(szTemp), L"Pitside - %s%s", m_szPath, lstSessions);
+				  SetWindowText(m_hWnd, szTemp );	//	Change the title bar to show the file name and Session(s) opened
+
 				  //	Just loaded a new session. Let's reset the timer
 				  tmLast = timeGetTime();	//	Save last time lap was received
 				}
@@ -1219,7 +1259,20 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			}
             return TRUE;
 		  }		
-          case ID_HELP_SHOWHELP:
+		  case ID_OPTIONS_CANCELSPLITS:
+		  {
+				if (HC_ShowSplits)	//	If the window showing all of the lap data is present, let's kill it
+				{
+					if (GetWindowPlacement(hWndShowSplits, &w_SectorTimesWindow) )
+					{
+						DestroyWindow(hWndShowSplits);
+						hWndShowSplits = NULL;
+					}
+				}
+				m_sfLapOpts.fDrawSplitPoints = false;
+				return TRUE;
+		  }
+		  case ID_HELP_SHOWHELP:
           {
             ShowHelp(hWnd);
             return TRUE;
@@ -1607,7 +1660,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					SELECTSESSIONS_RESULT sfResult;
 					CDlgSelectSessions dlgRace(g_pLapDB, &sfResult);
 					ArtShowDialog<IDD_SELECTSESSIONS>(&dlgRace);
-					if(!sfResult.fCancelled /*&& sfResult.m_RaceId[0] != -1 */)	//	Allow the user to show the menu and start a race, even if no data has been collected from the racers yet
+					if( !sfResult.fCancelled )	//	Allow the user to show the menu and start a race, even if no data has been collected from the racers yet
 					{
 						// Now display the T&S page and pass these RaceID's to this class
 						TS_RESULT ts_sfResult;
@@ -1649,6 +1702,24 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
                   UpdateUI(UPDATE_ALL);
 				  //	Let's reset the timer
 				  tmLast = timeGetTime();	//	Save last time lap was received
+
+				  // Find all of the Names of the selected Race Sessions for addition to title bar
+				  vector<RACEDATA> lstRaces = g_pLapDB->GetRaces();
+				  TCHAR lstSessions[MAX_PATH] = {NULL};
+				  for(int x = 0;x < lstRaces.size(); x++)
+				  {
+					for (int z = 0; z < 50; z++)
+					{
+						if ( m_iRaceId[z] == lstRaces[x].raceId )
+						{
+							_snwprintf(lstSessions, NUMCHARS(lstSessions), L"%s | %s", lstSessions, lstRaces[x].strName.c_str());
+							break;
+						}
+					}
+				  }
+				  TCHAR szTemp[MAX_PATH] = {NULL};
+				  _snwprintf(szTemp, NUMCHARS(szTemp), L"Pitside - %s%s", m_szPath, lstSessions);
+				  SetWindowText(hWnd, szTemp);	//	Change the title bar to show the file name opened
                 }
               }
             }
@@ -2228,7 +2299,6 @@ private:
   void HandleResize(SIZE sNewSize)
   {
     HandleCtlResize(sNewSize, IDC_DISPLAY, true, true); // main display window
-//    HandleCtlResize(sNewSize, IDC_SUBDISPLAY, false, false); // sub display window
     HandleCtlResize(sNewSize, IDC_SUBDISPLAY, true, false); // sub display window
     HandleCtlResize(sNewSize, IDC_LAPS, false, true); // lap list
     HandleCtlResize(sNewSize, IDC_TRACTIONCIRCLEMAP, false, false); // Traction circle window
@@ -3709,7 +3779,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         fDBOpened = true;
       }
     }
-    
+
   }
   else
   {

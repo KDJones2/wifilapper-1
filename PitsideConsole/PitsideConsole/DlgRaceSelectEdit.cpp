@@ -129,7 +129,6 @@ LRESULT CRaceSelectEditDlg::DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM 
 		  if(setSelected.size() >= 1)
 		  {
 			  //   Get the current Race Name to insert into edit dialog
-			  int iFirstRaceId = -1;
 			  for(set<LPARAM>::const_iterator i = setSelected.begin(); i != setSelected.end(); i++)
 			  {
 				// Let's find the race name in the database to display in the edit dialog
