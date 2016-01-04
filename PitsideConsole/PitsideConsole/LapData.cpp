@@ -252,6 +252,7 @@ void GetDataChannelName(DATA_CHANNEL eDC, LPTSTR lpszName, int cch)
   case DATA_CHANNEL_RECEPTION_X: lpszDataName = L"Wifi Dots X"; break;
   case DATA_CHANNEL_RECEPTION_Y: lpszDataName = L"Wifi Dots Y"; break;
   case DATA_CHANNEL_HRM: lpszDataName = L"Heart Rate"; break;
+  case DATA_CHANNEL_STRENGTH: lpszDataName = L"Conn. Level"; break;
   default:
     if(eDC >= DATA_CHANNEL_IOIOPIN_START && eDC <= DATA_CHANNEL_IOIOPIN_END)
     {
@@ -340,9 +341,13 @@ void GetChannelString(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LP
       break;
     }
     case DATA_CHANNEL_LAPTIME_SUMMARY:
+    {
+      sprintf(lpsz, "%4.1f", flValue);
+      break;
+    }
 	case DATA_CHANNEL_HRM:
     {
-      sprintf(lpsz, "%4.1fs", flValue);
+      sprintf(lpsz, "%4.1fBPM", flValue);
       break;
     }
     case DATA_CHANNEL_TIME:
@@ -444,6 +449,7 @@ void GetChannelValue(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LPS
     }
     case DATA_CHANNEL_LAPTIME_SUMMARY:
 	case DATA_CHANNEL_HRM:
+	case DATA_CHANNEL_STRENGTH:
     {
       sprintf(lpsz, "%4.1f", flValue);
       break;
