@@ -3341,6 +3341,10 @@ void UpdateDisplays()
         int iMin = (int)(flMin);
         return (float)(iMin);
       }
+      case DATA_CHANNEL_STRENGTH:
+	  {
+		return 0.0f;
+	  }
       case DATA_CHANNEL_X_ACCEL:
       case DATA_CHANNEL_Y_ACCEL:
       case DATA_CHANNEL_Z_ACCEL:
@@ -3506,6 +3510,7 @@ void UpdateDisplays()
 		case DATA_CHANNEL_Y_ACCEL: return 0.5f;
 		case DATA_CHANNEL_Z_ACCEL: return 0.5f;
 		case DATA_CHANNEL_TEMP: return 10.0f;
+		case DATA_CHANNEL_STRENGTH: return 1.0f;
 
 		default: 
 		  if(eChannel >= DATA_CHANNEL_IOIOPIN_START && eChannel < DATA_CHANNEL_IOIOPIN_END ||

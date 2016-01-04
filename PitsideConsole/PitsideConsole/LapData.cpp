@@ -350,6 +350,11 @@ void GetChannelString(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LP
       sprintf(lpsz, "%4.1fBPM", flValue);
       break;
     }
+	case DATA_CHANNEL_STRENGTH:
+    {
+      sprintf(lpsz, "%4.1f", flValue);
+      break;
+    }
     case DATA_CHANNEL_TIME:
     {
       sprintf(lpsz, "%4.1fs", flValue/1000.0f);
