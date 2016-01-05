@@ -244,6 +244,7 @@ void GetDataChannelName(DATA_CHANNEL eDC, LPTSTR lpszName, int cch)
   case DATA_CHANNEL_ELAPSEDTIME: lpszDataName = L"Elapsed Time"; break;
   case DATA_CHANNEL_LAPTIME_SUMMARY: lpszDataName = L"Lap Time"; break;
   case DATA_CHANNEL_VELOCITY: lpszDataName = L"Velocity"; break;
+  case DATA_CHANNEL_VELOCITYDELTA: lpszDataName = L"Vel. Delta"; break;
   case DATA_CHANNEL_TIMESLIP: lpszDataName = L"Time-slip"; break;
   case DATA_CHANNEL_X_ACCEL: lpszDataName = L"X accel"; break;
   case DATA_CHANNEL_Y_ACCEL: lpszDataName = L"Y accel"; break;
@@ -367,6 +368,7 @@ void GetChannelString(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LP
     }
 
 	case DATA_CHANNEL_VELOCITY:
+	case DATA_CHANNEL_VELOCITYDELTA:
     {
       LPCSTR lpszUnits = GetUnitText(eUnits);
       // note: velocity is in m/s, but most humans will like km/h (well... except for americans, but screw them for now)
@@ -470,6 +472,7 @@ void GetChannelValue(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LPS
       break;
     }
 	case DATA_CHANNEL_VELOCITY:
+	case DATA_CHANNEL_VELOCITYDELTA:
     {
       // note: velocity is in m/s, but most humans will like km/h (well... except for americans, but screw them for now)
       sprintf(lpsz, "%4.1f", ConvertSpeed(eUnits,flValue));
@@ -608,6 +611,7 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
     // the distance-from-start/finish for P is thus (percentage) * (d2's distance) + (100 - percentage) * (d1's distance)
     IDataChannel* pDistance = pLapDB->AllocateDataChannel();
     IDataChannel* pVelocity = pLapDB->AllocateDataChannel();
+	IDataChannel* pVelocityDelta = pLapDB->AllocateDataChannel();
     IDataChannel* pX = pLapDB->AllocateDataChannel();
     IDataChannel* pY = pLapDB->AllocateDataChannel();
     IDataChannel* pTime = pLapDB->AllocateDataChannel();
@@ -621,6 +625,7 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
     pY->Init(GetLap()->GetLapId(), DATA_CHANNEL_Y);
     pDistance->Init(GetLap()->GetLapId(), DATA_CHANNEL_DISTANCE);
     pVelocity->Init(GetLap()->GetLapId(), DATA_CHANNEL_VELOCITY);
+	pVelocityDelta->Init(GetLap()->GetLapId(), DATA_CHANNEL_VELOCITYDELTA);
     int iStartPoint = 0;
     for(int x = 0;x < lstPoints.size(); x++)
     {
@@ -656,6 +661,13 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
 			m_lstPoints.push_back(TimePoint2D(p));
 			pDistance->AddPoint((int)p.iTime,dThisDistance);
 			pVelocity->AddPoint((int)p.iTime,p.flVelocity);
+
+			//	Let's compute the Velocity delta between the Reference and current lap
+			const IDataChannel* pReferenceVelocityChannel = pReferenceLap->GetChannel(DATA_CHANNEL_VELOCITY);
+			const double dD1Velocity = pReferenceVelocityChannel->GetValue(sfD1.iTime);
+			const double dD2Velocity = pReferenceVelocityChannel->GetValue(sfD2.iTime);
+			const double dRefVelocity = (dD1Velocity * (1-dPercent)) + (dD2Velocity * dPercent);
+			pVelocityDelta->AddPoint((int)p.iTime,p.flVelocity - (float)dRefVelocity );	//	Insert the velocity delta into the vector for this channel
 		  }
 		}
 		else
@@ -668,6 +680,13 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
             m_lstPoints.push_back(TimePoint2D(p));
 		    pDistance->AddPoint((int)p.iTime,dThisDistance);
             pVelocity->AddPoint((int)p.iTime,p.flVelocity);
+
+			//	Let's compute the Velocity delta between the Reference and current lap
+			const IDataChannel* pReferenceVelocityChannel = pReferenceLap->GetChannel(DATA_CHANNEL_VELOCITY);
+			const double dD1Velocity = pReferenceVelocityChannel->GetValue(sfD1.iTime);
+			const double dD2Velocity = pReferenceVelocityChannel->GetValue(sfD2.iTime);
+			const double dRefVelocity = (dD1Velocity * (1-dPercent)) + (dD2Velocity * dPercent);
+			pVelocityDelta->AddPoint((int)p.iTime,p.flVelocity - (float)dRefVelocity );	//	Insert the velocity delta into the vector for this channel
 		  }
 		}
 
@@ -755,6 +774,16 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
     {
       pLapDB->FreeDataChannel(pVelocity);
       pVelocity = NULL;
+    }
+    if(pVelocityDelta->IsValid())
+    {
+      pVelocityDelta->Lock();
+      AddChannel(pVelocityDelta);
+    }
+    else
+    {
+      pLapDB->FreeDataChannel(pVelocityDelta);
+      pVelocityDelta = NULL;
     }
 
     if(fComputeTimeSlip && m_lstPoints.size() > 0)
@@ -853,6 +882,7 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
 
     IDataChannel* pDistance = pLapDB->AllocateDataChannel();
     IDataChannel* pVelocity = pLapDB->AllocateDataChannel();
+    IDataChannel* pVelocityDelta = pLapDB->AllocateDataChannel();
     IDataChannel* pTimeSlip = pLapDB->AllocateDataChannel();
     IDataChannel* pTime = pLapDB->AllocateDataChannel();
     IDataChannel* pLapTime = pLapDB->AllocateDataChannel();
@@ -862,6 +892,7 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
     pLapTime->Init(GetLap()->GetLapId(), DATA_CHANNEL_ELAPSEDTIME);
     pLapTimeSummary->Init(GetLap()->GetLapId(), DATA_CHANNEL_LAPTIME_SUMMARY);		// Preparing to add Laptime Summary channel for X-axis
     pVelocity->Init(GetLap()->GetLapId(), DATA_CHANNEL_VELOCITY);
+    pVelocityDelta->Init(GetLap()->GetLapId(), DATA_CHANNEL_VELOCITYDELTA);
     pTimeSlip->Init(GetLap()->GetLapId(), DATA_CHANNEL_TIMESLIP);
     for(int x = 1;x < lstPoints.size(); x++)
     {
@@ -891,6 +922,7 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
 
       pDistance->AddPoint(p.iTime, dDistance);
       pVelocity->AddPoint(p.iTime, p.flVelocity);
+      pVelocityDelta->AddPoint(p.iTime, 0);	//	No delta from reference lap, since we ARE the reference lap
       pTimeSlip->AddPoint(p.iTime, 0);
     }
 
@@ -901,12 +933,14 @@ void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtende
     pLapTimeSummary->Lock();
     pLapTime->Lock();
 	pVelocity->Lock();
+	pVelocityDelta->Lock();
     pTimeSlip->Lock();
     AddChannel(pDistance);
     AddChannel(pTime);
     AddChannel(pLapTime);
     AddChannel(pLapTimeSummary);
 	AddChannel(pVelocity);
+	AddChannel(pVelocityDelta);
     AddChannel(pTimeSlip);
     AddChannel(pX);
     AddChannel(pY);
