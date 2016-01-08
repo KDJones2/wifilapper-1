@@ -597,7 +597,7 @@ bool FindClosestTwoPoints(const TimePoint2D& p, int* pixStartIndex, double dInpu
 void CExtendedLap::ComputeLapData(const vector<TimePoint2D>& lstPoints, CExtendedLap* pReferenceLap, const ILapReceiver* pLapDB, bool fComputeTimeSlip)
 {
   if(lstPoints.size() <= 3) return;	//	Check so that following operations don't choke.
-
+//  if(lstPoints.size() <= 2) return;	//	Check so that following operations don't choke.
 
   // for calculating distance and time-slip, we need the reference lap
   if(pReferenceLap != NULL)
