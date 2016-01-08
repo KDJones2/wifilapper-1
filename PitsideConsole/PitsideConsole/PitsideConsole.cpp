@@ -802,12 +802,12 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					if (pLVInfo->iSubItem == SORTSTYLE_BYTIMEOFRACE && m_sfLapOpts.eSortPreference != SORTSTYLE_BYTIMEOFRACE)
 					{
 						m_sfLapOpts.eSortPreference = SORTSTYLE_BYTIMEOFRACE;
-						UpdateUI(UPDATE_MENU | UPDATE_DASHBOARD | UPDATE_LIST);
+						UpdateUI(UPDATE_DASHBOARD | UPDATE_LIST);
 					}
 					else if (pLVInfo->iSubItem == SORTSTYLE_BYLAPTIME && m_sfLapOpts.eSortPreference != SORTSTYLE_BYLAPTIME)
 					{
 						m_sfLapOpts.eSortPreference = SORTSTYLE_BYLAPTIME;
-						UpdateUI(UPDATE_MENU | UPDATE_DASHBOARD | UPDATE_LIST);
+						UpdateUI(UPDATE_DASHBOARD | UPDATE_LIST);
 					}
 				}
 			}
@@ -823,7 +823,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
                 NMITEMACTIVATE* pDetails = (NMITEMACTIVATE*)notifyHeader;
                 if(pDetails->iItem >= 0)	//	Single select Listview, requires special handling
                 {
-                  UpdateUI(UPDATE_MAP | UPDATE_MENU | UPDATE_DASHBOARD | UPDATE_VALUES);
+                  UpdateUI(UPDATE_MAP| UPDATE_DASHBOARD | UPDATE_VALUES);
                 }
               }
 			  return TRUE;
@@ -844,7 +844,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
                 NMITEMACTIVATE* pDetails = (NMITEMACTIVATE*)notifyHeader;
                 if(pDetails->iItem >= 0)
                 {
-                  UpdateUI(UPDATE_MAP | UPDATE_MENU | UPDATE_DASHBOARD | UPDATE_VALUES);
+                  UpdateUI(UPDATE_MAP| UPDATE_DASHBOARD | UPDATE_VALUES);
                 }
               }
               return TRUE;
