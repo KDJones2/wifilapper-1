@@ -3280,6 +3280,7 @@ void UpdateDisplays()
       case DATA_CHANNEL_X: return 1e30;
       case DATA_CHANNEL_Y: return 1e30; // we don't want guides for either latitude or longitude
 	  case DATA_CHANNEL_VELOCITY:
+	  case DATA_CHANNEL_VELOCITYDELTA:
       {
         int iMin = (int)(flMin);
         return (float)(iMin);
@@ -3336,14 +3337,16 @@ void UpdateDisplays()
         int iMin = (int)(flMin/1000.0f);
         return (float)(iMin)*1000.0f;
       }
+      case DATA_CHANNEL_STRENGTH: return 0.0f;
 	  case DATA_CHANNEL_LAPTIME_SUMMARY:
+      case DATA_CHANNEL_X_ACCEL:
+      case DATA_CHANNEL_Y_ACCEL:
+      case DATA_CHANNEL_Z_ACCEL:
       {
         int iMin = (int)(flMin);
         return (float)(iMin);
       }
-      case DATA_CHANNEL_X_ACCEL:
-      case DATA_CHANNEL_Y_ACCEL:
-      case DATA_CHANNEL_Z_ACCEL:
+ 	  case DATA_CHANNEL_VELOCITYDELTA:
       {
         int iMin = (int)(flMin);
         return (float)(iMin);
@@ -3375,6 +3378,7 @@ void UpdateDisplays()
     case DATA_CHANNEL_X: return 1e30;
     case DATA_CHANNEL_Y: return 1e30; // we don't want guides for either latitude or longitude
     case DATA_CHANNEL_VELOCITY:	// We need to fix the X-channel call before putting these back into the code.
+    case DATA_CHANNEL_VELOCITYDELTA:
 		{
 		  switch(m_sfLapOpts.eUnitPreference)
 		  {
@@ -3455,6 +3459,17 @@ void UpdateDisplays()
 		  }
 		  return 10.0;
 		}
+		case DATA_CHANNEL_VELOCITYDELTA: 
+		{
+		  if(flSpread < 1) return 0.5f;
+		  if(flSpread < 5) return 1.0f;
+		  if(flSpread < 10) return 2.0f;
+		  if(flSpread < 20) return 5.0f;
+		  if(flSpread < 40) return 10.0f;
+		  if(flSpread < 60) return 15.0f;
+		  if(flSpread < 100) return 20.0f;
+		  return 2.0;
+		}
 		case DATA_CHANNEL_DISTANCE: 
 		{
 		  if(flSpread < 0.001) return 0.0001f;		
@@ -3506,6 +3521,7 @@ void UpdateDisplays()
 		case DATA_CHANNEL_Y_ACCEL: return 0.5f;
 		case DATA_CHANNEL_Z_ACCEL: return 0.5f;
 		case DATA_CHANNEL_TEMP: return 10.0f;
+		case DATA_CHANNEL_STRENGTH: return 1.0f;
 
 		default: 
 		  if(eChannel >= DATA_CHANNEL_IOIOPIN_START && eChannel < DATA_CHANNEL_IOIOPIN_END ||
