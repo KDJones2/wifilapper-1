@@ -1749,21 +1749,13 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				} 
 
 				vector<const ILap*> lstLaps;
-//                map<const ILap*, const IDataChannel*> mapData;
 				vector <CExtendedLap*> lstLaps1 = GetLapsToShow();
                 for(set<LPARAM>::iterator i = setSelectedData.begin(); i != setSelectedData.end(); i++)
                 {
                   CExtendedLap* pLap = (CExtendedLap*)*i;
-
-/*                  for(int x = 0;x < DATA_CHANNEL_COUNT; x++)
-                  {
-                    const IDataChannel* pChannel = g_pLapDB->GetDataChannel(pLap->GetLap()->GetLapId(),(DATA_CHANNEL)x);
-                    mapData[pLap->GetLap()] = pChannel;
-                  }
-*/                  lstLaps.push_back(pLap->GetLap());
+                  lstLaps.push_back(pLap->GetLap());
                 }
-				DashWare::SaveToDashware(szFilename, /*lstLaps,*/ lstLaps1);
-//				DashWare::SaveToDashware(szFilename, lstLaps);
+				DashWare::SaveToDashware(szFilename, lstLaps, lstLaps1);
 				DestroyWindow(hwndGoto); //	Close the "Working..." dialog
                 hwndGoto = NULL; 
               }
