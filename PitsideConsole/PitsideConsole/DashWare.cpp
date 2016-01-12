@@ -35,7 +35,7 @@ namespace DashWare
     //	lstLaps: Vector of chosen laps to output, lpszFileaname: Filename to output CSV file to
 	if(lstLaps.size() <= 0) return E_FAIL;
 
-    vector<const ILap*> lstSortedLaps = lstLaps;	//	Get all of the chosen laps
+    vector<const ILap*> lstSortedLaps = lstLaps;	//	Get all of the chosen laps, lstLaps is used to remove Reference Lap from the list
     sort(begin(lstSortedLaps),end(lstSortedLaps),SortLapsByTime);	//	Sort all of the chosen laps by lap time
 
     wofstream out;
@@ -88,8 +88,6 @@ namespace DashWare
 //      for(int msQuery = msStartTime; msQuery < msEndTime; msQuery += 2000)	//	Increased time movement for debug purposes
       for(int msQuery = msStartTime; msQuery < msEndTime; msQuery += 100)
       {
-//        if(msQuery > msLastLine)
-//        {
 		  //	Lap counter
 		  out << ixLap << ",";
 		  //	Time
@@ -120,7 +118,6 @@ namespace DashWare
           }
           out << "," << endl << flush;
           msLastLine = msQuery;	//	Index the time in preparation for the next lap
-//        }
       }
     }
 

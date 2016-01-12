@@ -1755,7 +1755,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
                   CExtendedLap* pLap = (CExtendedLap*)*i;
                   lstLaps.push_back(pLap->GetLap());
                 }
-				DashWare::SaveToDashware(szFilename, lstLaps, lstLaps1);
+				DashWare::SaveToDashware(szFilename, lstLaps, lstLaps1);	//	lstLaps does not have the reference lap in it, lstLaps1 may have it
 				DestroyWindow(hwndGoto); //	Close the "Working..." dialog
                 hwndGoto = NULL; 
               }
