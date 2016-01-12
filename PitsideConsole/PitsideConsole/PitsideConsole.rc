@@ -22,9 +22,9 @@ BEGIN
     CONTROL         "", IDC_XAXIS, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_ALIGNLEFT | LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS, 0,0,75,150
     CONTROL         "", IDC_YAXIS, WC_LISTVIEW, WS_TABSTOP | WS_BORDER | LVS_ALIGNLEFT | LVS_REPORT | LVS_SHOWSELALWAYS, 75,0,75,150
 
-    EDITTEXT        IDC_COMMENTTEXT,							155,12,93,12
+    EDITTEXT        IDC_COMMENTTEXT,							155,12,81,12
     PUSHBUTTON      "Set Comment", IDC_SETDRIVER,				250,0,75,12
-//    PUSHBUTTON      "Clear Comment", IDC_CLEARCOMMENT,		250,14,75,12
+    PUSHBUTTON      "X", IDC_CLEARCOMMENT,		237,13,10,10
     PUSHBUTTON      "Use as reference lap", IDC_SETREFERENCE,	250,14,75,12
     PUSHBUTTON      "Send Message", IDC_SENDMESSAGE,			250,28,75,12
 
@@ -179,7 +179,7 @@ CAPTION "About Pitside Console"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "",IDC_SPLASHIMAGE,"Static",SS_BITMAP,25,10,200,200
-	CTEXT			"Pitside Console for SpeedFreq/Wifilapper\n\nVersion 2.004.0006\n\nThis is an Open Source project. If you want to contribute\n\n",IDC_LBLMESSAGE5,5,230,245,40
+	CTEXT			"Pitside Console for SpeedFreq/Wifilapper\n\nVersion 2.004.0007\n\nThis is an Open Source project. If you want to contribute\n\n",IDC_LBLMESSAGE5,5,230,245,40
 	CTEXT			"http://sites.google.com/site/speedfreqapp",IDC_LBLMESSAGE6,5,270,245,20
     PUSHBUTTON      "OK", IDOK, 5,290,240,30
 END

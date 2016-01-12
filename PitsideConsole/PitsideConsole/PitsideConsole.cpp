@@ -1834,19 +1834,19 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
             }
             return TRUE;
           }
-/*          case IDC_CLEARCOMMENT:	//	This button clears the comment field
+          case IDC_CLEARCOMMENT:	//	This button clears the comment field
           {
             switch(HIWORD(wParam))
             {
 				case BN_CLICKED:
 				  m_szCommentText[0] = '\0';
 				  SendMessage(GetDlgItem(m_hWnd, IDC_COMMENTTEXT), WM_SETTEXT, NUMCHARS(m_szCommentText), (LPARAM)m_szCommentText);
-//				  UpdateUI(UPDATE_ALL);
+//				  UpdateUI(UPDATE_LIST | UPDATE_DASHBOARD);
 				  break;
             }
             return TRUE;
           }
-*/          case IDC_COMMENTTEXT:
+          case IDC_COMMENTTEXT:
           {
             switch(HIWORD(wParam))
             {
