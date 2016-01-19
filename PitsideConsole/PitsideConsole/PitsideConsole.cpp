@@ -271,6 +271,7 @@ public:
   CMainUI() 
     : m_sfLapPainter(static_cast<ILapSupplier*>(this),SUPPLIERID_MAINDISPLAY), 
       m_sfSubDisplay(static_cast<ILapSupplier*>(this),SUPPLIERID_SUBDISPLAY), 
+//	  m_sfSubWindow(static_cast<ILapSupplier*>(this),SUPPLIERID_SUBWINDOW), 
       m_sfTractionDisplay(static_cast<ILapSupplier*>(this),SUPPLIERID_TRACTIONCIRCLEDISPLAY), 
 	  m_eLapDisplayStyle(LAPDISPLAYSTYLE_PLOT),		//	Make data plot the default initial view
       m_fShowTractionCircle(false),
@@ -565,6 +566,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 	LVITEM p_ADlvi;				//	Listview global pointer for Hot Laps
 	HWND hWndShowSplits;		//	Show Sectors window control handle
 	HWND HC_ShowSplits;			//	Handle to the Splits listview control
+//	HWND sub_hWnd;				//	Handle to the SubWindow, to get to the SubDisplay control
 	BOOL b_GreyColor;			//	Switch for painting listviews with alternating lines of color
 	INT i_SubItemBest, i_SubItemWorst;
 
@@ -617,8 +619,12 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           m_sfLapList.Init(GetDlgItem(m_hWnd, IDC_LAPS), lstCols,lstWidths);
         }
         m_sfLapPainter.Init(GetDlgItem(hWnd,IDC_DISPLAY));
-        m_sfSubDisplay.Init(GetDlgItem(hWnd,IDC_SUBDISPLAY));
-        m_sfTractionDisplay.Init(GetDlgItem(hWnd,IDC_TRACTIONCIRCLEMAP));
+//        ArtShowDialog<IDD_DLGSUBDISPLAY>(s_pUI);
+//		sub_hWnd = GetDlgItem(m_hWnd,IDD_DLGSUBDISPLAY);
+//		sub_hWnd = CreateWindowEx(WS_EX_TOOLWINDOW, L"SubDisplay", L"SubDisplay",  WS_POPUP | WS_SYSMENU | WS_THICKFRAME | WS_CAPTION, 586, 0, 87, 63, m_hWnd, NULL, GetModuleHandle(0), NULL);
+//		m_sfSubDisplay.Init(GetDlgItem(sub_hWnd,IDC_SUBDISPLAY));
+		m_sfSubDisplay.Init(GetDlgItem(m_hWnd,IDC_SUBDISPLAY));
+        m_sfTractionDisplay.Init(GetDlgItem(m_hWnd,IDC_TRACTIONCIRCLEMAP));
 
         set<DATA_CHANNEL> setAvailable;
         InitAxes(setAvailable);
@@ -1861,7 +1867,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		  }
         } // end switch for finding out what control WM_COMMAND hit
         break; // break out of WM_COMMAND handling
-      }
+      }	//	End of COMMAND loop
       case WM_UPDATEUI:
       {
         DWORD dwCurrentUpdate = m_fdwUpdateNeeded;
@@ -1972,31 +1978,31 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
         
       return 0;
     }
-      case WM_RBUTTONUP:
-      {
-        m_sfLapOpts.flWindowShiftX = 0;
-        m_sfLapOpts.flWindowShiftY = 0;
-        m_sfLapOpts.iZoomLevels = 0;
-        UpdateUI(UPDATE_MAP);
-        return TRUE;
-      }
-      case WM_PAINT:
-      {
-        UpdateDisplays();
-        return FALSE;
-      }
-      case WM_SIZE:
-      {
-        SIZE sNewSize;
-        sNewSize.cx = LOWORD(lParam);
-        sNewSize.cy = HIWORD(lParam);
-        HandleResize(sNewSize);
-        return TRUE;
-      }
+    case WM_RBUTTONUP:
+    {
+		m_sfLapOpts.flWindowShiftX = 0;
+		m_sfLapOpts.flWindowShiftY = 0;
+		m_sfLapOpts.iZoomLevels = 0;
+		UpdateUI(UPDATE_MAP);
+		return TRUE;
     }
-
-	return FALSE;
+    case WM_PAINT:
+    {
+		UpdateDisplays();
+		return FALSE;
+    }
+    case WM_SIZE:
+    {
+		SIZE sNewSize;
+		sNewSize.cx = LOWORD(lParam);
+		sNewSize.cy = HIWORD(lParam);
+		HandleResize(sNewSize);
+		return TRUE;
+    }
   }
+
+  return FALSE;
+}
   DWORD GetDlgId() const {return IDD_DLGFIRST;}
 
   const static DWORD UPDATE_MAP = 0x1;
@@ -2277,6 +2283,7 @@ private:
     m_baseWindowPos[IDD_DLGFIRST] = wp.rcNormalPosition;
 
     GET_WINDOWPOS(IDC_DISPLAY);
+//	GET_WINDOWPOS(IDD_DLGSUBDISPLAY);
     GET_WINDOWPOS(IDC_SUBDISPLAY);
     GET_WINDOWPOS(IDC_LAPS);
     GET_WINDOWPOS(IDC_TRACTIONCIRCLEMAP);
@@ -2293,7 +2300,8 @@ private:
   void HandleResize(SIZE sNewSize)
   {
     HandleCtlResize(sNewSize, IDC_DISPLAY, true, true); // main display window
-    HandleCtlResize(sNewSize, IDC_SUBDISPLAY, true, false); // sub display window
+//    HandleCtlResize(sNewSize, IDD_DLGSUBDISPLAY, true, true); // sub display window
+	HandleCtlResize(sNewSize, IDC_SUBDISPLAY, true, false); // sub display control
     HandleCtlResize(sNewSize, IDC_LAPS, false, true); // lap list
     HandleCtlResize(sNewSize, IDC_TRACTIONCIRCLEMAP, false, false); // Traction circle window
   }
@@ -3606,6 +3614,7 @@ private:
   ArtListBox m_sfXAxis;
 
   CLapPainter m_sfLapPainter;
+//  CLapPainter m_sfSubWindow;
   CLapPainter m_sfSubDisplay;
   CLapPainter m_sfTractionDisplay;
 

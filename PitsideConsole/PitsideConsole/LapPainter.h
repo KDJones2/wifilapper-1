@@ -30,6 +30,7 @@ enum SUPPLIERID
   SUPPLIERID_SECTORDISPLAY,
   SUPPLIERID_TRACTIONCIRCLEDISPLAY,	//	Draw the traction circle
   SUPPLIERID_ALLDATADISPLAY,	//	Show a window with all data for that lap for the given point
+//  SUPPLIERID_SUBWINDOW,
 };
 
 enum LAPDISPLAYSTYLE
