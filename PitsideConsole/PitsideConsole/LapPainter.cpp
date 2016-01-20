@@ -392,23 +392,34 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 			//		Set up to perform the ZOOM function for DATA PLOT.   
 			static double dTranslateShiftX;
 			static GLdouble dX,dY,dZ;
-			if (sfLapOpts.iZoomLevels != OldiZoomLevels)
+
+			CExtendedLap* pLap = lstLaps[lstLaps.size() - 1];	//	Get the Reference Lap for scaling
+			const IDataChannel* pDataX = pLap->GetChannel(m_pLapSupplier->GetXChannel());	//	Get the list of X-Axis points for the Reference Lap
+			const vector<DataPoint> &lstPointsX = pDataX->GetData();
+			float dBestLength = -1;
+			float dTimeToHighlight = -1;
+			DataPoint ptBest;					//	Best highlighted point where the mouse is on the Reference Lap
+			for(int x = 0; x< lstPointsX.size(); x++)
 			{
-				//		The mouse is in our window, let's determine the closest X point to the mouse
-				gluUnProject(ptMouse.x, 0, 0, rgModelviewMatrix, rgProjMatrix, rgViewport, &dX, &dY, &dZ);
-				dTranslateShiftX = dX - dXShift;
+				const DataPoint& p = lstPointsX[x];
+				int iTime = m_pLapSupplier->GetLapHighlightTime(pLap);
+				if(abs(p.iTimeMs - iTime) < dBestLength || dBestLength < 0)
+				{
+				  dBestLength = abs(p.iTimeMs - iTime);
+				  ptBest = p;					//	ptBest contains the X/Y values for the highlighted point of the Reference Lap
+				  dTimeToHighlight = iTime;		//	This is the highlighted time by the mouse on the Ref Lap. Now let's figure out its location in OGL space and zoom to it.
+				}
 			}
-			else
-			{
-				dTranslateShiftX = dX - dXShift;
-			}
-			OldiZoomLevels = sfLapOpts.iZoomLevels;
+
+
+			dTranslateShiftX = ptBest.flValue - dXShift;	//	Calculate the shift amount for the highlighted point in the Reference Lap
+			OldiZoomLevels = sfLapOpts.iZoomLevels;			//	Save the zoom level
 				
 			glTranslated(dTranslateShiftX, 0, 0);	// Translate the map to origin on x-axis only
-			glScaled(dScaleAmt, 1.0, 1.0);	//	No scaling of Y-axis on Data Plot.
+			glScaled(dScaleAmt, 1.0, 1.0);	//	No scaling of Y-axis on Data Plot, only scale the X-axis.
 			glTranslated(-dTranslateShiftX, 0, 0);	// Now put the map back in its place
 			//	Panning functionality
-			glTranslated(dXShift - dMinX, 0, 0);	//	Offset for this is still slight wrong, but the best for now.
+			glTranslated(dXShift - dMinX, 0, 0);	//	Shift the graph based upon the mouse movement
 
 			//		Now having shifted, let's get our new model matrices
 			glGetDoublev(GL_MODELVIEW_MATRIX, rgModelviewMatrix);
@@ -1468,7 +1479,7 @@ void CLapPainter::DrawLapLines(const LAPSUPPLIEROPTIONS& sfLapOpts)
 		}
 		//		Set up to perform the ZOOM function for MAP.   
 		glTranslated(dTranslateShiftX, dTranslateShiftY, 0);	// Translate the map to origin
-		glScaled(dScaleAmt*1.25, dScaleAmt*1.25, 1.0f);	//	Scale the sucker
+		glScaled(dScaleAmt*1.5, dScaleAmt*1.5, 1.0f);	//	Scale the sucker
 		glTranslated(-dTranslateShiftX, -dTranslateShiftY, 0);	// Now put the map back in its place
 
 		glTranslated(dTranslateShiftX-(double)ptBest.flX, dTranslateShiftY-(double)ptBest.flY, 0);	// Now move the map to the highlighted location
