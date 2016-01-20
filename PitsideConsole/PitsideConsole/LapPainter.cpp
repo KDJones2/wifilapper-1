@@ -1410,6 +1410,7 @@ void CLapPainter::DrawLapLines(const LAPSUPPLIEROPTIONS& sfLapOpts)
   GLdouble rgModelviewMatrix[16];
   GLdouble rgProjMatrix[16];
   GLint rgViewport[4];
+  vector<CExtendedLap*> lstLaps = m_pLapSupplier->GetLapsToShow();		//	Moved up-code to allow for Reference lap zooming
 
   {
 	//	Now that the matrices are correct, let's graph them.    
@@ -1443,6 +1444,39 @@ void CLapPainter::DrawLapLines(const LAPSUPPLIEROPTIONS& sfLapOpts)
 		glGetDoublev(GL_PROJECTION_MATRIX, rgProjMatrix);
 		glGetIntegerv(GL_VIEWPORT, rgViewport);
 	}
+	else if(dScaleAmt > 1)	//	If image is Zoomed In, center the panning of the secondary display (map) to the highlighted point of the Reference Lap
+	{
+		// the mouse outside our window, let's match the zooming of the main display and pan to the highlighted location
+		const double dTranslateShiftX = (rcAllLaps.left + rcAllLaps.right)/2;
+		const double dTranslateShiftY = (rcAllLaps.top + rcAllLaps.bottom)/2;
+	    CExtendedLap* pLap = lstLaps[lstLaps.size() - 1];	//	Get the Reference Lap for scaling
+		const vector<TimePoint2D>& lstPoints = pLap->GetPoints();	//	Get the list of point for the Reference Lap
+		float dBestLength = -1;
+		float dTimeToHighlight = -1;
+		TimePoint2D ptBest;					//	Best highlighted point where the mouse is on the Reference Lap
+		for(int x = 0; x< lstPoints.size(); x++)
+		{
+			const TimePoint2D& p = lstPoints[x];
+			glVertex2f(p.flX,p.flY);
+			int iTime = m_pLapSupplier->GetLapHighlightTime(pLap);
+			if(abs(p.iTime - iTime) < dBestLength || dBestLength < 0)
+			{
+			  dBestLength = abs(p.iTime - iTime);
+			  ptBest = p;					//	ptBest contains the X/Y values for the highlighted point of the Reference Lap
+			  dTimeToHighlight = iTime;		//	This is the highlighted time by the mouse on the Ref Lap. Now let's figure out its location in OGL space and zoom to it.
+			}
+		}
+		//		Set up to perform the ZOOM function for MAP.   
+		glTranslated(dTranslateShiftX, dTranslateShiftY, 0);	// Translate the map to origin
+		glScaled(dScaleAmt*1.25, dScaleAmt*1.25, 1.0f);	//	Scale the sucker
+		glTranslated(-dTranslateShiftX, -dTranslateShiftY, 0);	// Now put the map back in its place
+
+		glTranslated(dTranslateShiftX-(double)ptBest.flX, dTranslateShiftY-(double)ptBest.flY, 0);	// Now move the map to the highlighted location
+		// now having shifted, let's get our new model matrices
+		glGetDoublev(GL_MODELVIEW_MATRIX, rgModelviewMatrix);
+		glGetDoublev(GL_PROJECTION_MATRIX, rgProjMatrix);
+		glGetIntegerv(GL_VIEWPORT, rgViewport);
+	}
   }
   POINT ptMouse;
   Vector2D vHighlight;
@@ -1456,7 +1490,6 @@ void CLapPainter::DrawLapLines(const LAPSUPPLIEROPTIONS& sfLapOpts)
   }
   
   vector<MAPHIGHLIGHT> lstMousePointsToDraw;
-  vector<CExtendedLap*> lstLaps = m_pLapSupplier->GetLapsToShow();
   for(int x = 0; x < lstLaps.size(); x++)
   {
     CExtendedLap* pLap = lstLaps[x];
