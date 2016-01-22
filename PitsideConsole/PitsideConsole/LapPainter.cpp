@@ -392,8 +392,15 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 			//		Set up to perform the ZOOM function for DATA PLOT.   
 			static double dTranslateShiftX;
 			static GLdouble dX,dY,dZ;
-
-			CExtendedLap* pLap = lstLaps[lstLaps.size() - 1];	//	Get the Reference Lap for scaling
+			CExtendedLap* pLap;
+			if (lstLaps.size() > 0) 
+			{
+				pLap = lstLaps[lstLaps.size() - 1];	//	Get the Reference Lap for scaling
+			}
+			else
+			{
+				return;
+			}
 			const IDataChannel* pDataX = pLap->GetChannel(m_pLapSupplier->GetXChannel());	//	Get the list of X-Axis points for the Reference Lap
 			const vector<DataPoint> &lstPointsX = pDataX->GetData();
 			float dBestLength = -1;
@@ -435,7 +442,15 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 			{
 				if (sfLapOpts.m_SplitPoints[z].m_sfXPoint != 0.0f)
 				{
-					CExtendedLap* pLap = lstLaps[lstLaps.size() - 1];	//	Last lap is the Reference Lap
+					CExtendedLap* pLap;
+					if (lstLaps.size() > 0) 
+					{
+						pLap = lstLaps[lstLaps.size() - 1];	//	Get the Reference Lap for scaling
+					}
+					else
+					{
+						return;
+					}
 					const IDataChannel* pDistance = pLap->GetChannel(DATA_CHANNEL_DISTANCE);
 					const double dDistance = pDistance->GetValue(sfLapOpts.m_SplitPoints[z].m_sfSectorTime) - pDistance->GetValue(sfLapOpts.m_SplitPoints[0].m_sfSectorTime);
 					double flLine = dDistance;
@@ -1460,7 +1475,15 @@ void CLapPainter::DrawLapLines(const LAPSUPPLIEROPTIONS& sfLapOpts)
 		// the mouse outside our window, let's match the zooming of the main display and pan to the highlighted location
 		const double dTranslateShiftX = (rcAllLaps.left + rcAllLaps.right)/2;
 		const double dTranslateShiftY = (rcAllLaps.top + rcAllLaps.bottom)/2;
-	    CExtendedLap* pLap = lstLaps[lstLaps.size() - 1];	//	Get the Reference Lap for scaling
+		CExtendedLap* pLap;
+		if (lstLaps.size() > 0) 
+		{
+			pLap = lstLaps[lstLaps.size() - 1];	//	Get the Reference Lap for scaling
+		}
+		else
+		{
+			return;
+		}
 		const vector<TimePoint2D>& lstPoints = pLap->GetPoints();	//	Get the list of point for the Reference Lap
 		float dBestLength = -1;
 		TimePoint2D ptBest;					//	Best highlighted point where the mouse is on the Reference Lap
