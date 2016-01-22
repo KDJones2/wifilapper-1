@@ -411,8 +411,10 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 				}
 			}
 
-
-			dTranslateShiftX = ptBest.flValue - dXShift;	//	Calculate the shift amount for the highlighted point in the Reference Lap
+			if(dScaleAmt > 1)
+			{
+				dTranslateShiftX = ptBest.flValue - dXShift;	//	Calculate the shift amount for the highlighted point in the Reference Lap if we are zoomed in
+			}
 			OldiZoomLevels = sfLapOpts.iZoomLevels;			//	Save the zoom level
 				
 			glTranslated(dTranslateShiftX, 0, 0);	// Translate the map to origin on x-axis only
