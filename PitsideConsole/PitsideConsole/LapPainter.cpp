@@ -397,7 +397,6 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 			const IDataChannel* pDataX = pLap->GetChannel(m_pLapSupplier->GetXChannel());	//	Get the list of X-Axis points for the Reference Lap
 			const vector<DataPoint> &lstPointsX = pDataX->GetData();
 			float dBestLength = -1;
-			float dTimeToHighlight = -1;
 			DataPoint ptBest;					//	Best highlighted point where the mouse is on the Reference Lap
 			for(int x = 0; x< lstPointsX.size(); x++)
 			{
@@ -407,7 +406,6 @@ void CLapPainter::DrawGeneralGraph(const LAPSUPPLIEROPTIONS& sfLapOpts, bool fHi
 				{
 				  dBestLength = abs(p.iTimeMs - iTime);
 				  ptBest = p;					//	ptBest contains the X/Y values for the highlighted point of the Reference Lap
-				  dTimeToHighlight = iTime;		//	This is the highlighted time by the mouse on the Ref Lap. Now let's figure out its location in OGL space and zoom to it.
 				}
 			}
 
@@ -1465,7 +1463,6 @@ void CLapPainter::DrawLapLines(const LAPSUPPLIEROPTIONS& sfLapOpts)
 	    CExtendedLap* pLap = lstLaps[lstLaps.size() - 1];	//	Get the Reference Lap for scaling
 		const vector<TimePoint2D>& lstPoints = pLap->GetPoints();	//	Get the list of point for the Reference Lap
 		float dBestLength = -1;
-		float dTimeToHighlight = -1;
 		TimePoint2D ptBest;					//	Best highlighted point where the mouse is on the Reference Lap
 		for(int x = 0; x< lstPoints.size(); x++)
 		{
@@ -1476,7 +1473,6 @@ void CLapPainter::DrawLapLines(const LAPSUPPLIEROPTIONS& sfLapOpts)
 			{
 			  dBestLength = abs(p.iTime - iTime);
 			  ptBest = p;					//	ptBest contains the X/Y values for the highlighted point of the Reference Lap
-			  dTimeToHighlight = iTime;		//	This is the highlighted time by the mouse on the Ref Lap. Now let's figure out its location in OGL space and zoom to it.
 			}
 		}
 		//		Set up to perform the ZOOM function for MAP.   
