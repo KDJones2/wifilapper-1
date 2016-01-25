@@ -1321,26 +1321,49 @@ void CLapPainter::drawOval (float x_center, float y_center, float w, float h)
 void CLapPainter::MakeColor(const CExtendedLap* pLap, bool RefLapFlag, float* pR, float* pG, float* pB) 
 { 
 	srand((int)pLap);	//  <-- makes sure that we randomize the colours consistently, so that lap plots don't change colour from draw to draw... 
+
+		//	Background color options: 0 (00),0,0 (Black) or 0.95 (F2),0.95.0.95 (Lt. Grey)
+		//	Need to check contrast ratio before allowing the color
+		//	Contrast ratio is defined as Luminace ratio L1/L2
+		//  Luminance = (0.2126 × red) + (0.7152 × green) + (0.0722 × blue) 
+		//  Hexadecimal value of colour component (00-FF)
+
 	if (m_pLapSupplier->GetDisplayOptions().fColorScheme)	//	Background color is black, make sure there is enough contrast with the lines
 	{
+		float fLBackground = (0.2126 * 0.05) + (0.7152 * 0.05) + (0.0722 * 0.05);	//	Background Luminace value is zero (black)
+		float fLForeground;
+		float fContrastRatio;
+		
 		do 
 		{ 
 			*pR = RandDouble(); 
 			*pG = RandDouble(); 
 			*pB = RandDouble(); 
+			//	Contrast Ratio is (L1 + 0.05) / (L2 + 0.05) where L1 is the relative luminance of the lighter of the colors, 
+			//	L2 is the relative luminance of the darker of the colors. Contrast ratios can range from 1 to 21 (commonly written 1:1 to 21:1)
+			fLForeground = (0.2126 * *pR) + (0.7152 * *pG) + (0.0722 * *pB);
+			fContrastRatio = (fLForeground + 0.05) / (fLBackground + 0.05);
 		} 
-		while(*pR + *pG + *pB < 1.20f || *pR + *pG + *pB > 2.25f ); 
+		while(fContrastRatio < 4.5 ); //	Cinema standard is for greater than 4.5 to 1 contrast ratio
 		glColor3d( *pR, *pG, *pB ); // Final color to use.  Tells opengl to draw the following in the colour we just made up
 	}
 	else	//	Background color is light grey, keep these colors low enough alpha to provide contrast
 	{
+		//	Calculate the Background Luminace value
+		float fLBackground = (0.2126 * 0.95) + (0.7152 * 0.95) + (0.0722 * 0.95);
+		float fLForeground;
+		float fContrastRatio;
 		do 
 		{ 
 			*pR = RandDouble(); 
 			*pG = RandDouble(); 
 			*pB = RandDouble(); 
+			//	Contrast Ratio is (L1 + 0.05) / (L2 + 0.05) where L1 is the relative luminance of the lighter of the colors, 
+			//	L2 is the relative luminance of the darker of the colors. Contrast ratios can range from 1 to 21 (commonly written 1:1 to 21:1)
+			fLForeground = (0.2126 * *pR) + (0.7152 * *pG) + (0.0722 * *pB);
+			fContrastRatio = (fLBackground + 0.05) / (fLForeground + 0.05);
 		} 
-		while(*pR * *pG * *pB > 0.45 && *pR + *pG + *pB > 0.75 && *pR * *pG > 0.75); 
+		while(fContrastRatio < 3.5 ); //	Cinema standard is for greater than 4.5 to 1 contrast ratio
 		glColor3d( *pR, *pG, *pB ); // Final color to use.  Tells opengl to draw the following in the colour we just made up
 	}
 	//	Check if this the is the Reference Lap. If so, change the color to full White/Black
