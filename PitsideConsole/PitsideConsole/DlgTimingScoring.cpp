@@ -45,7 +45,7 @@ int CALLBACK CompareHLListItems(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSor
 	}
 
 //	b_TextResult = wcscmp(sz_Result2, sz_Result1);
-	b_TextResult = wcscmp(sz_Result1, sz_Result2);
+	b_TextResult = _wcsicmp(sz_Result1, sz_Result2);
 	if (bSortAscending > 0 && b_TextResult < 0)
 //	if (bSortAscending && b_TextResult < 0)
 	{
