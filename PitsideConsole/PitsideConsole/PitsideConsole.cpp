@@ -3891,6 +3891,10 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             x_sfLapOpts.bSmoothYesNo = sfSettings.bSmoothYesNo;	//	Assign smoothing setting from Settings.txt file
 			break;
           }
+  default:
+          {
+            x_sfLapOpts.bSmoothYesNo = false;	//	No smoothing of accelerometer data as a default
+          }
   }
   switch (sfSettings.bXAxis_KM)
   {
@@ -3899,6 +3903,10 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
           {
 			x_sfLapOpts.bXAxis_KM = sfSettings.bXAxis_KM;	//	Assign choice of LAT or KM for X-Axis setting from Settings.txt file
 			break;
+          }
+  default:
+          {
+            x_sfLapOpts.bXAxis_KM = false;	//	Distance in LAT degrees as a default
           }
   }
   x_sfLapOpts.eSortPreference = SORTSTYLE_BYTIMEOFRACE;		//	Default sort Lap List by time of lap
@@ -3916,8 +3924,8 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
       fTryAgain = false;
       if(!g_pHTTPServer->Init(sfSettings.iHTTPPort,&aResponder))
       {
-        TCHAR szMsg[200];
-        _snwprintf(szMsg,NUMCHARS(szMsg),L"Pitside was unable to start the HTTP server on port %d.  Do you want to open settings.txt to try another port or disable the server?",sfSettings.iHTTPPort);
+        TCHAR szMsg[512];
+        _snwprintf(szMsg,NUMCHARS(szMsg),L"Pitside was unable to start the HTTP server on port %d. Do you want to open settings.txt to try another port or disable the server?\n\nNOTE: This will also stop all communication from the phone to Pitside",sfSettings.iHTTPPort);
         int iRet = MessageBox(NULL,szMsg,L"Failed to start HTTP server",MB_ICONERROR | MB_YESNO);
         if(iRet == IDYES)
         {
@@ -3939,8 +3947,10 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   {
     g_pHTTPServer = NULL;
   }
-
-  HANDLE hRecvThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&ReceiveThreadProc, (LPVOID)&sfLaps, 0, NULL);
+  if(sfSettings.fRunHTTP)	//	Only try to receive phone information when the HTTP server is turned on
+  {
+	  HANDLE hRecvThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&ReceiveThreadProc, (LPVOID)&sfLaps, 0, NULL);
+  }
 
   ArtShowDialog<IDD_DLGFIRST>(&sfUI);
   exit(0);
