@@ -486,6 +486,20 @@ void GetIPString(DWORD ip, LPTSTR lpsz, int cchBuf)
   swprintf(lpsz, cchBuf, L"%d.%d.%d.%d",pBytes[0],pBytes[1],pBytes[2],pBytes[3]);
 }
 
+int str_ends_with2(const TCHAR * str, const TCHAR * suffix) 
+{
+  if( str == NULL || suffix == NULL )
+    return 0;
+
+  size_t str_len = wcslen(str);
+  size_t suffix_len = wcslen(suffix);
+
+  if(suffix_len > str_len)
+    return 0;
+
+  return 0 == wcsncmp( str + str_len - suffix_len, suffix, suffix_len );
+}
+
 int TimeoutRead(SOCKET s, char* buf, int cbBuf, int flags, int timeout, bool* pfConnectionLost)
 {
   *pfConnectionLost = false;
@@ -654,17 +668,28 @@ public:
           if(aDBDone.Process(buf[x]))
           {
             eRecv = RECV_NONE;
-            // we have received a raw database.  Save it to a temp folder, then send the path to the pitside UI so it can decide what to do
-            TCHAR szTemp[MAX_PATH];
-            if(GetTempPath(MAX_PATH, szTemp))
+			// First, let the user know that the database has been recieved and determine where to save it
+			DWORD dwRet = MessageBox(NULL,L"A new database has been sent from a phone.\n\nSpecify a name and folder to save it to",L"New database",MB_OK);
+
+			// we have received a raw database.  Select a folder to save it to, then send the path to the pitside UI so it can decide what to do
+			TCHAR szDBPath[MAX_PATH];
+			wcscat(szDBPath,L"TempPitsideDB.wflp");
+			if(ArtGetSaveFileNameNewDB(NULL,L"Select location and filename to save to",szDBPath,NUMCHARS(szDBPath),L"WifiLapper Files (*.wflp)\0*.WFLP\0\0"))
             {
-              wcscat(szTemp,L"TempPitsideDB.wflp");
-              if(SaveBufferToFile(szTemp, &lstDBBuf[0], lstDBBuf.size()-aDBDone.GetSize()))
-              {
-                pLaps->NotifyDBArrival(szTemp);
-              }
+				const bool fFileIsNew = !DoesFileExist(szDBPath);
+				if(fFileIsNew)
+				{
+				  // let's make sure there's a .wflp suffix on that bugger.
+				  if(!str_ends_with2(szDBPath,L".wflp"))
+				  {
+					wcsncat(szDBPath,L".wflp", NUMCHARS(szDBPath));
+				  }
+				}
+				if(SaveBufferToFile(szDBPath, &lstDBBuf[0], lstDBBuf.size()-aDBDone.GetSize()))
+				{
+					pLaps->NotifyDBArrival(szDBPath);
+				}
             }
-          
           }
         
 		    } // end processing loop

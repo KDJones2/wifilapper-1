@@ -155,4 +155,32 @@ bool ArtGetSaveFileName(HWND hWndOwner, LPCTSTR lpszTitle, LPTSTR lpszPath, int 
   BOOL fSuccess =  GetSaveFileName(&ofn);
   return fSuccess;
 }
+bool ArtGetSaveFileNameNewDB(HWND hWndOwner, LPCTSTR lpszTitle, LPTSTR lpszPath, int cchPath, LPCTSTR lpszFilter)
+{
+  OPENFILENAME ofn;
+  ofn.lStructSize = sizeof(ofn);
+  ofn.hwndOwner = hWndOwner;
+  ofn.hInstance = NULL;
+  ofn.lpstrFilter = lpszFilter;
+  ofn.lpstrCustomFilter = NULL;
+  ofn.nMaxCustFilter = 0;
+  ofn.nFilterIndex = 0;
+  ofn.lpstrFile = lpszPath;
+  ofn.nMaxFile = cchPath;
+  ofn.lpstrFileTitle = lpszPath;
+  ofn.nMaxFileTitle = 0;
+  ofn.lpstrInitialDir = NULL;
+  ofn.lpstrTitle = lpszTitle;
+  ofn.Flags = 0;
+  ofn.nFileOffset = 0;
+  ofn.nFileExtension = 0;
+  ofn.lpstrDefExt = NULL;
+  ofn.lpfnHook = NULL;
+  ofn.lpTemplateName = NULL;
+  ofn.pvReserved = 0;
+  ofn.dwReserved = 0;
+  ofn.FlagsEx = 0;
+  BOOL fSuccess =  GetSaveFileName(&ofn);
+  return fSuccess;
+}
 map<int,IUI*> mapDialogs;
