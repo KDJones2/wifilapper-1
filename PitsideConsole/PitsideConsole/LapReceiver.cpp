@@ -672,8 +672,7 @@ public:
 				DWORD dwRet = MessageBox(NULL,L"A new database has been sent from a phone.\n\nSpecify a name and folder to save it to",L"New database",MB_OK);
 
 				// we have received a raw database.  Select a folder to save it to, then send the path to the pitside UI so it can decide what to do
-				TCHAR szDBPath[MAX_PATH];
-				szDBPath[0]=L'\0';
+				TCHAR szDBPath[MAX_PATH] = {NULL};
 				wcscat(szDBPath,L"TempPitsideDB.wflp");
 				while (true)
 				{

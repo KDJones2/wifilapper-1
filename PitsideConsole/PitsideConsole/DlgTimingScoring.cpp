@@ -378,8 +378,7 @@ LRESULT CDlgTimingScoring::DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 				{
 //				  swprintf(szText, NUMCHARS(szText), L"Race Start = %i\n\nRace End = %i", tmStartRace, tmEndRace);
 //				  MessageBox(hWnd, szText, L"Saving", MB_OK);
-				  TCHAR szFilename[MAX_PATH];
-				  szFilename[0]=L'\0';
+				  TCHAR szFilename[MAX_PATH] = {NULL};
 				  wcscat(szFilename,L"TimingScoring.txt");
 				  while (true)
 				  {
@@ -389,7 +388,7 @@ LRESULT CDlgTimingScoring::DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 						if(fFileIsNew)
 						{
 							// let's make sure there's a .txt suffix on that bugger.
-							if(!str_ends_with(szFilename,L".txt") || !str_ends_with(szFilename,L".TXT") )
+							if(!str_ends_with(szFilename,L".txt") && !str_ends_with(szFilename,L".TXT") )
 							{
 								wcsncat(szFilename,L".txt", NUMCHARS(szFilename));
 							}

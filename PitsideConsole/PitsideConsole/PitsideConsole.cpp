@@ -1451,9 +1451,8 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				{
 
 					//	Let's get the output file name from the user.
-				    TCHAR szTempPath[MAX_PATH];
-					TCHAR szFileName[MAX_PATH], szTempName[MAX_PATH];
-					szFileName[0]=L'\0';
+				    TCHAR szTempPath[MAX_PATH], szTempName[MAX_PATH];
+					TCHAR szFileName[MAX_PATH] = {NULL};
 					if (PrintFlag)
 					{
 					    GetTempPath(NUMCHARS(szTempPath),szTempPath);	//	Get the TEMP folder path
@@ -1471,7 +1470,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 								if(fFileIsNew)
 								{
 								  // let's make sure there's a .jpg suffix on that bugger.
-								  if(!str_ends_with(szFileName,L".jpg"))
+								  if(!str_ends_with(szFileName,L".jpg") && !str_ends_with(szFileName,L".JPG"))
 								  {
 									wcsncat(szFileName,L".jpg", NUMCHARS(szFileName));
 								  }
@@ -1756,8 +1755,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
             set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData3();
             if(setSelectedData.size() > 0)
             {
-			  TCHAR szFilename[MAX_PATH];
-			  szFilename[0]=L'\0';
+			  TCHAR szFilename[MAX_PATH] = {NULL};
 			  wcscat(szFilename,L"Export.csv");
 			  while (true)
 			  {
@@ -1767,7 +1765,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					if(fFileIsNew)
 					{
 						// let's make sure there's a .csv suffix on that bugger.
-						if(!str_ends_with(szFilename,L".csv"))
+						if(!str_ends_with(szFilename,L".csv") && !str_ends_with(szFilename,L".CSV"))
 						{
 							wcsncat(szFilename,L".csv", NUMCHARS(szFilename));
 						}
@@ -3799,8 +3797,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   bool fDBOpened = false;
 
   int iRaceId[50] = {0};
-  TCHAR szDBPath[MAX_PATH];
-  szDBPath[0] = '\0';
+  TCHAR szDBPath[MAX_PATH] = {NULL};
   wcscat(szDBPath,L"NewDatabase.wflp");
   if(ArtGetSaveFileName(NULL,L"Select .wflp to open or save to",szDBPath,NUMCHARS(szDBPath),L"WifiLapper Files (*.wflp)\0*.WFLP\0\0"))
   {
@@ -3808,7 +3805,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if(fFileIsNew)
     {
       // let's make sure there's a .wflp suffix on that bugger.
-      if(!str_ends_with(szDBPath,L".wflp"))
+      if(!str_ends_with(szDBPath,L".wflp") && !str_ends_with(szDBPath,L".WFLP"))
       {
         wcsncat(szDBPath,L".wflp", NUMCHARS(szDBPath));
       }
