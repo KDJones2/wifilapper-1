@@ -585,112 +585,133 @@ public:
 	    {
 		    for(int x = 0;x < cbRead; x++)
 		    {
-          lstLapBuf.push_back(buf[x]);
-			    if(aV1Start.Process(buf[x]))
-			    {
-            eRecv = RECV_V1_LAP;
-				    aV1Start.Reset();
-				    // we have detected the start of a new lap
-				    lstLapBuf.clear();
-			    }
-			    if(aV1End.Process(buf[x]))
-			    {
-            eRecv = RECV_NONE;
-				    aV1End.Reset();
-				    // we have found the end of a lap
-				    int iLapId = 0;
-				    ILap* pLap = pLaps->AllocateLap(true);
-				    if(ProcessV1LapData(lstLapBuf, &iLapId, pLap))
-				    {
-					    pLaps->AddLap(pLap, 0xffffffff);
-				    }
-				    else
-				    {
-              pLap->Free();
-				    }
-            lstLapBuf.clear();
-			    }
-          if(aV2Start.Process(buf[x]))
-          {
-            eRecv = RECV_V2_LAP;
-            aV2Start.Reset();
-            lstLapBuf.clear();
-          }
-          if(aV2End.Process(buf[x]))
-          {
-            eRecv = RECV_NONE;
-            aV2End.Reset();
-            int iLapId = 0;
-            ILap* pLap = pLaps->AllocateLap(true);
-            if(ProcessV2LapData(lstLapBuf, &iLapId, pLap))
-            {
-              pLaps->AddLap(pLap, 0xffffffff);
-            }
-          }
-
-          lstDataBuf.push_back(buf[x]);
-          if(aDataStart.Process(buf[x]))
-          {
-            eRecv = RECV_DATA;
-            aDataStart.Reset();
-            lstDataBuf.clear();
-          }
-          if(aDataEnd.Process(buf[x]))
-          {
-            eRecv = RECV_NONE;
-            int iLapId = 0;
-            aDataEnd.Reset();
-            IDataChannel* pDataChannel = pLaps->AllocateDataChannel();
-            if(ProcessDataChannel(lstDataBuf,&iLapId, pDataChannel))
-            {
-              pLaps->AddDataChannel(pDataChannel);
-            }
-            lstDataBuf.clear();
-          }
-        
-			    if(aHTBT.Process(buf[x]))
-			    {
-            eRecv = RECV_NONE;
-				    aHTBT.Reset();
-				    const char* pbResponse = "HTBT";
-				    send(sData, pbResponse, 4, 0);
-
-            lstLapBuf.clear();
-            lstDataBuf.clear();
-			    }
-          lstDBBuf.push_back(buf[x]);
-
-          if(aDBIncoming.Process(buf[x]))
-          {
-            eRecv = RECV_DB;
-            lstDBBuf.clear();
-          }
-          if(aDBDone.Process(buf[x]))
-          {
-            eRecv = RECV_NONE;
-			// First, let the user know that the database has been recieved and determine where to save it
-			DWORD dwRet = MessageBox(NULL,L"A new database has been sent from a phone.\n\nSpecify a name and folder to save it to",L"New database",MB_OK);
-
-			// we have received a raw database.  Select a folder to save it to, then send the path to the pitside UI so it can decide what to do
-			TCHAR szDBPath[MAX_PATH];
-			wcscat(szDBPath,L"TempPitsideDB.wflp");
-			if(ArtGetSaveFileNameNewDB(NULL,L"Select location and filename to save to",szDBPath,NUMCHARS(szDBPath),L"WifiLapper Files (*.wflp)\0*.WFLP\0\0"))
-            {
-				const bool fFileIsNew = !DoesFileExist(szDBPath);
-				if(fFileIsNew)
+			  lstLapBuf.push_back(buf[x]);
+					if(aV1Start.Process(buf[x]))
+					{
+				eRecv = RECV_V1_LAP;
+						aV1Start.Reset();
+						// we have detected the start of a new lap
+						lstLapBuf.clear();
+					}
+					if(aV1End.Process(buf[x]))
+					{
+				eRecv = RECV_NONE;
+						aV1End.Reset();
+						// we have found the end of a lap
+						int iLapId = 0;
+						ILap* pLap = pLaps->AllocateLap(true);
+						if(ProcessV1LapData(lstLapBuf, &iLapId, pLap))
+						{
+							pLaps->AddLap(pLap, 0xffffffff);
+						}
+						else
+						{
+				  pLap->Free();
+						}
+				lstLapBuf.clear();
+					}
+			  if(aV2Start.Process(buf[x]))
+			  {
+				eRecv = RECV_V2_LAP;
+				aV2Start.Reset();
+				lstLapBuf.clear();
+			  }
+			  if(aV2End.Process(buf[x]))
+			  {
+				eRecv = RECV_NONE;
+				aV2End.Reset();
+				int iLapId = 0;
+				ILap* pLap = pLaps->AllocateLap(true);
+				if(ProcessV2LapData(lstLapBuf, &iLapId, pLap))
 				{
-				  // let's make sure there's a .wflp suffix on that bugger.
-				  if(!str_ends_with2(szDBPath,L".wflp"))
-				  {
-					wcsncat(szDBPath,L".wflp", NUMCHARS(szDBPath));
-				  }
+				  pLaps->AddLap(pLap, 0xffffffff);
+				}
+			  }
+
+			  lstDataBuf.push_back(buf[x]);
+			  if(aDataStart.Process(buf[x]))
+			  {
+				eRecv = RECV_DATA;
+				aDataStart.Reset();
+				lstDataBuf.clear();
+			  }
+			  if(aDataEnd.Process(buf[x]))
+			  {
+				eRecv = RECV_NONE;
+				int iLapId = 0;
+				aDataEnd.Reset();
+				IDataChannel* pDataChannel = pLaps->AllocateDataChannel();
+				if(ProcessDataChannel(lstDataBuf,&iLapId, pDataChannel))
+				{
+				  pLaps->AddDataChannel(pDataChannel);
+				}
+				lstDataBuf.clear();
+			  }
+        
+					if(aHTBT.Process(buf[x]))
+					{
+				eRecv = RECV_NONE;
+						aHTBT.Reset();
+						const char* pbResponse = "HTBT";
+						send(sData, pbResponse, 4, 0);
+
+				lstLapBuf.clear();
+				lstDataBuf.clear();
+					}
+			  lstDBBuf.push_back(buf[x]);
+
+			  if(aDBIncoming.Process(buf[x]))
+			  {
+				eRecv = RECV_DB;
+				lstDBBuf.clear();
+			  }
+			  if(aDBDone.Process(buf[x]))
+			  {
+				eRecv = RECV_NONE;
+				// First, let the user know that the database has been recieved and determine where to save it
+				DWORD dwRet = MessageBox(NULL,L"A new database has been sent from a phone.\n\nSpecify a name and folder to save it to",L"New database",MB_OK);
+
+				// we have received a raw database.  Select a folder to save it to, then send the path to the pitside UI so it can decide what to do
+				TCHAR szDBPath[MAX_PATH];
+				szDBPath[0]=L'\0';
+				wcscat(szDBPath,L"TempPitsideDB.wflp");
+				while (true)
+				{
+					if(ArtGetSaveFileName(NULL,L"Select location and filename to save to",szDBPath,NUMCHARS(szDBPath),L"WifiLapper Files (*.wflp)\0*.WFLP\0\0"))
+					{
+						const bool fFileIsNew = !DoesFileExist(szDBPath);
+						if(fFileIsNew)
+						{
+						  // let's make sure there's a .wflp suffix on that bugger.
+						  if(!str_ends_with2(szDBPath,L".wflp"))
+						  {
+							wcsncat(szDBPath,L".wflp", NUMCHARS(szDBPath));
+						  }
+						  break;
+						}
+						else
+						{
+							DWORD dwRet = MessageBox(NULL,L"A database already exists with that name.\n\nAre you sure you want to overwrite it?",L"WARNING", MB_APPLMODAL | MB_ICONWARNING | MB_YESNO | MB_TOPMOST | MB_DEFBUTTON2);
+							if (dwRet == IDYES)
+							{
+								break;
+							}
+						}
+					}
+					else
+					{
+						return;
+					}
 				}
 				if(SaveBufferToFile(szDBPath, &lstDBBuf[0], lstDBBuf.size()-aDBDone.GetSize()))
 				{
 					pLaps->NotifyDBArrival(szDBPath);
 				}
-            }
-          }
+				else
+				{
+					MessageBox(NULL,L"An error occurred while saving the database",L"ERROR",MB_APPLMODAL | MB_ICONERROR | MB_TOPMOST | MB_OK);
+				}
+			  }
         
 		    } // end processing loop
       

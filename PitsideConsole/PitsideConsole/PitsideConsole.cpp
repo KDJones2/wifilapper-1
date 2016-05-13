@@ -1453,6 +1453,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					//	Let's get the output file name from the user.
 				    TCHAR szTempPath[MAX_PATH];
 					TCHAR szFileName[MAX_PATH], szTempName[MAX_PATH];
+					szFileName[0]=L'\0';
 					if (PrintFlag)
 					{
 					    GetTempPath(NUMCHARS(szTempPath),szTempPath);	//	Get the TEMP folder path
@@ -1460,21 +1461,40 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 					}
 					else
 					{
-						if(ArtGetSaveFileName(hWnd, L"Choose Filename to save as a JPEG File.", szFileName, NUMCHARS(szFileName),L"JPG Files (*.jpg)\0*.JPG\0\0"))
+
+						wcscat(szFileName,L"Picture.jpg");
+						while (true)
 						{
-							if(!str_ends_with(szFileName,L".jpg"))
+							if(ArtGetSaveFileName(hWnd, L"Choose Filename to save as a JPEG File.", szFileName, NUMCHARS(szFileName),L"JPG Files (*.jpg)\0*.JPG\0\0"))
 							{
-								wcsncat(szFileName,L".jpg", NUMCHARS(szFileName));
+								const bool fFileIsNew = !DoesFileExist(szFileName);
+								if(fFileIsNew)
+								{
+								  // let's make sure there's a .jpg suffix on that bugger.
+								  if(!str_ends_with(szFileName,L".jpg"))
+								  {
+									wcsncat(szFileName,L".jpg", NUMCHARS(szFileName));
+								  }
+								  break;
+								}
+								else
+								{
+									DWORD dwRet = MessageBox(NULL,L"A file already exists with that name.\n\nAre you sure you want to overwrite it?",L"WARNING", MB_APPLMODAL | MB_ICONWARNING | MB_YESNO | MB_TOPMOST | MB_DEFBUTTON2);
+									if (dwRet == IDYES)
+									{
+										break;
+									}
+								}
+							}
+							else
+							{
+								return 0;
 							}
 						}
-						else
-						{
-							break;
-						}
-							// Create a temporary BMP file, this is where we will save the screen capture.
-							swprintf(szTempName, NUMCHARS(szTempName), L"%s.bmp", szFileName);
+
+						// Create a temporary BMP file, this is where we will save the screen capture.
+						swprintf(szTempName, NUMCHARS(szTempName), L"%s.bmp", szFileName);
 					}
-    
 					// Add the size of the headers to the size of the bitmap to get the total file size
 					DWORD dwSizeofDIB = dwBmpSize + sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
  
@@ -1736,15 +1756,38 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
             set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData3();
             if(setSelectedData.size() > 0)
             {
-              TCHAR szFilename[MAX_PATH];
-              if(ArtGetSaveFileName(hWnd, L"Choose Output file", szFilename, NUMCHARS(szFilename),L"CSV Files (*.csv)\0*.CSV\0\0"))
-              {
-                // let's make sure there's a .csv suffix on that bugger.
-				if(!str_ends_with(szFilename,L".csv"))
+			  TCHAR szFilename[MAX_PATH];
+			  szFilename[0]=L'\0';
+			  wcscat(szFilename,L"Export.csv");
+			  while (true)
+			  {
+				if(ArtGetSaveFileName(hWnd, L"Choose Output file", szFilename, NUMCHARS(szFilename),L"CSV Files (*.csv)\0*.CSV\0\0"))
 				{
-					wcsncat(szFilename,L".csv", NUMCHARS(szFilename));
+					const bool fFileIsNew = !DoesFileExist(szFilename);
+					if(fFileIsNew)
+					{
+						// let's make sure there's a .csv suffix on that bugger.
+						if(!str_ends_with(szFilename,L".csv"))
+						{
+							wcsncat(szFilename,L".csv", NUMCHARS(szFilename));
+						}
+						break;
+					}
+					else
+					{
+						DWORD dwRet = MessageBox(NULL,L"A file already exists with that name.\n\nAre you sure you want to overwrite it?",L"WARNING", MB_APPLMODAL | MB_ICONWARNING | MB_YESNO | MB_TOPMOST | MB_DEFBUTTON2);
+						if (dwRet == IDYES)
+						{
+							break;
+						}
+					}
 				}
-                
+				else
+				{
+					return 0;
+				}
+			  }
+
 				//	Display the "Working...." dialog, as this is going to take some time.
 				DLGPROC working = NULL;
 				HWND hwndGoto = NULL;  // Window handle of dialog box  
@@ -1764,7 +1807,6 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 				DashWare::SaveToDashware(szFilename, lstLaps, lstLaps1);	//	lstLaps does not have the reference lap in it, lstLaps1 may have it
 				DestroyWindow(hwndGoto); //	Close the "Working..." dialog
                 hwndGoto = NULL; 
-              }
             }
             else
             {
@@ -3758,6 +3800,8 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
   int iRaceId[50] = {0};
   TCHAR szDBPath[MAX_PATH];
+  szDBPath[0] = '\0';
+  wcscat(szDBPath,L"NewDatabase.wflp");
   if(ArtGetSaveFileName(NULL,L"Select .wflp to open or save to",szDBPath,NUMCHARS(szDBPath),L"WifiLapper Files (*.wflp)\0*.WFLP\0\0"))
   {
     const bool fFileIsNew = !DoesFileExist(szDBPath);
@@ -3798,7 +3842,6 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         fDBOpened = true;
       }
     }
-
   }
   else
   {

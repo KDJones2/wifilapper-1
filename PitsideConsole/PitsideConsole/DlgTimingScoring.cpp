@@ -379,14 +379,37 @@ LRESULT CDlgTimingScoring::DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 //				  swprintf(szText, NUMCHARS(szText), L"Race Start = %i\n\nRace End = %i", tmStartRace, tmEndRace);
 //				  MessageBox(hWnd, szText, L"Saving", MB_OK);
 				  TCHAR szFilename[MAX_PATH];
-				  if(ArtGetSaveFileName(hWnd, L"Choose Output file", szFilename, NUMCHARS(szFilename),L"TXT Files (*.txt)\0*.TXT\0\0"))
+				  szFilename[0]=L'\0';
+				  wcscat(szFilename,L"TimingScoring.txt");
+				  while (true)
 				  {
-					// let's make sure there's a .txt suffix on that bugger.
-					if(!str_ends_with(szFilename,L".txt") || !str_ends_with(szFilename,L".TXT") )
+					if(ArtGetSaveFileName(hWnd, L"Choose Output file", szFilename, NUMCHARS(szFilename),L"TXT Files (*.txt)\0*.TXT\0\0"))
 					{
-						wcsncat(szFilename,L".txt", NUMCHARS(szFilename));
+						const bool fFileIsNew = !DoesFileExist(szFilename);
+						if(fFileIsNew)
+						{
+							// let's make sure there's a .txt suffix on that bugger.
+							if(!str_ends_with(szFilename,L".txt") || !str_ends_with(szFilename,L".TXT") )
+							{
+								wcsncat(szFilename,L".txt", NUMCHARS(szFilename));
+							}
+							break;
+						}
+						else
+						{
+							DWORD dwRet = MessageBox(NULL,L"A file already exists with that name.\n\nAre you sure you want to overwrite it?",L"WARNING", MB_APPLMODAL | MB_ICONWARNING | MB_YESNO | MB_TOPMOST | MB_DEFBUTTON2);
+							if (dwRet == IDYES)
+							{
+								break;
+							}
+						}
 					}
-                
+					else
+					{
+						return 0;
+					}
+				  }
+
 					//	Open up the file and write the information to it
 					wofstream out;
 					out.open(szFilename);
@@ -446,7 +469,6 @@ LRESULT CDlgTimingScoring::DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 	
 					m_pResults->fCancelled = false;
 					return TRUE;
-				  }
 				}
 				else
 				{
