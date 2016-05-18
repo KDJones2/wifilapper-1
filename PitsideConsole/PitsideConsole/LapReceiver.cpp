@@ -678,28 +678,28 @@ public:
 				{
 					if(ArtGetSaveFileName(NULL,L"Select location and filename to save to",szDBPath,NUMCHARS(szDBPath),L"WifiLapper Files (*.wflp)\0*.WFLP\0\0"))
 					{
+						// let's make sure there's a .wflp suffix on that bugger.
+						if(!str_ends_with2(szDBPath,L".wflp") && !str_ends_with2(szDBPath,L".WFLP"))
+						{
+							wcsncat(szDBPath,L".wflp", NUMCHARS(szDBPath));
+						}
 						const bool fFileIsNew = !DoesFileExist(szDBPath);
 						if(fFileIsNew)
 						{
-						  // let's make sure there's a .wflp suffix on that bugger.
-						  if(!str_ends_with2(szDBPath,L".wflp"))
-						  {
-							wcsncat(szDBPath,L".wflp", NUMCHARS(szDBPath));
-						  }
-						  break;
+						  break;	//	Exit loop, as file name is valid and new
 						}
 						else
 						{
 							DWORD dwRet = MessageBox(NULL,L"A database already exists with that name.\n\nAre you sure you want to overwrite it?",L"WARNING", MB_APPLMODAL | MB_ICONWARNING | MB_YESNO | MB_TOPMOST | MB_DEFBUTTON2);
 							if (dwRet == IDYES)
 							{
-								break;
+								break;	//	User wants to overwrite file, so exit loop and proceed
 							}
 						}
 					}
 					else
 					{
-						return;
+						return;	//	User cancelled the save operation, so leave subroutine
 					}
 				}
 				if(SaveBufferToFile(szDBPath, &lstDBBuf[0], lstDBBuf.size()-aDBDone.GetSize()))

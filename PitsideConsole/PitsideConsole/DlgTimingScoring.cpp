@@ -384,28 +384,28 @@ LRESULT CDlgTimingScoring::DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 				  {
 					if(ArtGetSaveFileName(hWnd, L"Choose Output file", szFilename, NUMCHARS(szFilename),L"TXT Files (*.txt)\0*.TXT\0\0"))
 					{
+						// let's make sure there's a .txt suffix on that bugger.
+						if(!str_ends_with(szFilename,L".txt") && !str_ends_with(szFilename,L".TXT") )
+						{
+							wcsncat(szFilename,L".txt", NUMCHARS(szFilename));
+						}
 						const bool fFileIsNew = !DoesFileExist(szFilename);
 						if(fFileIsNew)
 						{
-							// let's make sure there's a .txt suffix on that bugger.
-							if(!str_ends_with(szFilename,L".txt") && !str_ends_with(szFilename,L".TXT") )
-							{
-								wcsncat(szFilename,L".txt", NUMCHARS(szFilename));
-							}
-							break;
+							break;	//	Exit loop, as file name is valid and new
 						}
 						else
 						{
 							DWORD dwRet = MessageBox(NULL,L"A file already exists with that name.\n\nAre you sure you want to overwrite it?",L"WARNING", MB_APPLMODAL | MB_ICONWARNING | MB_YESNO | MB_TOPMOST | MB_DEFBUTTON2);
 							if (dwRet == IDYES)
 							{
-								break;
+								break;	//	User wants to overwrite file, so exit loop and proceed
 							}
 						}
 					}
 					else
 					{
-						return 0;
+						return 0;	//	User cancelled the save operation, so leave subroutine
 					}
 				  }
 

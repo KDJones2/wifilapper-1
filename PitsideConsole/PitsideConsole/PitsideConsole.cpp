@@ -1466,28 +1466,28 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 						{
 							if(ArtGetSaveFileName(hWnd, L"Choose Filename to save as a JPEG File.", szFileName, NUMCHARS(szFileName),L"JPG Files (*.jpg)\0*.JPG\0\0"))
 							{
+								// let's make sure there's a .jpg suffix on that bugger.
+								if(!str_ends_with(szFileName,L".jpg") && !str_ends_with(szFileName,L".JPG"))
+								{
+									wcsncat(szFileName,L".jpg", NUMCHARS(szFileName));
+								}
 								const bool fFileIsNew = !DoesFileExist(szFileName);
 								if(fFileIsNew)
 								{
-								  // let's make sure there's a .jpg suffix on that bugger.
-								  if(!str_ends_with(szFileName,L".jpg") && !str_ends_with(szFileName,L".JPG"))
-								  {
-									wcsncat(szFileName,L".jpg", NUMCHARS(szFileName));
-								  }
-								  break;
+								  break;	//	Exit loop, as file name is valid and new
 								}
 								else
 								{
 									DWORD dwRet = MessageBox(NULL,L"A file already exists with that name.\n\nAre you sure you want to overwrite it?",L"WARNING", MB_APPLMODAL | MB_ICONWARNING | MB_YESNO | MB_TOPMOST | MB_DEFBUTTON2);
 									if (dwRet == IDYES)
 									{
-										break;
+										break;	//	User wants to overwrite file, so exit loop and proceed
 									}
 								}
 							}
 							else
 							{
-								return 0;
+								return 0;	//	User cancelled the save operation, so leave subroutine
 							}
 						}
 
@@ -1761,28 +1761,28 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 			  {
 				if(ArtGetSaveFileName(hWnd, L"Choose Output file", szFilename, NUMCHARS(szFilename),L"CSV Files (*.csv)\0*.CSV\0\0"))
 				{
+					// let's make sure there's a .csv suffix on that bugger.
+					if(!str_ends_with(szFilename,L".csv") && !str_ends_with(szFilename,L".CSV"))
+					{
+						wcsncat(szFilename,L".csv", NUMCHARS(szFilename));
+					}
 					const bool fFileIsNew = !DoesFileExist(szFilename);
 					if(fFileIsNew)
 					{
-						// let's make sure there's a .csv suffix on that bugger.
-						if(!str_ends_with(szFilename,L".csv") && !str_ends_with(szFilename,L".CSV"))
-						{
-							wcsncat(szFilename,L".csv", NUMCHARS(szFilename));
-						}
-						break;
+						break;	//	Exit loop, as file name is valid and new
 					}
 					else
 					{
 						DWORD dwRet = MessageBox(NULL,L"A file already exists with that name.\n\nAre you sure you want to overwrite it?",L"WARNING", MB_APPLMODAL | MB_ICONWARNING | MB_YESNO | MB_TOPMOST | MB_DEFBUTTON2);
 						if (dwRet == IDYES)
 						{
-							break;
+							break;	//	User wants to overwrite file, so exit loop and proceed
 						}
 					}
 				}
 				else
 				{
-					return 0;
+					return 0;	//	User cancelled the save operation, so leave subroutine
 				}
 			  }
 
@@ -3801,15 +3801,12 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   wcscat(szDBPath,L"NewDatabase.wflp");
   if(ArtGetSaveFileName(NULL,L"Select .wflp to open or save to",szDBPath,NUMCHARS(szDBPath),L"WifiLapper Files (*.wflp)\0*.WFLP\0\0"))
   {
-    const bool fFileIsNew = !DoesFileExist(szDBPath);
-    if(fFileIsNew)
+    // let's make sure there's a .wflp suffix on that bugger.
+    if(!str_ends_with(szDBPath,L".wflp") && !str_ends_with(szDBPath,L".WFLP"))
     {
-      // let's make sure there's a .wflp suffix on that bugger.
-      if(!str_ends_with(szDBPath,L".wflp") && !str_ends_with(szDBPath,L".WFLP"))
-      {
-        wcsncat(szDBPath,L".wflp", NUMCHARS(szDBPath));
-      }
+	    wcsncat(szDBPath,L".wflp", NUMCHARS(szDBPath));
     }
+    const bool fFileIsNew = !DoesFileExist(szDBPath);
     // they chose one to open, so open it.
     if(sfLaps.Init(szDBPath))
     {
