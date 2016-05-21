@@ -3774,14 +3774,17 @@ void InitPlotPrefs(LAPSUPPLIEROPTIONS &p_sfLapOpts)
 		p_sfLapOpts.m_Tranformations[i].b_LoadTrans = false;
 	}
   }
+//	Converts ANSI strings to UNICODE strings
+BOOL AnsiToUnicode( LPSTR  pszAnsiString, LPWSTR pszwUniBuff, DWORD dwUniBuffSize )
+{
+	int iRet = 0;
+    iRet = MultiByteToWideChar(CP_ACP, 0, pszAnsiString, -1, pszwUniBuff, dwUniBuffSize);
+	return ( 0 != iRet );
+}
 
 INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 
 {
-  if(strcmp(lpCmdLine,"unit") == 0)
-  {
-    return UnitTests();
-  }
   INITCOMMONCONTROLSEX initCtrls;
   initCtrls.dwICC = ICC_LISTVIEW_CLASSES;
   initCtrls.dwSize = sizeof(initCtrls);
@@ -3792,54 +3795,88 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   g_pUI = &sfUI;
   //CLapReceiver sfLaps(&sfUI);
 
-  
   CSQLiteLapDB sfLaps(&sfUI);
   bool fDBOpened = false;
 
   int iRaceId[50] = {0};
-  TCHAR szDBPath[MAX_PATH] = {NULL};
-  wcscat(szDBPath,L"NewDatabase.wflp");
-  if(ArtGetSaveFileName(NULL,L"Select .wflp to open or save to",szDBPath,NUMCHARS(szDBPath),L"WifiLapper Files (*.wflp)\0*.WFLP\0\0"))
+  TCHAR szDBPath[MAX_PATH] = {NULL};	//	Filename and path are contained in this string
+  TCHAR szTemp[512] = {NULL};
+  TCHAR szLoadFileName[MAX_PATH] = {NULL};
+  TCHAR wCmdLine[MAX_PATH] = {NULL};
+  AnsiToUnicode(lpCmdLine, wCmdLine, sizeof(wCmdLine));	//	Convert ANSI command line to UNICODE command
+
+  if(strcmp(lpCmdLine,"unit") == 0)	//	Check for special test command line
   {
-    // let's make sure there's a .wflp suffix on that bugger.
-    if(!str_ends_with(szDBPath,L".wflp") && !str_ends_with(szDBPath,L".WFLP"))
-    {
-	    wcsncat(szDBPath,L".wflp", NUMCHARS(szDBPath));
-    }
-    const bool fFileIsNew = !DoesFileExist(szDBPath);
-    // they chose one to open, so open it.
-    if(sfLaps.Init(szDBPath))
-    {
-      if(!fFileIsNew)
-      {
-        // show the race-selection dialog
-        RACESELECT_RESULT sfRaceResult;
-        CRaceSelectDlg sfRaceSelect(&sfLaps,&sfRaceResult);
-        ::ArtShowDialog<IDD_SELECTRACE>(&sfRaceSelect);
-        if(!sfRaceResult.fCancelled)
-        {
+    return UnitTests();
+//	DWORD dwRet = MessageBox(NULL,wCmdLine,L"Unit", MB_APPLMODAL | MB_ICONWARNING | MB_OK | MB_TOPMOST | MB_DEFBUTTON2);
+  }
+  else if( str_ends_with( wCmdLine, L".wflp\"") )	//	Check if user clicked on an associated WFLP file and load it
+  {
+	  //	First we must remove the quote marks from the beginning and end of the file name in the command line
+	  int start = 1;
+	  int end = NUMCHARS(wCmdLine);
+	  for (int q=start; q<end; q++)
+	  {
+		  szLoadFileName[q-1] = wCmdLine[q];
+		  if (wCmdLine[q] == NULL)
+		  {
+			  szLoadFileName[q-2] = NULL;	//	Remove the final "
+			  break;
+		  }
+	  }
+	  //	Now let's put the file name/path into our loading string, szDBPath
+	  wcsncat(szDBPath, szLoadFileName, NUMCHARS(szLoadFileName));
+//	  _snwprintf(szTemp, NUMCHARS(szTemp), L"Start = %i End = %i\n szDBPath= %s\n szLoadFileName = %s\n wCmdLine= %s", start, end, szDBPath, szLoadFileName, wCmdLine);
+//	  DWORD dwRet = MessageBox(NULL,szTemp,L"Load File", MB_APPLMODAL | MB_ICONWARNING | MB_OK | MB_TOPMOST | MB_DEFBUTTON2);
+  }
+  else
+  {
+//	_snwprintf(szTemp, NUMCHARS(szTemp), L"wCmdLine= %s", wCmdLine);
+//	DWORD dwRet = MessageBox(NULL,szTemp,L"New File", MB_APPLMODAL | MB_ICONWARNING | MB_OK | MB_TOPMOST | MB_DEFBUTTON2);
+	wcscat(szDBPath,L"NewDatabase.wflp");
+	if(ArtGetSaveFileName(NULL,L"Select .wflp to open or save to",szDBPath,NUMCHARS(szDBPath),L"WifiLapper Files (*.wflp)\0*.WFLP\0\0"))
+	{
+		// let's make sure there's a .wflp suffix on that bugger.
+		if(!str_ends_with(szDBPath,L".wflp") && !str_ends_with(szDBPath,L".WFLP"))
+		{
+			wcsncat(szDBPath,L".wflp", NUMCHARS(szDBPath));
+		}
+	}
+	else
+	{
+		return 0;	//	User cancelled load file operation, just exit the program
+	}
+  }
+
+  const bool fFileIsNew = !DoesFileExist(szDBPath);
+  // they chose one to open, so open it.
+  if(sfLaps.Init(szDBPath))
+  {
+	if(!fFileIsNew)
+	{
+		// show the race-selection dialog
+		RACESELECT_RESULT sfRaceResult;
+		CRaceSelectDlg sfRaceSelect(&sfLaps,&sfRaceResult);
+		::ArtShowDialog<IDD_SELECTRACE>(&sfRaceSelect);
+		if(!sfRaceResult.fCancelled)
+		{
 			for (int z = 0; z < 50; z++)
 			{
 				iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load the first selected race session
 			}
-          fDBOpened = true;
-        }
-        else
-        {
-          iRaceId[0] = -1;
-          fDBOpened = true;
-        }
-      }
-      else
-      {
-        iRaceId[0] = -1;
-        fDBOpened = true;
-      }
-    }
-  }
-  else
-  {
-    return 0;
+			fDBOpened = true;
+		}
+		else
+		{
+			iRaceId[0] = -1;
+			fDBOpened = true;
+		}
+	}
+	else
+	{
+		iRaceId[0] = -1;
+		fDBOpened = true;
+	}
   }
   
   if(!fDBOpened)
@@ -3847,11 +3884,13 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     // they didn't choose a file, so just use a temp DB.
     TCHAR szTempPath[MAX_PATH];
     GetTempPath(NUMCHARS(szTempPath),szTempPath);
-    wcscat(szTempPath,L"\\pitsidetemp.wflp");
+    wcscat(szTempPath,L"pitsidetemp.wflp");
     if(sfLaps.Init(szTempPath))
     {
       // success!
       wcscpy(szDBPath,szTempPath);
+	  iRaceId[0] = -1;
+	  fDBOpened = true;
     }
   }
   if(!fDBOpened)
