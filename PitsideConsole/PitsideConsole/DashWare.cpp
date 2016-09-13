@@ -64,8 +64,8 @@ namespace DashWare
     }
 	WriteChannelHeaders(out, dwMapChannels);	//	Put all Data Channel names into the header for the CSV file
     
-	int msLastLine = 0;	//	Indexer for pulling correct timestamp data for each data channel
-    float flStartTime = 0; // start time in seconds;
+	long long msLastLine = 0;	//	Indexer for pulling correct timestamp data for each data channel
+    long long msTimeOffset = 0; // Time in ms to offset the Time in seconds column in the CSV offset file; used to fix phone reset issues
 	//	Need to go through the lstSortedLaps sequentially and find each lap in lstLaps1 for output to file
     for (int ixLap = 0; ixLap < lstSortedLaps.size(); ixLap++)
     {
@@ -78,13 +78,18 @@ namespace DashWare
 			  //	We found the lap. Let's get all of the populated data channels for this lap
 
 			  const ILap* pLap = lstLaps1[iFoundLap]->GetLap();	//	Get the chosen lap
-			  int msStartTime = INT_MAX; // start time and end time for this lap (gotten by looking at start and end time for data channels)
-			  int msEndTime = -INT_MAX;
+			  long long msStartTime = INT_MAX; // start time and end time for this lap (gotten by looking at start and end time for data channels)
+			  long long msEndTime = -INT_MAX;
 
 			  const IDataChannel* pDC = lstLaps1[iFoundLap]->GetChannel(DATA_CHANNEL_VELOCITY);	//	Use the Velocity data channel to set time boundary conditions for this lap
 
 			  msStartTime = pDC->GetStartTimeMs();
 			  msEndTime = max(msEndTime, msStartTime + pLap->GetTime()*1000);
+			  if ((msStartTime + 2000) < msLastLine)		//	Time stamp for this lap is less than previous lap; possible phone reset. 
+			  //	Add an offset to following laps for RaceRender to work correctly
+			  {
+				  msTimeOffset = msLastLine + msTimeOffset + 5000 - msStartTime;
+			  }
 
 			  const vector<TimePoint2D>& lstPoints = pLap->GetPoints();	  //	List of points for this lap
 			  float flRunningAverage[DATA_CHANNEL_COUNT] = {0.0f};
@@ -100,7 +105,7 @@ namespace DashWare
 				  out << ixLap << ",";
 				  //	Time
 				  TCHAR szTemp[100] = L"0";
-				  _snwprintf(szTemp,NUMCHARS(szTemp),L"%6.3f",((float)msQuery/1000.0f)+flStartTime);
+				  _snwprintf( szTemp, NUMCHARS(szTemp), L"%6.3f", ((float)(msQuery + msTimeOffset)/1000.0f) );
 				  out << szTemp << ",";
 				  //	Comment
 				  out << pLap->GetComment();

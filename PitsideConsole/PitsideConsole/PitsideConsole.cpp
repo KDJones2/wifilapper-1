@@ -3904,7 +3904,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
   g_pLapDB = &sfLaps;
 
-  
+//  LAPSUPPLIEROPTIONS m_sfLapOpts; //sfLapOpts contains all lap display options  
   LAPSUPPLIEROPTIONS x_sfLapOpts; //sfLapOpts contains all lap display options
   InitPlotPrefs(x_sfLapOpts);	//	Initialize all PlotPrefs variables before displaying anything
 
@@ -4027,8 +4027,78 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   {
 	  HANDLE hRecvThread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)&ReceiveThreadProc, (LPVOID)&sfLaps, 0, NULL);
   }
-
+  //	Show the Open Dialog and start Pitside Console
   ArtShowDialog<IDD_DLGFIRST>(&sfUI);
-  exit(0);
+
+  //	Exiting the program. 
+  //	Let's save as many preferences and current settings as we can for next execution cycle before closing
+  TCHAR szTempPath[MAX_PATH];
+  if(GetTempPathW(NUMCHARS(szTempPath),szTempPath))
+  {
+	wcscat(szTempPath,L"LatestSettings.txt");
+
+//	LoadPitsideSettings(&sfSettings);
+    wofstream out;
+    out.open(szTempPath);
+    if(!out.eof() && !out.fail())
+    {
+      out << sfSettings.fRunHTTP << endl;
+      out << sfSettings.iHTTPPort << endl;
+      out << sfSettings.iVelocity << endl;
+      out << sfSettings.iMapLines << endl;
+	  out << sfSettings.iColorScheme << endl;
+	  out << sfSettings.bSmoothYesNo << endl;
+	  out << sfSettings.bXAxis_KM << endl;
+
+	  out << x_sfLapOpts.bShowReferenceLap << endl;
+	  out << x_sfLapOpts.bSmoothYesNo << endl;
+	  out << x_sfLapOpts.bTractionCircle << endl;
+	  out << x_sfLapOpts.bXAxis_KM << endl;
+	  out << x_sfLapOpts.eSortPreference << endl;
+	  out << x_sfLapOpts.eUnitPreference << endl;
+	  out << x_sfLapOpts.e_Orientation << endl;
+	  out << x_sfLapOpts.fColorScheme << endl;
+	  out << x_sfLapOpts.fDrawGuides << endl;
+	  out << x_sfLapOpts.fDrawLines << endl;
+	  out << x_sfLapOpts.fDrawSplitPoints << endl;
+	  out << x_sfLapOpts.fElapsedTime << endl;
+	  out << x_sfLapOpts.fIOIOHardcoded << endl;
+	  out << x_sfLapOpts.flWindowShiftX << endl;
+	  out << x_sfLapOpts.flWindowShiftY << endl;
+	  out << x_sfLapOpts.hWndLap << endl;
+	  out << x_sfLapOpts.iZoomLevels << endl;
+//	  out << x_sfLapOpts.m_PlotPrefs << endl;
+//	  out << x_sfLapOpts.m_SplitPoints << endl;
+//	  out << x_sfLapOpts.m_Tranformations << endl;
+
+	  for (int i=0; i < 50; i++)
+	  {
+//		out << x_sfLapOpts.m_PlotPrefs[i].m_ChannelName << endl;
+		out << x_sfLapOpts.m_PlotPrefs[i].iDataChannel << endl;
+		out << x_sfLapOpts.m_PlotPrefs[i].iPlotView << endl;  //  Save current display mode for channel
+		out << x_sfLapOpts.m_PlotPrefs[i].fMinValue << endl;    //  Set all lower limits to -3.0
+		out << x_sfLapOpts.m_PlotPrefs[i].fMaxValue << endl;  //  Set all upper limits to 1000000.0
+		out << x_sfLapOpts.m_PlotPrefs[i].iTransformYesNo << endl;  //  Default to display as a graph
+		out << x_sfLapOpts.m_PlotPrefs[i].fTransAValue << endl;  //  Set all A constants to 0.0
+		out << x_sfLapOpts.m_PlotPrefs[i].fTransBValue << endl;  //  Set all B constants to 1.0
+		out << x_sfLapOpts.m_PlotPrefs[i].fTransCValue << endl;  //  Set all C constants to 0.0
+		out << x_sfLapOpts.m_SplitPoints[i].m_sfXPoint << endl;	//	Initialize all split points
+		out << x_sfLapOpts.m_SplitPoints[i].m_sfYPoint << endl;	//	Initialize all split points
+		out << x_sfLapOpts.m_SplitPoints[i].m_sfSectorTime << endl;	//	Initialize all sector times
+		out << x_sfLapOpts.m_SplitPoints[i].m_sfSplitTime << endl;
+		out << x_sfLapOpts.fDrawSplitPoints << endl;	//	Default to not show split points
+//		out << x_sfLapOpts.m_Tranformations[i].f_CoeffA << endl;
+//		out << x_sfLapOpts.m_Tranformations[i].f_CoeffB << endl;
+//		out << x_sfLapOpts.m_Tranformations[i].f_CoeffC << endl;
+//		out << x_sfLapOpts.m_Tranformations[i].c_Name << endl;
+//		out << x_sfLapOpts.m_Tranformations[i].b_LoadTrans << endl;
+	  }
+	  
+	  out.close();
+    }
+  
+  }
+
+  exit(0);	//
 }
 
