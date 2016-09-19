@@ -3884,7 +3884,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS sfSettings, CMainUI 
 	copy(Line.begin(), Line.end(), c_Name);
 	swprintf(szText, NUMCHARS(szText), c_Name);	//	Load name of last-processed file in szDBPath
 	}
-	for (t=0; t<50; t++)	//	Load the RaceID's to be displayed
+	for (t=1; t<51; t++)	//	Load the RaceID's to be displayed
 	{
 		Line = lines[t+1];
 		{
@@ -3894,7 +3894,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS sfSettings, CMainUI 
 		iRaceId[t] = _wtoi(c_Name);	//	Load the boolean on whether to run the HTTP server into sfSettings data structure
 		}
 	}
-	if ( !_wcsnicmp(szText, szDBPath, NUMCHARS(szText)) )	//	If opened file is the same as the last opened file, load previous settings for Pitside
+	if ( _wcsnicmp(szText, szDBPath, NUMCHARS(szText)) == 0 )	//	If opened file is the same as the last opened file, load previous settings for Pitside
 	{
 		//	If not break and load default settings
 		Line = lines[t++];
@@ -4090,7 +4090,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS sfSettings, CMainUI 
 		}
 
 		int arraycounter = 1;
-		for (int i = t++; i < lines.size(); i+=13)
+		for (int i = t++; i < lines.size() && arraycounter < 50; i+=13)
 		{
 			Line = lines[i];
 			{
@@ -4314,7 +4314,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					copy(Line.begin(), Line.end(), c_Name);
 					swprintf(szText, NUMCHARS(szText), c_Name);	//	Load name of last-processed file in szDBPath
 				}
-				if (!wcsncmp( szText, szDBPath, NUMCHARS(szDBPath) ))	//	Opening the same file, so load see if user wants to return to previous session
+				if ( _wcsnicmp( szText, szDBPath, NUMCHARS(szDBPath) ) == 0 )	//	Opening the same file, so load see if user wants to return to previous session
 				{
 	//				TCHAR szMsg[MAX_PATH] = L"Do you want to pick up where you left off?";
 					int iRet = MessageBoxW(NULL,L"Do you want to pick up where you left off?",L"Database loaded previously",MB_ICONERROR | MB_YESNO);
@@ -4323,6 +4323,26 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 							LoadSettings(szDBPath, sfSettings, sfUI, iRaceId);	//	Let's load as many preferences and current settings as we can from the last instance run
 							//	iRaceId has all of the previous race sessions
 							fDBOpened = true;
+					}
+				}
+				else
+				{
+					// show the race-selection dialog
+					RACESELECT_RESULT sfRaceResult;
+					CRaceSelectDlg sfRaceSelect(&sfLaps,&sfRaceResult);
+					::ArtShowDialog<IDD_SELECTRACE>(&sfRaceSelect);
+					if(!sfRaceResult.fCancelled)
+					{
+						for (int z = 0; z < 50; z++)
+						{
+							iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load the first selected race session
+						}
+						fDBOpened = true;
+					}
+					else
+					{
+						iRaceId[0] = -1;
+						fDBOpened = true;
 					}
 				}
 			}
