@@ -3647,7 +3647,9 @@ void UpdateDisplays()
   }
 public:
   vector<DATA_CHANNEL> m_lstYChannels;
+  DATA_CHANNEL m_eXChannel;	//	Made public by KDJ
   ArtListBox m_sfYAxis;
+  CExtendedLap* m_pReferenceLap;
   ArtListBox m_sfLapList;
   ArtListBox m_sfListBox;
   int m_iRaceId[50];	//	Made public by KDJ
@@ -3663,7 +3665,7 @@ private:
   map<const CExtendedLap*,int> m_mapLapHighlightTimes; // stores the highlight times (in milliseconds since phone app start) for each lap.  Set from ILapSupplier calls
 
   LAPDISPLAYSTYLE m_eLapDisplayStyle;
-  DATA_CHANNEL m_eXChannel;
+//  DATA_CHANNEL m_eXChannel;
 //  vector<DATA_CHANNEL> m_lstYChannels;
   bool m_fShowTractionCircle;
   bool m_fSmooth;
@@ -3671,7 +3673,7 @@ private:
   bool m_fShowDriverBests;
   bool m_fShowReferenceLap;
 
-  CExtendedLap* m_pReferenceLap;
+//  CExtendedLap* m_pReferenceLap;	//	Made public by KDJ
   map<int,CExtendedLap*> m_mapLaps; // maps from iLapId to a lap object
   HWND m_hWnd;
 
@@ -3837,6 +3839,22 @@ void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainU
 		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfSplitTime << endl;
 		out << sfUI->m_sfLapOpts.fDrawSplitPoints << endl;	//	Default to not show split points
 	  }
+
+	  set<LPARAM> setSelectedLaps = sfUI->m_sfLapList.GetSelectedItemsData3();	//	First let's get the list of selected laps
+	  vector<CExtendedLap*> lstLaps;
+	  for(set<LPARAM>::iterator i = setSelectedLaps.begin(); i != setSelectedLaps.end(); i++)
+	  {
+		  CExtendedLap* pLap = (CExtendedLap*)*i;
+		  lstLaps.push_back(pLap);
+		  out << lstLaps[0] << endl;	//	Load the list of Laps to display
+	  }
+	  out << L"End_of_Laps" << endl; 
+	  
+	  out << sfUI->m_eXChannel << endl;	//	Save X-Axis data channel
+	  for (int i=0; i < sfUI->m_lstYChannels.size(); i++)	//	Save the list of selected Y-Axis channels
+	  {
+		  out << sfUI->m_lstYChannels[i] << endl;	//	Save the list of selected Y-Axis channels
+	  }
 	  out << "//" << endl;	//	End of file marker
 	  out.close();
     }
@@ -3906,6 +3924,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		sfUI->m_sfLapOpts.hWndLap[t] = (HWND)_wtol(c_Name);	//	Load the Lap Handle into sfSettings data structure
 		}
 	}
+	t = 2*t+1;	// Move the line counter forward
 	Line = lines[t++];
 	{
 	TCHAR *c_Name = new TCHAR[Line.size()+1];
@@ -4197,6 +4216,57 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		sfUI->m_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);    //  Load the setting to show split points
 		}
 		arraycounter++;
+	}
+	t = t + (arraycounter-1) * 13;	//	Reset the line counter to collect the next set of data
+//	t++;
+
+	Line = lines[t];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_pReferenceLap->m_pLap->GetLapId();	//	Load the X-Axis data channel
+	}
+	t++; 
+
+	for (t; t < lines.size(); t++)	//	Load the list of selected Laps
+	{
+		Line = lines[t];
+		{
+			TCHAR *c_Name = new TCHAR[Line.size()+1];
+			c_Name[Line.size()] = 0;
+			copy(Line.begin(), Line.end(), c_Name);
+			if ( _wcsnicmp( c_Name, L"End_of_Laps", NUMCHARS(c_Name) ) != 0)
+			{
+				sfUI->m_sfLapList.GetSelectedItemsData3().insert((LPARAM)_wtoi(c_Name));
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+
+	t++;
+	Line = lines[t];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_eXChannel = (DATA_CHANNEL)_wtoi(c_Name);	//	Load the X-Axis data channel
+	}
+	t++; 
+		
+	sfUI->m_lstYChannels.clear();	//	Clear the current list of Data channels
+	for (t; t < lines.size(); t++ )
+	{
+		Line = lines[t];
+		{
+		TCHAR *c_Name = new TCHAR[Line.size()+1];
+		c_Name[Line.size()] = 0;
+		copy(Line.begin(), Line.end(), c_Name);
+		sfUI->m_lstYChannels.push_back( (DATA_CHANNEL)_wtoi(c_Name) );	//	Load the Y-Axis data channels
+		}
 	}
 	  
 	in.close();
