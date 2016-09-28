@@ -3840,6 +3840,7 @@ void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainU
 		out << sfUI->m_sfLapOpts.fDrawSplitPoints << endl;	//	Default to not show split points
 	  }
 
+	  out << sfUI->m_pReferenceLap << endl;	//	Save the Reference Lap ID
 	  set<LPARAM> setSelectedLaps = sfUI->m_sfLapList.GetSelectedItemsData3();	//	First let's get the list of selected laps
 	  vector<CExtendedLap*> lstLaps;
 	  for(set<LPARAM>::iterator i = setSelectedLaps.begin(); i != setSelectedLaps.end(); i++)
@@ -4109,8 +4110,9 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 	sfUI->m_sfLapOpts.iZoomLevels = _wtoi(c_Name);	//	Load the Zoom Level into LapOpts data structure
 	}
 
-	int arraycounter = 1;
-	for (int i = t++; i < lines.size() && arraycounter < 50; i+=13)
+	t++;
+	int arraycounter = 0;
+	for (int i = t; i < lines.size() && arraycounter < 50; i+=13)
 	{
 		Line = lines[i];
 		{
@@ -4217,15 +4219,14 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		}
 		arraycounter++;
 	}
-	t = t + (arraycounter-1) * 13;	//	Reset the line counter to collect the next set of data
-//	t++;
+	t = t - 1 + (arraycounter) * 13;	//	Reset the line counter to collect the next set of data
 
 	Line = lines[t];
 	{
 	TCHAR *c_Name = new TCHAR[Line.size()+1];
 	c_Name[Line.size()] = 0;
 	copy(Line.begin(), Line.end(), c_Name);
-	sfUI->m_pReferenceLap->m_pLap->GetLapId();	//	Load the X-Axis data channel
+//	sfUI->m_pReferenceLap = (CExtendedLap*)_wtoi(c_Name);	//	Load the X-Axis data channel
 	}
 	t++; 
 
