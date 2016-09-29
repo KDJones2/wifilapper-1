@@ -3647,9 +3647,12 @@ void UpdateDisplays()
   }
 public:
   vector<DATA_CHANNEL> m_lstYChannels;
+  DATA_CHANNEL m_eXChannel;	//	Made public by KDJ
   ArtListBox m_sfYAxis;
+  CExtendedLap* m_pReferenceLap;
   ArtListBox m_sfLapList;
   ArtListBox m_sfListBox;
+  int m_iRaceId[50];	//	Made public by KDJ
 private:
   ArtListBox m_sfXAxis;
 
@@ -3662,7 +3665,7 @@ private:
   map<const CExtendedLap*,int> m_mapLapHighlightTimes; // stores the highlight times (in milliseconds since phone app start) for each lap.  Set from ILapSupplier calls
 
   LAPDISPLAYSTYLE m_eLapDisplayStyle;
-  DATA_CHANNEL m_eXChannel;
+//  DATA_CHANNEL m_eXChannel;
 //  vector<DATA_CHANNEL> m_lstYChannels;
   bool m_fShowTractionCircle;
   bool m_fSmooth;
@@ -3670,7 +3673,7 @@ private:
   bool m_fShowDriverBests;
   bool m_fShowReferenceLap;
 
-  CExtendedLap* m_pReferenceLap;
+//  CExtendedLap* m_pReferenceLap;	//	Made public by KDJ
   map<int,CExtendedLap*> m_mapLaps; // maps from iLapId to a lap object
   HWND m_hWnd;
 
@@ -3691,7 +3694,7 @@ private:
   vector<MulticastListener*> m_lstMulticast;
   MCResponder m_sfResponder;
 
-  int m_iRaceId[50];
+//  int m_iRaceId[50];
   ILapSupplier* z_ILapSupplier;
 };
 
@@ -3775,7 +3778,7 @@ void InitPlotPrefs(LAPSUPPLIEROPTIONS &p_sfLapOpts)
 	}
   }
 
-void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS sfSettings, CMainUI sfUI)
+void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI* sfUI)
 {
   TCHAR szTempPath[MAX_PATH];
   if(GetTempPathW(NUMCHARS(szTempPath),szTempPath))
@@ -3787,47 +3790,71 @@ void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS sfSettings, CMainUI
     if(!out.eof() && !out.fail())
     {
 	  out << szDBPath << endl;	//	The file name for the database
-	  out << sfSettings.fRunHTTP << endl;
-      out << sfSettings.iHTTPPort << endl;
-      out << sfSettings.iVelocity << endl;
-      out << sfSettings.iMapLines << endl;
-	  out << sfSettings.iColorScheme << endl;
-	  out << sfSettings.bSmoothYesNo << endl;
-	  out << sfSettings.bXAxis_KM << endl;
+	  for (int t=0; t<50; t++)	//	Save the RaceID's currently displayed
+	  {
+		  out << sfUI->m_iRaceId[t] << endl;
+//		  TCHAR szText[MAX_PATH]={0};
+//		  swprintf(szText, NUMCHARS(szText), L"%d", sfUI.m_sfLapOpts.hWndLap[t]);
+//		  out << szText << endl;
+		  out << sfUI->m_sfLapOpts.hWndLap[t] << endl;
+	  }
+	  out << sfSettings->fRunHTTP << endl;
+      out << sfSettings->iHTTPPort << endl;
+      out << sfSettings->iVelocity << endl;
+      out << sfSettings->iMapLines << endl;
+	  out << sfSettings->iColorScheme << endl;
+	  out << sfSettings->bSmoothYesNo << endl;
+	  out << sfSettings->bXAxis_KM << endl;
 
-	  out << sfUI.m_sfLapOpts.bShowReferenceLap << endl;
-	  out << sfUI.m_sfLapOpts.bSmoothYesNo << endl;
-	  out << sfUI.m_sfLapOpts.bTractionCircle << endl;
-	  out << sfUI.m_sfLapOpts.bXAxis_KM << endl;
-	  out << sfUI.m_sfLapOpts.eSortPreference << endl;
-	  out << sfUI.m_sfLapOpts.eUnitPreference << endl;
-	  out << sfUI.m_sfLapOpts.e_Orientation << endl;
-	  out << sfUI.m_sfLapOpts.fColorScheme << endl;
-	  out << sfUI.m_sfLapOpts.fDrawGuides << endl;
-	  out << sfUI.m_sfLapOpts.fDrawLines << endl;
-	  out << sfUI.m_sfLapOpts.fDrawSplitPoints << endl;
-	  out << sfUI.m_sfLapOpts.fElapsedTime << endl;
-	  out << sfUI.m_sfLapOpts.fIOIOHardcoded << endl;
-	  out << sfUI.m_sfLapOpts.flWindowShiftX << endl;
-	  out << sfUI.m_sfLapOpts.flWindowShiftY << endl;
-	  out << sfUI.m_sfLapOpts.hWndLap << endl;
-	  out << sfUI.m_sfLapOpts.iZoomLevels << endl;
+	  out << sfUI->m_sfLapOpts.bShowReferenceLap << endl;
+	  out << sfUI->m_sfLapOpts.bSmoothYesNo << endl;
+	  out << sfUI->m_sfLapOpts.bTractionCircle << endl;
+	  out << sfUI->m_sfLapOpts.bXAxis_KM << endl;
+	  out << sfUI->m_sfLapOpts.eSortPreference << endl;
+	  out << sfUI->m_sfLapOpts.eUnitPreference << endl;
+	  out << sfUI->m_sfLapOpts.e_Orientation << endl;
+	  out << sfUI->m_sfLapOpts.fColorScheme << endl;
+	  out << sfUI->m_sfLapOpts.fDrawGuides << endl;
+	  out << sfUI->m_sfLapOpts.fDrawLines << endl;
+	  out << sfUI->m_sfLapOpts.fDrawSplitPoints << endl;
+	  out << sfUI->m_sfLapOpts.fElapsedTime << endl;
+	  out << sfUI->m_sfLapOpts.fIOIOHardcoded << endl;
+	  out << sfUI->m_sfLapOpts.flWindowShiftX << endl;
+	  out << sfUI->m_sfLapOpts.flWindowShiftY << endl;
+	  out << sfUI->m_sfLapOpts.iZoomLevels << endl;
 
 	  for (int i=0; i < 50; i++)
 	  {
-		out << sfUI.m_sfLapOpts.m_PlotPrefs[i].iDataChannel << endl;
-		out << sfUI.m_sfLapOpts.m_PlotPrefs[i].iPlotView << endl;  //  Save current display mode for channel
-		out << sfUI.m_sfLapOpts.m_PlotPrefs[i].fMinValue << endl;    //  Set all lower limits to -3.0
-		out << sfUI.m_sfLapOpts.m_PlotPrefs[i].fMaxValue << endl;  //  Set all upper limits to 1000000.0
-		out << sfUI.m_sfLapOpts.m_PlotPrefs[i].iTransformYesNo << endl;  //  Default to display as a graph
-		out << sfUI.m_sfLapOpts.m_PlotPrefs[i].fTransAValue << endl;  //  Set all A constants to 0.0
-		out << sfUI.m_sfLapOpts.m_PlotPrefs[i].fTransBValue << endl;  //  Set all B constants to 1.0
-		out << sfUI.m_sfLapOpts.m_PlotPrefs[i].fTransCValue << endl;  //  Set all C constants to 0.0
-		out << sfUI.m_sfLapOpts.m_SplitPoints[i].m_sfXPoint << endl;	//	Initialize all split points
-		out << sfUI.m_sfLapOpts.m_SplitPoints[i].m_sfYPoint << endl;	//	Initialize all split points
-		out << sfUI.m_sfLapOpts.m_SplitPoints[i].m_sfSectorTime << endl;	//	Initialize all sector times
-		out << sfUI.m_sfLapOpts.m_SplitPoints[i].m_sfSplitTime << endl;
-		out << sfUI.m_sfLapOpts.fDrawSplitPoints << endl;	//	Default to not show split points
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].iDataChannel << endl;
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].iPlotView << endl;  //  Save current display mode for channel
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fMinValue << endl;    //  Set all lower limits to -3.0
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fMaxValue << endl;  //  Set all upper limits to 1000000.0
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].iTransformYesNo << endl;  //  Default to display as a graph
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fTransAValue << endl;  //  Set all A constants to 0.0
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fTransBValue << endl;  //  Set all B constants to 1.0
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fTransCValue << endl;  //  Set all C constants to 0.0
+		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfXPoint << endl;	//	Initialize all split points
+		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfYPoint << endl;	//	Initialize all split points
+		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfSectorTime << endl;	//	Initialize all sector times
+		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfSplitTime << endl;
+		out << sfUI->m_sfLapOpts.fDrawSplitPoints << endl;	//	Default to not show split points
+	  }
+
+	  out << sfUI->m_pReferenceLap << endl;	//	Save the Reference Lap ID
+	  set<LPARAM> setSelectedLaps = sfUI->m_sfLapList.GetSelectedItemsData3();	//	First let's get the list of selected laps
+	  vector<CExtendedLap*> lstLaps;
+	  for(set<LPARAM>::iterator i = setSelectedLaps.begin(); i != setSelectedLaps.end(); i++)
+	  {
+		  CExtendedLap* pLap = (CExtendedLap*)*i;
+		  lstLaps.push_back(pLap);
+		  out << lstLaps[0] << endl;	//	Load the list of Laps to display
+	  }
+	  out << L"End_of_Laps" << endl; 
+	  
+	  out << sfUI->m_eXChannel << endl;	//	Save X-Axis data channel
+	  for (int i=0; i < sfUI->m_lstYChannels.size(); i++)	//	Save the list of selected Y-Axis channels
+	  {
+		  out << sfUI->m_lstYChannels[i] << endl;	//	Save the list of selected Y-Axis channels
 	  }
 	  out << "//" << endl;	//	End of file marker
 	  out.close();
@@ -3836,7 +3863,7 @@ void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS sfSettings, CMainUI
   }
 }
 
-int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS sfSettings, CMainUI sfUI)
+int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI* sfUI)
 {
   TCHAR szTempPath[MAX_PATH];
   TCHAR szText[MAX_PATH];
@@ -3873,314 +3900,373 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS sfSettings, CMainUI 
 
 	//	Now let's process the information and load it in the sfUI data structure
 	string Line = lines[0];
+	int t;
 	{
 	TCHAR *c_Name = new TCHAR[Line.size()+1];
 	c_Name[Line.size()] = 0;
 	copy(Line.begin(), Line.end(), c_Name);
 	swprintf(szText, NUMCHARS(szText), c_Name);	//	Load name of last-processed file in szDBPath
 	}
-	if ( !_wcsnicmp(szText, szDBPath, NUMCHARS(szText)) )	//	If opened file is the same as the last opened file, load previous settings for Pitside
+	for (t=0; t<50; t++)	//	Load the RaceID's to be displayed
 	{
-		//	If not break and load default settings
-		Line = lines[1];
+		Line = lines[2*t+1];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfSettings.fRunHTTP = _wtoi(c_Name);	//	Load the boolean on whether to run the HTTP server into sfSettings data structure
+		sfUI->m_iRaceId[t] = _wtoi(c_Name);	//	Load the last Race session ID's into Pitside Console for loading and display
 		}
+
+		Line = lines[2*t+2];
+		{
+		TCHAR *c_Name = new TCHAR[Line.size()+1];
+		c_Name[Line.size()] = 0;
+		copy(Line.begin(), Line.end(), c_Name);
+		sfUI->m_sfLapOpts.hWndLap[t] = (HWND)_wtol(c_Name);	//	Load the Lap Handle into sfSettings data structure
+		}
+	}
+	t = 2*t+1;	// Move the line counter forward
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfSettings->fRunHTTP = _wtoi(c_Name);	//	Load the boolean on whether to run the HTTP server into sfSettings data structure
+	}
 	
-		Line = lines[2];
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfSettings->iHTTPPort = _wtoi(c_Name);	//	Load the HTTP port number into sfSettings data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfSettings->iVelocity = _wtoi(c_Name);	//	Load the Velocity (km/mi/mps) into sfSettings data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfSettings->iMapLines = _wtoi(c_Name);	//	Load the boolean for map lines display into sfSettings data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfSettings->iColorScheme = _wtoi(c_Name);	//	Load the color scheme into sfSettings data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfSettings->bSmoothYesNo = _wtoi(c_Name);	//	Load the boolean for accel smoothing into sfSettings data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfSettings->bXAxis_KM = _wtoi(c_Name);	//	Load the Distance setting into sfSettings data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.bShowReferenceLap = _wtoi(c_Name);	//	Load the booelean to display Ref Lap into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.bSmoothYesNo = _wtoi(c_Name);	//	LLoad the boolean for accel smoothing into LapOpts data structuree
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.bTractionCircle = _wtoi(c_Name);	//	Load the boolean to display Traction Circle into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.bXAxis_KM = _wtoi(c_Name);	//	Load the Distance setting into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.eSortPreference = (LAPSORTSTYLE)_wtoi(c_Name);	//	Load the Lap Sort pref into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.eUnitPreference = (UNIT_PREFERENCE)_wtoi(c_Name);	//	Load the kph/mph/mps seeting into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.e_Orientation = (ORIENTATION)_wtoi(c_Name);	//	Load the Phone Orientation into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.fColorScheme = _wtoi(c_Name);	//	Load the Color Scheme into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.fDrawGuides = _wtoi(c_Name);	//	Load the Guidelines Drawing boolean into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.fDrawLines = _wtoi(c_Name);	//	Load the Lines/Dots Drawing boolean into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);	//	Load the Split Points boolean into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.fElapsedTime = _wtoi(c_Name);	//	Load the Elapsed Time boolean into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.fIOIOHardcoded = _wtoi(c_Name);	//	Load the IOIO Hardcoded boolean into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.flWindowShiftX = _wtof(c_Name);	//	Load the Window ShiftX into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.flWindowShiftY = _wtof(c_Name);	//	Load the Window ShiftY into LapOpts data structure
+	}
+
+	Line = lines[t++];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.iZoomLevels = _wtoi(c_Name);	//	Load the Zoom Level into LapOpts data structure
+	}
+
+	t++;
+	int arraycounter = 0;
+	for (int i = t; i < lines.size() && arraycounter < 50; i+=13)
+	{
+		Line = lines[i];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfSettings.iHTTPPort = _wtoi(c_Name);	//	Load the HTTP port number into sfSettings data structure
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].iDataChannel = (DATA_CHANNEL)_wtoi(c_Name);    //  Load the data channel
 		}
 
-		Line = lines[3];
+		Line = lines[i+1];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfSettings.iVelocity = _wtoi(c_Name);	//	Load the Velocity (km/mi/mps) into sfSettings data structure
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].iPlotView = _wtoi(c_Name);    //  Load current display mode for channel
 		}
 
-		Line = lines[4];
+		Line = lines[i+2];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfSettings.iMapLines = _wtoi(c_Name);	//	Load the boolean for map lines display into sfSettings data structure
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fMinValue = _wtof(c_Name);    //  Load the lower limit for channel
 		}
 
-		Line = lines[5];
+		Line = lines[i+3];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfSettings.iColorScheme = _wtoi(c_Name);	//	Load the color scheme into sfSettings data structure
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fMaxValue = _wtof(c_Name);    //  Load the upper limit for channel
 		}
 
-		Line = lines[6];
+		Line = lines[i+4];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfSettings.bSmoothYesNo = _wtoi(c_Name);	//	Load the boolean for accel smoothing into sfSettings data structure
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].iTransformYesNo = _wtoi(c_Name);    //  Load the transform flag for channel
 		}
 
-		Line = lines[7];
+		Line = lines[i+5];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfSettings.bXAxis_KM = _wtoi(c_Name);	//	Load the Distance setting into sfSettings data structure
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fTransAValue = _wtof(c_Name);    //  Load the A constant for channel
 		}
 
-		Line = lines[8];
+		Line = lines[i+6];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.bShowReferenceLap = _wtoi(c_Name);	//	Load the booelean to display Ref Lap into LapOpts data structure
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fTransBValue = _wtof(c_Name);    //  Load the B constant for channel
 		}
 
-		Line = lines[9];
+		Line = lines[i+7];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.bSmoothYesNo = _wtoi(c_Name);	//	LLoad the boolean for accel smoothing into LapOpts data structuree
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fTransCValue = _wtof(c_Name);    //  Load the C constant for channel
 		}
 
-		Line = lines[10];
+		Line = lines[i+8];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.bTractionCircle = _wtoi(c_Name);	//	Load the boolean to display Traction Circle into LapOpts data structure
+		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfXPoint = _wtof(c_Name);    //  Load the split points
 		}
 
-		Line = lines[11];
+		Line = lines[i+9];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.bXAxis_KM = _wtoi(c_Name);	//	Load the Distance setting into LapOpts data structure
+		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfYPoint = _wtof(c_Name);    //  Load the split points
 		}
 
-		Line = lines[12];
+		Line = lines[i+10];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.eSortPreference = (LAPSORTSTYLE)_wtoi(c_Name);	//	Load the Lap Sort pref into LapOpts data structure
+		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfSectorTime = _wtoi(c_Name);    //  Load all sector times
 		}
 
-		Line = lines[13];
+		Line = lines[i+11];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.eUnitPreference = (UNIT_PREFERENCE)_wtoi(c_Name);	//	Load the kph/mph/mps seeting into LapOpts data structure
+		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfSplitTime = _wtof(c_Name);    //  Load the lower limit for channel
 		}
 
-		Line = lines[14];
+		Line = lines[i+12];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.e_Orientation = (ORIENTATION)_wtoi(c_Name);	//	Load the Phone Orientation into LapOpts data structure
+		sfUI->m_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);    //  Load the setting to show split points
 		}
+		arraycounter++;
+	}
+	t = t - 1 + (arraycounter) * 13;	//	Reset the line counter to collect the next set of data
 
-		Line = lines[15];
-		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.fColorScheme = _wtoi(c_Name);	//	Load the Color Scheme into LapOpts data structure
-		}
+	Line = lines[t];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+//	sfUI->m_pReferenceLap = (CExtendedLap*)_wtoi(c_Name);	//	Load the X-Axis data channel
+	}
+	t++; 
 
-		Line = lines[16];
+	for (t; t < lines.size(); t++)	//	Load the list of selected Laps
+	{
+		Line = lines[t];
 		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.fDrawGuides = _wtoi(c_Name);	//	Load the Guidelines Drawing boolean into LapOpts data structure
-		}
-
-		Line = lines[17];
-		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.fDrawLines = _wtoi(c_Name);	//	Load the Lines/Dots Drawing boolean into LapOpts data structure
-		}
-
-		Line = lines[18];
-		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);	//	Load the Split Points boolean into LapOpts data structure
-		}
-
-		Line = lines[19];
-		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.fElapsedTime = _wtoi(c_Name);	//	Load the Elapsed Time boolean into LapOpts data structure
-		}
-
-		Line = lines[20];
-		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.fIOIOHardcoded = _wtoi(c_Name);	//	Load the IOIO Hardcoded boolean into LapOpts data structure
-		}
-
-		Line = lines[21];
-		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.flWindowShiftX = _wtof(c_Name);	//	Load the Window ShiftX into LapOpts data structure
-		}
-
-		Line = lines[22];
-		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.flWindowShiftY = _wtof(c_Name);	//	Load the Window ShiftY into LapOpts data structure
-		}
-
-		Line = lines[23];
-		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-	//	sfUI.m_sfLapOpts.hWndLap = (HWND)_wtoi(c_Name);	//	Load the Lap Handle into sfSettings data structure
-		}
-
-		Line = lines[24];
-		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-		sfUI.m_sfLapOpts.iZoomLevels = _wtoi(c_Name);	//	Load the Zoom Level into LapOpts data structure
-		}
-
-		int arraycounter = 1;
-		for (int i = 25; i < lines.size(); i+=13)
-		{
-			Line = lines[i];
-			{
 			TCHAR *c_Name = new TCHAR[Line.size()+1];
 			c_Name[Line.size()] = 0;
 			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_PlotPrefs[arraycounter].iDataChannel = (DATA_CHANNEL)_wtoi(c_Name);    //  Load the data channel
-			}
-
-			Line = lines[i+1];
+			if ( _wcsnicmp( c_Name, L"End_of_Laps", NUMCHARS(c_Name) ) != 0)
 			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_PlotPrefs[arraycounter].iPlotView = _wtoi(c_Name);    //  Load current display mode for channel
+				sfUI->m_sfLapList.GetSelectedItemsData3().insert((LPARAM)_wtoi(c_Name));
 			}
-
-			Line = lines[i+2];
+			else
 			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_PlotPrefs[arraycounter].fMinValue = _wtof(c_Name);    //  Load the lower limit for channel
+				break;
 			}
+		}
+	}
 
-			Line = lines[i+3];
-			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_PlotPrefs[arraycounter].fMaxValue = _wtof(c_Name);    //  Load the upper limit for channel
-			}
-
-			Line = lines[i+4];
-			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_PlotPrefs[arraycounter].iTransformYesNo = _wtoi(c_Name);    //  Load the transform flag for channel
-			}
-
-			Line = lines[i+5];
-			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_PlotPrefs[arraycounter].fTransAValue = _wtof(c_Name);    //  Load the A constant for channel
-			}
-
-			Line = lines[i+6];
-			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_PlotPrefs[arraycounter].fTransBValue = _wtof(c_Name);    //  Load the B constant for channel
-			}
-
-			Line = lines[i+7];
-			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_PlotPrefs[arraycounter].fTransCValue = _wtof(c_Name);    //  Load the C constant for channel
-			}
-
-			Line = lines[i+8];
-			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_SplitPoints[arraycounter].m_sfXPoint = _wtof(c_Name);    //  Load the split points
-			}
-
-			Line = lines[i+9];
-			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_SplitPoints[arraycounter].m_sfYPoint = _wtof(c_Name);    //  Load the split points
-			}
-
-			Line = lines[i+10];
-			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_SplitPoints[arraycounter].m_sfSectorTime = _wtoi(c_Name);    //  Load all sector times
-			}
-
-			Line = lines[i+11];
-			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.m_SplitPoints[arraycounter].m_sfSplitTime = _wtof(c_Name);    //  Load the lower limit for channel
-			}
-
-			Line = lines[i+12];
-			{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			sfUI.m_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);    //  Load the setting to show split points
-			}
-			arraycounter++;
+	t++;
+	Line = lines[t];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_eXChannel = (DATA_CHANNEL)_wtoi(c_Name);	//	Load the X-Axis data channel
+	}
+	t++; 
+		
+	sfUI->m_lstYChannels.clear();	//	Clear the current list of Data channels
+	for (t; t < lines.size(); t++ )
+	{
+		Line = lines[t];
+		{
+		TCHAR *c_Name = new TCHAR[Line.size()+1];
+		c_Name[Line.size()] = 0;
+		copy(Line.begin(), Line.end(), c_Name);
+		sfUI->m_lstYChannels.push_back( (DATA_CHANNEL)_wtoi(c_Name) );	//	Load the Y-Axis data channels
 		}
 	}
 	  
@@ -4222,6 +4308,11 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
   PITSIDE_SETTINGS sfSettings;
   LoadPitsideSettings(&sfSettings);		//	Load preferences from "Settings.txt" file
+  LAPSUPPLIEROPTIONS x_sfLapOpts; //sfLapOpts contains all lap display options
+  InitPlotPrefs(x_sfLapOpts);	//	Initialize all PlotPrefs variables before displaying anything
+//  sfUI.SetDisplayOptions(x_sfLapOpts);	//	Link x_sfLapOpts with CMainUI pointer
+  sfUI.SetRaceId(&iRaceId[0]);
+
 
   if(strcmp(lpCmdLine,"unit") == 0)	//	Check for special test command line
   {
@@ -4262,33 +4353,119 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
   }
 
-  if( DoesFileExist(szDBPath) )	//	File exists, so load it and return back to where you last left off
-  {
-		LoadSettings(szDBPath, sfSettings, sfUI);	//	Let's save as many preferences and current settings as we can for next execution cycle before closing
-  }
   const bool fFileIsNew = !DoesFileExist(szDBPath);
   // they chose one to open, so open it.
   if(sfLaps.Init(szDBPath))
   {
 	if(!fFileIsNew)
 	{
-		// show the race-selection dialog
-		RACESELECT_RESULT sfRaceResult;
-		CRaceSelectDlg sfRaceSelect(&sfLaps,&sfRaceResult);
-		::ArtShowDialog<IDD_SELECTRACE>(&sfRaceSelect);
-		if(!sfRaceResult.fCancelled)
-		{
-			for (int z = 0; z < 50; z++)
+		  TCHAR szTempPath[MAX_PATH];
+		  if(GetTempPathW(NUMCHARS(szTempPath),szTempPath))
+		  {
+			wcscat(szTempPath,L"LatestSettings.txt");
+			vector<string> lines;
+			ifstream in;
+			if ( DoesFileExist(szTempPath) )	//	Make sure that the file exists before opening it
 			{
-				iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load the first selected race session
+				in.open(szTempPath);
+				//	Read in the first line of the "LatestSettings.txt" file
+				//	Store them in the 'lines' vector
+				string Line;
+				if(!in.eof() && !in.fail())
+				{
+					getline(in, Line);
+					if (Line != "//")
+					{
+						lines.push_back(Line);
+					}
+				}
+				in.close();
+				TCHAR szText[MAX_PATH];
+
+				//	Now let's process the information and load it in the sfUI data structure
+				{
+					string Line = lines[0];
+					TCHAR *c_Name = new TCHAR[Line.size()+1];
+					c_Name[Line.size()] = 0;
+					copy(Line.begin(), Line.end(), c_Name);
+					swprintf(szText, NUMCHARS(szText), c_Name);	//	Load name of last-processed file in szDBPath
+				}
+				if ( _wcsnicmp( szText, szDBPath, NUMCHARS(szDBPath) ) == 0 )	//	Opening the same file, so load see if user wants to return to previous session
+				{
+	//				TCHAR szMsg[MAX_PATH] = L"Do you want to pick up where you left off?";
+					int iRet = MessageBoxW(NULL,L"Do you want to pick up where you left off?",L"Database loaded previously",MB_ICONERROR | MB_YESNO);
+					if(iRet == IDYES)
+					{
+							LoadSettings(szDBPath, &sfSettings, &sfUI);	//	Let's overwrite the default preferences with the settings from the last instance run
+							for (int t=0; t<50; t++)
+							{
+								iRaceId[t]=sfUI.m_iRaceId[t];
+							}
+							fDBOpened = true;
+					}
+					else
+					{
+						// show the race-selection dialog
+						RACESELECT_RESULT sfRaceResult;
+						CRaceSelectDlg sfRaceSelect(&sfLaps,&sfRaceResult);
+						::ArtShowDialog<IDD_SELECTRACE>(&sfRaceSelect);
+						if(!sfRaceResult.fCancelled)
+						{
+							for (int z = 0; z < 50; z++)
+							{
+								iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load the first selected race session
+							}
+							fDBOpened = true;
+						}
+						else
+						{
+							iRaceId[0] = -1;
+							fDBOpened = true;
+						}
+					}
+				}
+				else
+				{
+					// show the race-selection dialog
+					RACESELECT_RESULT sfRaceResult;
+					CRaceSelectDlg sfRaceSelect(&sfLaps,&sfRaceResult);
+					::ArtShowDialog<IDD_SELECTRACE>(&sfRaceSelect);
+					if(!sfRaceResult.fCancelled)
+					{
+						for (int z = 0; z < 50; z++)
+						{
+							iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load the first selected race session
+						}
+						fDBOpened = true;
+					}
+					else
+					{
+						iRaceId[0] = -1;
+						fDBOpened = true;
+					}
+				}
 			}
-			fDBOpened = true;
-		}
-		else
-		{
-			iRaceId[0] = -1;
-			fDBOpened = true;
-		}
+			else
+			{
+				// show the race-selection dialog
+				RACESELECT_RESULT sfRaceResult;
+				CRaceSelectDlg sfRaceSelect(&sfLaps,&sfRaceResult);
+				::ArtShowDialog<IDD_SELECTRACE>(&sfRaceSelect);
+				if(!sfRaceResult.fCancelled)
+				{
+					for (int z = 0; z < 50; z++)
+					{
+						iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load the first selected race session
+					}
+					fDBOpened = true;
+				}
+				else
+				{
+					iRaceId[0] = -1;
+					fDBOpened = true;
+				}
+			}
+		  }
 	}
 	else
 	{
@@ -4317,14 +4494,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     MessageBox(NULL,L"Pitside was unable to create a database to save data to.  Is your hard drive full?",L"Failed to create DB",MB_ICONERROR);
     exit(0);
   }
-  sfUI.SetRaceId(&iRaceId[0]);
-
-
   g_pLapDB = &sfLaps;
-
-  LAPSUPPLIEROPTIONS x_sfLapOpts; //sfLapOpts contains all lap display options
-  InitPlotPrefs(x_sfLapOpts);	//	Initialize all PlotPrefs variables before displaying anything
-//  sfUI.SetDisplayOptions(x_sfLapOpts);	//	Link x_sfLapOpts with CMainUI pointer
 
   switch (sfSettings.iVelocity)
   {
@@ -4446,7 +4616,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   ArtShowDialog<IDD_DLGFIRST>(&sfUI);
 
   //	Exiting the program. 
-  SaveSettings(szDBPath, sfSettings, sfUI);	//	Let's save as many preferences and current settings as we can for next execution cycle before closing
+  SaveSettings(szDBPath, &sfSettings, &sfUI);	//	Let's save as many preferences and current settings as we can for next execution cycle before closing
 
   exit(0);	//
 }

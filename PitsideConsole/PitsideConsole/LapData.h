@@ -230,10 +230,11 @@ private:
 private:
   ILapReceiver* m_pLapDB;
   CExtendedLap* m_pReferenceLap;
-  const ILap* m_pLap;
+//  const ILap* m_pLap;	//	Made public by KDJ
   SYSTEMTIME m_tmRecv; // when was this thing constructed?
   SYSTEMTIME m_tmStart; // when was this thing started on-track?
 public:
+  const ILap* m_pLap;
   vector<TimePoint2D> m_lstPoints;	//	Made public by KDJ
 //  mutable map<DATA_CHANNEL,const IDataChannel*> m_mapChannels; // we own these pointers.  We get them allocated in ComputeLapData, and it is our responsibility to get them de-allocated
 
