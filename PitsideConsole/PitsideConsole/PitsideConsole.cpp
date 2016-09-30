@@ -3825,7 +3825,8 @@ void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainU
 
 	  for (int i=0; i < 50; i++)
 	  {
-		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].iDataChannel << endl;
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].iDataChannel << endl;	//	Save the Data Channel number
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].m_ChannelName << endl;	//	Save the Data Channel Name
 		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].iPlotView << endl;  //  Save current display mode for channel
 		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fMinValue << endl;    //  Set all lower limits to -3.0
 		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fMaxValue << endl;  //  Set all upper limits to 1000000.0
@@ -3925,7 +3926,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		sfUI->m_sfLapOpts.hWndLap[t] = (HWND)_wtol(c_Name);	//	Load the Lap Handle into sfSettings data structure
 		}
 	}
-	t = 2*t+1;	// Move the line counter forward
+	t = 2*t + 1;	// Move the line counter forward
 	Line = lines[t++];
 	{
 	TCHAR *c_Name = new TCHAR[Line.size()+1];
@@ -4110,9 +4111,8 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 	sfUI->m_sfLapOpts.iZoomLevels = _wtoi(c_Name);	//	Load the Zoom Level into LapOpts data structure
 	}
 
-	t++;
-	int arraycounter = 0;
-	for (int i = t; i < lines.size() && arraycounter < 50; i+=13)
+	int arraycounter = 0;	//	Now load the Plotting Preferences into the m_sfLapOpts.PlotPrefs array
+	for (int i = t; i < lines.size() && arraycounter < 50; i+=14)
 	{
 		Line = lines[i];
 		{
@@ -4127,7 +4127,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].iPlotView = _wtoi(c_Name);    //  Load current display mode for channel
+		swprintf(sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].m_ChannelName, NUMCHARS(sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].m_ChannelName), c_Name);    //  Load the data channel
 		}
 
 		Line = lines[i+2];
@@ -4135,7 +4135,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fMinValue = _wtof(c_Name);    //  Load the lower limit for channel
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].iPlotView = _wtoi(c_Name);    //  Load current display mode for channel
 		}
 
 		Line = lines[i+3];
@@ -4143,7 +4143,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fMaxValue = _wtof(c_Name);    //  Load the upper limit for channel
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fMinValue = _wtof(c_Name);    //  Load the lower limit for channel
 		}
 
 		Line = lines[i+4];
@@ -4151,7 +4151,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].iTransformYesNo = _wtoi(c_Name);    //  Load the transform flag for channel
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fMaxValue = _wtof(c_Name);    //  Load the upper limit for channel
 		}
 
 		Line = lines[i+5];
@@ -4159,7 +4159,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fTransAValue = _wtof(c_Name);    //  Load the A constant for channel
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].iTransformYesNo = _wtoi(c_Name);    //  Load the transform flag for channel
 		}
 
 		Line = lines[i+6];
@@ -4167,7 +4167,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fTransBValue = _wtof(c_Name);    //  Load the B constant for channel
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fTransAValue = _wtof(c_Name);    //  Load the A constant for channel
 		}
 
 		Line = lines[i+7];
@@ -4175,7 +4175,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fTransCValue = _wtof(c_Name);    //  Load the C constant for channel
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fTransBValue = _wtof(c_Name);    //  Load the B constant for channel
 		}
 
 		Line = lines[i+8];
@@ -4183,7 +4183,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfXPoint = _wtof(c_Name);    //  Load the split points
+		sfUI->m_sfLapOpts.m_PlotPrefs[arraycounter].fTransCValue = _wtof(c_Name);    //  Load the C constant for channel
 		}
 
 		Line = lines[i+9];
@@ -4191,7 +4191,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfYPoint = _wtof(c_Name);    //  Load the split points
+		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfXPoint = _wtof(c_Name);    //  Load the split points
 		}
 
 		Line = lines[i+10];
@@ -4199,7 +4199,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfSectorTime = _wtoi(c_Name);    //  Load all sector times
+		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfYPoint = _wtof(c_Name);    //  Load the split points
 		}
 
 		Line = lines[i+11];
@@ -4207,7 +4207,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfSplitTime = _wtof(c_Name);    //  Load the lower limit for channel
+		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfSectorTime = _wtoi(c_Name);    //  Load all sector times
 		}
 
 		Line = lines[i+12];
@@ -4215,11 +4215,20 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
+		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfSplitTime = _wtof(c_Name);    //  Load the lower limit for channel
+		}
+
+		Line = lines[i+13];
+		{
+		TCHAR *c_Name = new TCHAR[Line.size()+1];
+		c_Name[Line.size()] = 0;
+		copy(Line.begin(), Line.end(), c_Name);
 		sfUI->m_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);    //  Load the setting to show split points
+//		x_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);    //  Load the setting to show split points
 		}
 		arraycounter++;
 	}
-	t = t - 1 + (arraycounter) * 13;	//	Reset the line counter to collect the next set of data
+	t = t + (arraycounter) * 14;	//	Reset the line counter to collect the next set of data
 
 	Line = lines[t];
 	{
@@ -4257,7 +4266,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 	sfUI->m_eXChannel = (DATA_CHANNEL)_wtoi(c_Name);	//	Load the X-Axis data channel
 	}
 	t++; 
-		
+	
 	sfUI->m_lstYChannels.clear();	//	Clear the current list of Data channels
 	for (t; t < lines.size(); t++ )
 	{
@@ -4269,7 +4278,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		sfUI->m_lstYChannels.push_back( (DATA_CHANNEL)_wtoi(c_Name) );	//	Load the Y-Axis data channels
 		}
 	}
-	  
+	
 	in.close();
   }
   return 1;
@@ -4310,7 +4319,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   LoadPitsideSettings(&sfSettings);		//	Load preferences from "Settings.txt" file
   LAPSUPPLIEROPTIONS x_sfLapOpts; //sfLapOpts contains all lap display options
   InitPlotPrefs(x_sfLapOpts);	//	Initialize all PlotPrefs variables before displaying anything
-//  sfUI.SetDisplayOptions(x_sfLapOpts);	//	Link x_sfLapOpts with CMainUI pointer
+  sfUI.SetDisplayOptions(x_sfLapOpts);	//	Link x_sfLapOpts with CMainUI pointer
   sfUI.SetRaceId(&iRaceId[0]);
 
 
@@ -4571,7 +4580,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
           }
   }
   x_sfLapOpts.eSortPreference = SORTSTYLE_BYTIMEOFRACE;		//	Default sort Lap List by time of lap
-  sfUI.SetDisplayOptions(x_sfLapOpts);
+//  sfUI.SetDisplayOptions(x_sfLapOpts);
   sfUI.SetDBPath(szDBPath);
 
   PitsideHTTP aResponder(g_pLapDB,&sfUI);
