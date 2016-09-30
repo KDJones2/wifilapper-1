@@ -3789,7 +3789,7 @@ void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainU
     out.open(szTempPath);
     if(!out.eof() && !out.fail())
     {
-	  out << szDBPath << endl;	//	The file name for the database
+	  out << sfUI->m_szPath << endl;	//	The file name for the database
 	  for (int t=0; t<50; t++)	//	Save the RaceID's currently displayed
 	  {
 		  out << sfUI->m_iRaceId[t] << endl;
@@ -3906,7 +3906,8 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 	TCHAR *c_Name = new TCHAR[Line.size()+1];
 	c_Name[Line.size()] = 0;
 	copy(Line.begin(), Line.end(), c_Name);
-	swprintf(szText, NUMCHARS(szText), c_Name);	//	Load name of last-processed file in szDBPath
+	swprintf(sfUI->m_szPath, NUMCHARS(sfUI->m_szPath), c_Name);	//	Load name of last-processed file in sfUI Pointer for szDBPath
+//	swprintf(szDBPath, NUMCHARS(c_Name), c_Name);	//	Load name of last-processed file in szDBPath
 	}
 	for (t=0; t<50; t++)	//	Load the RaceID's to be displayed
 	{
@@ -4423,12 +4424,14 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 							for (int z = 0; z < 50; z++)
 							{
 								iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load the first selected race session
+								sfUI.m_iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load these RaceId's into the global pointer
 							}
 							fDBOpened = true;
 						}
 						else
 						{
 							iRaceId[0] = -1;
+							sfUI.m_iRaceId[0] = -1;
 							fDBOpened = true;
 						}
 					}
@@ -4444,12 +4447,14 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						for (int z = 0; z < 50; z++)
 						{
 							iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load the first selected race session
+							sfUI.m_iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load these RaceId's into the global pointer
 						}
 						fDBOpened = true;
 					}
 					else
 					{
 						iRaceId[0] = -1;
+						sfUI.m_iRaceId[0] = -1;
 						fDBOpened = true;
 					}
 				}
@@ -4465,12 +4470,14 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					for (int z = 0; z < 50; z++)
 					{
 						iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load the first selected race session
+						sfUI.m_iRaceId[z] = sfRaceResult.iRaceId[z];	//	Load these RaceId's into the global pointer
 					}
 					fDBOpened = true;
 				}
 				else
 				{
 					iRaceId[0] = -1;
+					sfUI.m_iRaceId[0] = -1;
 					fDBOpened = true;
 				}
 			}
@@ -4479,6 +4486,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	else
 	{
 		iRaceId[0] = -1;
+		sfUI.m_iRaceId[0] = -1;
 		fDBOpened = true;
 	}
   }
@@ -4494,9 +4502,11 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
       // success!
       wcscpy(szDBPath,szTempPath);
 	  iRaceId[0] = -1;
+	  sfUI.m_iRaceId[0] = -1;
 	  fDBOpened = true;
     }
   }
+
   if(!fDBOpened)
   {
     // disaster.
@@ -4581,7 +4591,8 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   }
   x_sfLapOpts.eSortPreference = SORTSTYLE_BYTIMEOFRACE;		//	Default sort Lap List by time of lap
 //  sfUI.SetDisplayOptions(x_sfLapOpts);
-  sfUI.SetDBPath(szDBPath);
+//  sfUI.SetDBPath(szDBPath);
+  swprintf(sfUI.m_szPath, NUMCHARS(sfUI.m_szPath), szDBPath);	//	Load name of the chosen file into the sfUI pointer
 
   PitsideHTTP aResponder(g_pLapDB,&sfUI);
   if(sfSettings.fRunHTTP && sfSettings.iHTTPPort > 0 && sfSettings.iHTTPPort < 65536)
