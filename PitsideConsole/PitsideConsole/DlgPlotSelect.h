@@ -120,6 +120,7 @@ public:
   bool bSmoothYesNo;	//	Whether or not to smooth the accelerometer graphs
   bool bShowReferenceLap;	//	Whether or not the Reference Lap is displayed
   ORIENTATION e_Orientation;	//	Phone orientation when installed in the car
+  int LapId;
 };
 
 

@@ -191,9 +191,7 @@ vector<CExtendedLap*> GetAllLaps()
       {
         case WM_INITDIALOG:
         {
-          //  Initialize all data channels, if not already set by user.
-//          if (m_sfLapOpts->m_PlotPrefs[1].m_ChannelName[512] == m_sfLapOpts->m_PlotPrefs[0].m_ChannelName[512])
-		  {
+			//  Initialize all data channels, if not already set by user.
             InitPlotPrefs(hWnd, lParam);
 			LoadTransformations(*m_sfLapOpts);	//	Load transformations from "Transformations.txt" file
 			LoadDropDown(hWnd);		//	Now load those names into drop down list for selection
@@ -206,14 +204,9 @@ vector<CExtendedLap*> GetAllLaps()
 				SendMessage(hWndComboBox, CB_SETCURSEL, (WPARAM)0, (LPARAM)0);
 			}
 
-          }
-//          else
-          {
             set<DATA_CHANNEL> setAvailable;
-//            SetPlotPrefs(hWnd, setAvailable);
-// 			LoadDropDown(hWnd);		//	Now load those names into drop down list for selection
-         }
-          return TRUE;
+            SetPlotPrefs(hWnd, setAvailable);
+			return TRUE;
         }
 
         case WM_COMMAND:

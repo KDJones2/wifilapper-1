@@ -626,7 +626,28 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		m_sfSubDisplay.Init(GetDlgItem(m_hWnd,IDC_SUBDISPLAY));
         m_sfTractionDisplay.Init(GetDlgItem(m_hWnd,IDC_TRACTIONCIRCLEMAP));
 
-        set<DATA_CHANNEL> setAvailable;
+		LoadLaps(g_pLapDB);
+		if (m_sfLapOpts.LapId != 0)	//	Reference lap needs to be loaded. Identify which one it is and set it
+		{
+            for(map<int,CExtendedLap*>::iterator i = m_mapLaps.begin(); i != m_mapLaps.end(); i++)
+            {
+                if(i->second->GetLap()->GetLapId() == m_sfLapOpts.LapId)
+                {
+					m_pReferenceLap = i->second;	//	Set the Reference lap to this lap                    
+                }
+            }
+            m_pReferenceLap->ComputeDistances(NULL, g_pLapDB);	//	Now recompute distances, based upon this Reference Lap
+            for(map<int,CExtendedLap*>::iterator i = m_mapLaps.begin(); i != m_mapLaps.end(); i++)
+            {
+				if(i->second != m_pReferenceLap)
+				{
+					i->second->ComputeDistances(m_pReferenceLap, g_pLapDB); // tell this lap to recompute using pLap as the reference lap
+				}
+            }
+		}
+
+		
+		set<DATA_CHANNEL> setAvailable;
         InitAxes(setAvailable);
         LoadLaps(::g_pLapDB);
         UpdateUI(UPDATE_ALL);
@@ -3841,17 +3862,8 @@ void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainU
 		out << sfUI->m_sfLapOpts.fDrawSplitPoints << endl;	//	Default to not show split points
 	  }
 
-	  out << sfUI->m_pReferenceLap << endl;	//	Save the Reference Lap ID
-	  set<LPARAM> setSelectedLaps = sfUI->m_sfLapList.GetSelectedItemsData3();	//	First let's get the list of selected laps
-	  vector<CExtendedLap*> lstLaps;
-	  for(set<LPARAM>::iterator i = setSelectedLaps.begin(); i != setSelectedLaps.end(); i++)
-	  {
-		  CExtendedLap* pLap = (CExtendedLap*)*i;
-		  lstLaps.push_back(pLap);
-		  out << lstLaps[0] << endl;	//	Load the list of Laps to display
-	  }
-	  out << L"End_of_Laps" << endl; 
-	  
+	  out << sfUI->m_pReferenceLap->m_pLap->GetLapId() << endl;	//	Save the Reference Lap ID
+
 	  out << sfUI->m_eXChannel << endl;	//	Save X-Axis data channel
 	  for (int i=0; i < sfUI->m_lstYChannels.size(); i++)	//	Save the list of selected Y-Axis channels
 	  {
@@ -4236,29 +4248,10 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 	TCHAR *c_Name = new TCHAR[Line.size()+1];
 	c_Name[Line.size()] = 0;
 	copy(Line.begin(), Line.end(), c_Name);
-//	sfUI->m_pReferenceLap = (CExtendedLap*)_wtoi(c_Name);	//	Load the X-Axis data channel
+	sfUI->m_sfLapOpts.LapId = _wtoi(c_Name);	//	Get the LapId for the reference lap
 	}
+
 	t++; 
-
-	for (t; t < lines.size(); t++)	//	Load the list of selected Laps
-	{
-		Line = lines[t];
-		{
-			TCHAR *c_Name = new TCHAR[Line.size()+1];
-			c_Name[Line.size()] = 0;
-			copy(Line.begin(), Line.end(), c_Name);
-			if ( _wcsnicmp( c_Name, L"End_of_Laps", NUMCHARS(c_Name) ) != 0)
-			{
-				sfUI->m_sfLapList.GetSelectedItemsData3().insert((LPARAM)_wtoi(c_Name));
-			}
-			else
-			{
-				break;
-			}
-		}
-	}
-
-	t++;
 	Line = lines[t];
 	{
 	TCHAR *c_Name = new TCHAR[Line.size()+1];
@@ -4322,6 +4315,7 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
   InitPlotPrefs(x_sfLapOpts);	//	Initialize all PlotPrefs variables before displaying anything
   sfUI.SetDisplayOptions(x_sfLapOpts);	//	Link x_sfLapOpts with CMainUI pointer
   sfUI.SetRaceId(&iRaceId[0]);
+  x_sfLapOpts.LapId = 0;
 
 
   if(strcmp(lpCmdLine,"unit") == 0)	//	Check for special test command line
