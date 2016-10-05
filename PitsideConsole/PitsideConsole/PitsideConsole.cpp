@@ -3814,10 +3814,6 @@ void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainU
 	  for (int t=0; t<50; t++)	//	Save the RaceID's currently displayed
 	  {
 		  out << sfUI->m_iRaceId[t] << endl;
-//		  TCHAR szText[MAX_PATH]={0};
-//		  swprintf(szText, NUMCHARS(szText), L"%d", sfUI.m_sfLapOpts.hWndLap[t]);
-//		  out << szText << endl;
-		  out << sfUI->m_sfLapOpts.hWndLap[t] << endl;
 	  }
 	  out << sfSettings->fRunHTTP << endl;
       out << sfSettings->iHTTPPort << endl;
@@ -3848,18 +3844,18 @@ void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainU
 	  {
 		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].iDataChannel << endl;	//	Save the Data Channel number
 		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].m_ChannelName << endl;	//	Save the Data Channel Name
-		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].iPlotView << endl;  //  Save current display mode for channel
-		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fMinValue << endl;    //  Set all lower limits to -3.0
-		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fMaxValue << endl;  //  Set all upper limits to 1000000.0
-		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].iTransformYesNo << endl;  //  Default to display as a graph
-		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fTransAValue << endl;  //  Set all A constants to 0.0
-		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fTransBValue << endl;  //  Set all B constants to 1.0
-		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fTransCValue << endl;  //  Set all C constants to 0.0
-		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfXPoint << endl;	//	Initialize all split points
-		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfYPoint << endl;	//	Initialize all split points
-		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfSectorTime << endl;	//	Initialize all sector times
-		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfSplitTime << endl;
-		out << sfUI->m_sfLapOpts.fDrawSplitPoints << endl;	//	Default to not show split points
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].iPlotView << endl;  //  Save how channel is displayed (graph/value)
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fMinValue << endl;    //  Save the lower limit for the Alarm
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fMaxValue << endl;  //  Save the upper limit for the Alarm
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].iTransformYesNo << endl;  //  Save whether channel is transformed
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fTransAValue << endl;  //  Save A constants
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fTransBValue << endl;  //  Save B constants
+		out << sfUI->m_sfLapOpts.m_PlotPrefs[i].fTransCValue << endl;  //  Save C constants
+		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfXPoint << endl;	//	Save split points
+		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfYPoint << endl;	//	Save split points
+		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfSectorTime << endl;	//	Save sector times
+		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfSplitTime << endl;	//	Save best sector time
+		out << sfUI->m_sfLapOpts.fDrawSplitPoints << endl;	//	Save setting to show/hide split points
 	  }
 
 	  out << sfUI->m_pReferenceLap->m_pLap->GetLapId() << endl;	//	Save the Reference Lap ID
@@ -3919,7 +3915,6 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 	c_Name[Line.size()] = 0;
 	copy(Line.begin(), Line.end(), c_Name);
 	swprintf(sfUI->m_szPath, NUMCHARS(sfUI->m_szPath), c_Name);	//	Load name of last-processed file in sfUI Pointer for szDBPath
-//	swprintf(szDBPath, NUMCHARS(c_Name), c_Name);	//	Load name of last-processed file in szDBPath
 	}
 	for (t=0; t<50; t++)	//	Load the RaceID's to be displayed
 	{
@@ -3930,16 +3925,8 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		copy(Line.begin(), Line.end(), c_Name);
 		sfUI->m_iRaceId[t] = _wtoi(c_Name);	//	Load the last Race session ID's into Pitside Console for loading and display
 		}
-
-		Line = lines[2*t+2];
-		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.hWndLap[t] = (HWND)_wtol(c_Name);	//	Load the Lap Handle into sfSettings data structure
-		}
 	}
-	t = 2*t + 1;	// Move the line counter forward
+	t = t + 1;	// Move the line counter forward
 	Line = lines[t++];
 	{
 	TCHAR *c_Name = new TCHAR[Line.size()+1];
@@ -4009,7 +3996,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 	TCHAR *c_Name = new TCHAR[Line.size()+1];
 	c_Name[Line.size()] = 0;
 	copy(Line.begin(), Line.end(), c_Name);
-	sfUI->m_sfLapOpts.bSmoothYesNo = _wtoi(c_Name);	//	LLoad the boolean for accel smoothing into LapOpts data structuree
+	sfUI->m_sfLapOpts.bSmoothYesNo = _wtoi(c_Name);	//	Load the boolean for accel smoothing into LapOpts data structuree
 	}
 
 	Line = lines[t++];
@@ -4237,7 +4224,6 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
 		sfUI->m_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);    //  Load the setting to show split points
-//		x_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);    //  Load the setting to show split points
 		}
 		arraycounter++;
 	}
