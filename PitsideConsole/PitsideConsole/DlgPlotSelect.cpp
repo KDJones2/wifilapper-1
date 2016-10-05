@@ -704,9 +704,6 @@ vector<CExtendedLap*> GetAllLaps()
 								//   Send CB_GETCURSEL message to get the index of the selected list item.
 								{
 									int ItemIndex = SendMessage((HWND) lParam, (UINT) CB_GETCURSEL, (WPARAM) 0, (LPARAM) 0);
-//									TCHAR  ListItem[256];
-//									(TCHAR) SendMessage((HWND) lParam, (UINT) CB_GETLBTEXT, (WPARAM) ItemIndex, (LPARAM) ListItem);
-//									MessageBox(hWnd, (LPCWSTR) ListItem, TEXT("WM_COMMAND"), MB_OK);
 									m_sfLapOpts->m_PlotPrefs[1].fTransAValue = m_sfLapOpts->m_Tranformations[ItemIndex].f_CoeffA;
 									m_sfLapOpts->m_PlotPrefs[1].fTransBValue = m_sfLapOpts->m_Tranformations[ItemIndex].f_CoeffB;
 									m_sfLapOpts->m_PlotPrefs[1].fTransCValue = m_sfLapOpts->m_Tranformations[ItemIndex].f_CoeffC;

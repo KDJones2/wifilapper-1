@@ -673,7 +673,48 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		TCHAR szTemp[MAX_PATH] = {NULL};
 	    _snwprintf(szTemp, NUMCHARS(szTemp), L"Pitside - %s%s", m_szPath, lstSessions);
 		SetWindowText(m_hWnd, szTemp );	//	Change the title bar to show the file name and Session(s) opened
-    
+
+		if (m_sfLapOpts.fDrawSplitPoints == true)	//	Initialize the Sector Times window
+		{
+			//	Create non-modal dialog to display the sector times window if DrawSplitPoints is TRUE
+			DLGPROC ShowSplits = NULL;
+			//	Create the window for displaying sector times for the selected laps
+			INITCOMMONCONTROLSEX InitCtrlEx;
+			InitCtrlEx.dwSize = sizeof(INITCOMMONCONTROLSEX);
+			InitCtrlEx.dwICC = ICC_PROGRESS_CLASS;
+			InitCommonControlsEx(&InitCtrlEx);
+			hWndShowSplits = CreateDialog(NULL, MAKEINTRESOURCE (IDD_SHOWSECTORS), hWnd, (DLGPROC)ShowSplits);	//	Create resource
+			HC_ShowSplits = GetDlgItem(hWndShowSplits, IDC_SHOW_SECTORS);	//	Let's get the handle for the display control in this window
+			SetWindowPlacement(hWndShowSplits, &w_SectorTimesWindow);	//	Maintains the location of the Sector Times window
+
+			//	Set up the Sector Times list box columns
+			vector<wstring> lstCols;
+			vector<int> lstWidths;
+			lstCols.push_back(L"Lap ID");
+			lstCols.push_back(L"1");
+			lstCols.push_back(L"2");
+			lstCols.push_back(L"3");
+			lstCols.push_back(L"4");
+			lstCols.push_back(L"5");
+			lstCols.push_back(L"6");
+			lstCols.push_back(L"7");
+			lstCols.push_back(L"8");
+			lstCols.push_back(L"9");
+			lstWidths.push_back(195);
+			lstWidths.push_back(40);
+			lstWidths.push_back(40);
+			lstWidths.push_back(40);
+			lstWidths.push_back(40);
+			lstWidths.push_back(40);
+			lstWidths.push_back(40);
+			lstWidths.push_back(40);
+			lstWidths.push_back(40);
+			lstWidths.push_back(40);
+
+			m_sfListBox.Init(HC_ShowSplits,lstCols,lstWidths);	//	Initialize and show the Sector Splits window
+			ShowWindow(hWndShowSplits, SW_SHOW); 
+		}
+
 		return 0;
       }
       case WM_CLOSE:
@@ -3875,7 +3916,6 @@ void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainU
 int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI* sfUI)
 {
   TCHAR szTempPath[MAX_PATH];
-  TCHAR szText[MAX_PATH];
   if(GetTempPathW(NUMCHARS(szTempPath),szTempPath))
   {
 	wcscat(szTempPath,L"LatestSettings.txt");
@@ -3916,17 +3956,16 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 	copy(Line.begin(), Line.end(), c_Name);
 	swprintf(sfUI->m_szPath, NUMCHARS(sfUI->m_szPath), c_Name);	//	Load name of last-processed file in sfUI Pointer for szDBPath
 	}
-	for (t=0; t<50; t++)	//	Load the RaceID's to be displayed
+	for (t=1; t<=50; t++)	//	Load the RaceID's to be displayed
 	{
-		Line = lines[2*t+1];
+		Line = lines[t];
 		{
 		TCHAR *c_Name = new TCHAR[Line.size()+1];
 		c_Name[Line.size()] = 0;
 		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_iRaceId[t] = _wtoi(c_Name);	//	Load the last Race session ID's into Pitside Console for loading and display
+		sfUI->m_iRaceId[t-1] = _wtoi(c_Name);	//	Load the last Race session ID's into Pitside Console for loading and display
 		}
 	}
-	t = t + 1;	// Move the line counter forward
 	Line = lines[t++];
 	{
 	TCHAR *c_Name = new TCHAR[Line.size()+1];
@@ -4382,7 +4421,6 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 				if ( _wcsnicmp( szText, szDBPath, NUMCHARS(szDBPath) ) == 0 )	//	Opening the same file, so load see if user wants to return to previous session
 				{
-	//				TCHAR szMsg[MAX_PATH] = L"Do you want to pick up where you left off?";
 					int iRet = MessageBoxW(NULL,L"Do you want to pick up where you left off?",L"Database loaded previously",MB_ICONERROR | MB_YESNO);
 					if(iRet == IDYES)
 					{
@@ -4551,10 +4589,6 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             x_sfLapOpts.bSmoothYesNo = sfSettings.bSmoothYesNo;	//	Assign smoothing setting from Settings.txt file
 			break;
           }
-  default:
-          {
-            x_sfLapOpts.bSmoothYesNo = false;	//	No smoothing of accelerometer data as a default
-          }
   }
   switch (sfSettings.bXAxis_KM)
   {
@@ -4564,14 +4598,8 @@ INT WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			x_sfLapOpts.bXAxis_KM = sfSettings.bXAxis_KM;	//	Assign choice of LAT or KM for X-Axis setting from Settings.txt file
 			break;
           }
-  default:
-          {
-            x_sfLapOpts.bXAxis_KM = false;	//	Distance in LAT degrees as a default
-          }
   }
   x_sfLapOpts.eSortPreference = SORTSTYLE_BYTIMEOFRACE;		//	Default sort Lap List by time of lap
-//  sfUI.SetDisplayOptions(x_sfLapOpts);
-//  sfUI.SetDBPath(szDBPath);
   swprintf(sfUI.m_szPath, NUMCHARS(sfUI.m_szPath), szDBPath);	//	Load name of the chosen file into the sfUI pointer
 
   PitsideHTTP aResponder(g_pLapDB,&sfUI);
