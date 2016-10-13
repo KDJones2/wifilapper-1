@@ -627,7 +627,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
         m_sfTractionDisplay.Init(GetDlgItem(m_hWnd,IDC_TRACTIONCIRCLEMAP));
 
 		LoadLaps(g_pLapDB);
-		if (m_sfLapOpts.LapId != 0)	//	Reference lap needs to be loaded. Identify which one it is and set it
+		if (m_sfLapOpts.LapId != 0 && m_mapLaps.size() > 0)	//	Reference lap needs to be loaded. Identify which one it is and set it
 		{
             for(map<int,CExtendedLap*>::iterator i = m_mapLaps.begin(); i != m_mapLaps.end(); i++)
             {
@@ -3896,10 +3896,14 @@ void SaveSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainU
 		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfYPoint << endl;	//	Save split points
 		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfSectorTime << endl;	//	Save sector times
 		out << sfUI->m_sfLapOpts.m_SplitPoints[i].m_sfSplitTime << endl;	//	Save best sector time
-		out << sfUI->m_sfLapOpts.fDrawSplitPoints << endl;	//	Save setting to show/hide split points
 	  }
+		out << "End of Plot Prefs" << endl;
 
-	  out << sfUI->m_pReferenceLap->m_pLap->GetLapId() << endl;	//	Save the Reference Lap ID
+	  out << sfUI->m_sfLapOpts.fDrawSplitPoints << endl;	//	Save setting to show/hide split points
+	  if ( sfUI->m_pReferenceLap )
+		out << sfUI->m_pReferenceLap->m_pLap->GetLapId() << endl;	//	Save the Reference Lap ID
+	  else
+		out << "0" << endl;
 
 	  out << sfUI->m_eXChannel << endl;	//	Save X-Axis data channel
 	  for (int i=0; i < sfUI->m_lstYChannels.size(); i++)	//	Save the list of selected Y-Axis channels
@@ -4151,7 +4155,7 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 	}
 
 	int arraycounter = 0;	//	Now load the Plotting Preferences into the m_sfLapOpts.PlotPrefs array
-	for (int i = t; i < lines.size() && arraycounter < 50; i+=14)
+	for (int i = t; i < lines.size() && arraycounter < 50; i+=13)
 	{
 		Line = lines[i];
 		{
@@ -4256,18 +4260,28 @@ int LoadSettings(TCHAR szDBPath[MAX_PATH], PITSIDE_SETTINGS* sfSettings, CMainUI
 		copy(Line.begin(), Line.end(), c_Name);
 		sfUI->m_sfLapOpts.m_SplitPoints[arraycounter].m_sfSplitTime = _wtof(c_Name);    //  Load the lower limit for channel
 		}
-
-		Line = lines[i+13];
-		{
-		TCHAR *c_Name = new TCHAR[Line.size()+1];
-		c_Name[Line.size()] = 0;
-		copy(Line.begin(), Line.end(), c_Name);
-		sfUI->m_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);    //  Load the setting to show split points
-		}
 		arraycounter++;
 	}
-	t = t + (arraycounter) * 14;	//	Reset the line counter to collect the next set of data
+	t = t + (arraycounter) * 13;	//	Reset the line counter to collect the next set of data
 
+	Line = lines[t];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+//	sfUI->m_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);    //  End of Data Channels
+	}
+
+	t++;
+	Line = lines[t];
+	{
+	TCHAR *c_Name = new TCHAR[Line.size()+1];
+	c_Name[Line.size()] = 0;
+	copy(Line.begin(), Line.end(), c_Name);
+	sfUI->m_sfLapOpts.fDrawSplitPoints = _wtoi(c_Name);    //  Load the setting to show split points
+	}
+
+	t++;
 	Line = lines[t];
 	{
 	TCHAR *c_Name = new TCHAR[Line.size()+1];
