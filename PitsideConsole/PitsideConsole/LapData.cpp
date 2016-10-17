@@ -232,17 +232,17 @@ PIDDATA g_rgIOIOCustomData[] = {
   {L"Alt Voltage","%3.2f"},
 };
 
-PIDDATA g_rgRaceDACCustomData[] = {
-  {L"RaceDAC A1%%","%3.2f"},
-  {L"RaceDAC A2%%","%3.2f"},
-  {L"RaceDAC A3%%","%3.2f"},
-  {L"RaceDAC A4%%","%3.2f"},
-  {L"RaceDAC A5%%","%3.2f"},
-  {L"RaceDAC A6%%","%3.2f"},
-  {L"RaceDAC A7%%","%3.2f"},
-  {L"RaceDAC A8%%","%3.2f"},
-  {L"RaceDAC D1%%","%4.1f"},
-  {L"RaceDAC D2%%","%4.1f"},
+PIDDATA g_rgRaceDACData[] = {
+  {L"RaceDAC A1","%3.2f"},
+  {L"RaceDAC A2","%3.2f"},
+  {L"RaceDAC A3","%3.2f"},
+  {L"RaceDAC A4","%3.2f"},
+  {L"RaceDAC A5","%3.2f"},
+  {L"RaceDAC A6","%3.2f"},
+  {L"RaceDAC A7","%3.2f"},
+  {L"RaceDAC A8","%3.2f"},
+  {L"RaceDAC D1","%4.1f"},
+  {L"RaceDAC D2","%4.1f"},
 };
 
 void GetDataChannelName(DATA_CHANNEL eDC, LPTSTR lpszName, int cch)
@@ -287,15 +287,16 @@ void GetDataChannelName(DATA_CHANNEL eDC, LPTSTR lpszName, int cch)
     }
     else if(eDC >= DATA_CHANNEL_RACEDAC_START && eDC <= DATA_CHANNEL_RACEDAC_END)
     {
-      _snwprintf(lpszName, cch, L"RaceDAC Pin %d",(eDC - DATA_CHANNEL_RACEDAC_START));
-      return;
+//      _snwprintf(lpszName, cch, L"RaceDAC Pin %d",(eDC - DATA_CHANNEL_RACEDAC_START + 1));
+//      return;
+      lpszDataName = ::g_rgRaceDACData[eDC - DATA_CHANNEL_RACEDAC_START].pListDesc;
 	}
     else if(eDC >= DATA_CHANNEL_RACEDACCUSTOM_START && eDC <= DATA_CHANNEL_RACEDACCUSTOM_END)
     {
       const int custom = eDC - DATA_CHANNEL_RACEDACCUSTOM_START;
-      if(custom >= 0 && custom < NUMITEMS(g_rgRaceDACCustomData))
+      if(custom >= 0 && custom < NUMITEMS(g_rgIOIOCustomData))
       {
-        lpszDataName = ::g_rgRaceDACCustomData[custom].pListDesc;
+        lpszDataName = ::g_rgIOIOCustomData[custom].pListDesc;
       }
       else
       {
@@ -462,7 +463,7 @@ void GetChannelString(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LP
       else if(eX >= DATA_CHANNEL_RACEDACCUSTOM_START && eX <= DATA_CHANNEL_RACEDACCUSTOM_END)
       {
         const int custom = eX - DATA_CHANNEL_RACEDACCUSTOM_START;
-        sprintf(lpsz,g_rgRaceDACCustomData[custom].pDataFormat, flValue);
+        sprintf(lpsz,g_rgIOIOCustomData[custom].pDataFormat, flValue);
       }
       else
       {
@@ -574,7 +575,7 @@ void GetChannelValue(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LPS
       else if(eX >= DATA_CHANNEL_RACEDACCUSTOM_START && eX <= DATA_CHANNEL_RACEDACCUSTOM_END)
       {
         const int custom = eX - DATA_CHANNEL_RACEDACCUSTOM_START;
-        sprintf(lpsz,g_rgRaceDACCustomData[custom].pDataFormat, flValue);
+        sprintf(lpsz,g_rgIOIOCustomData[custom].pDataFormat, flValue);
       }
       else
       {
