@@ -232,6 +232,19 @@ PIDDATA g_rgIOIOCustomData[] = {
   {L"Alt Voltage","%3.2f"},
 };
 
+PIDDATA g_rgRaceDACData[] = {
+  {L"RaceDAC A1","%3.2f"},
+  {L"RaceDAC A2","%3.2f"},
+  {L"RaceDAC A3","%3.2f"},
+  {L"RaceDAC A4","%3.2f"},
+  {L"RaceDAC A5","%3.2f"},
+  {L"RaceDAC A6","%3.2f"},
+  {L"RaceDAC A7","%3.2f"},
+  {L"RaceDAC A8","%3.2f"},
+  {L"RaceDAC D1","%4.1f"},
+  {L"RaceDAC D2","%4.1f"},
+};
+
 void GetDataChannelName(DATA_CHANNEL eDC, LPTSTR lpszName, int cch)
 {
   LPCTSTR lpszDataName = NULL;
@@ -272,6 +285,24 @@ void GetDataChannelName(DATA_CHANNEL eDC, LPTSTR lpszName, int cch)
         lpszDataName = L"Ukwn IOIO pin";
       }
     }
+    else if(eDC >= DATA_CHANNEL_RACEDAC_START && eDC <= DATA_CHANNEL_RACEDAC_END)
+    {
+//      _snwprintf(lpszName, cch, L"RaceDAC Pin %d",(eDC - DATA_CHANNEL_RACEDAC_START + 1));
+//      return;
+      lpszDataName = ::g_rgRaceDACData[eDC - DATA_CHANNEL_RACEDAC_START].pListDesc;
+	}
+    else if(eDC >= DATA_CHANNEL_RACEDACCUSTOM_START && eDC <= DATA_CHANNEL_RACEDACCUSTOM_END)
+    {
+      const int custom = eDC - DATA_CHANNEL_RACEDACCUSTOM_START;
+      if(custom >= 0 && custom < NUMITEMS(g_rgIOIOCustomData))
+      {
+        lpszDataName = ::g_rgIOIOCustomData[custom].pListDesc;
+      }
+      else
+      {
+        lpszDataName = L"Ukwn RaceDAC pin";
+      }
+	}
     else
     {
       DASSERT(eDC >= DATA_CHANNEL_PID_START && eDC < DATA_CHANNEL_PID_END);
@@ -320,7 +351,7 @@ LPCSTR GetUnitText(UNIT_PREFERENCE eUnits)
 
 void GetChannelString(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LPSTR lpsz, int cch)
 {
-  CASSERT(DATA_CHANNEL_COUNT == 0x401);
+  CASSERT(DATA_CHANNEL_COUNT == 0x601);
 
   switch(eX)
   {
@@ -424,6 +455,16 @@ void GetChannelString(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LP
         const int custom = eX - DATA_CHANNEL_IOIOCUSTOM_START;
         sprintf(lpsz,g_rgIOIOCustomData[custom].pDataFormat, flValue);
       }
+      else if(eX >= DATA_CHANNEL_RACEDAC_START && eX <= DATA_CHANNEL_RACEDAC_END)
+      {
+        const int pin = eX - DATA_CHANNEL_RACEDAC_START;
+        sprintf(lpsz, "%4.1fV", flValue);
+      }
+      else if(eX >= DATA_CHANNEL_RACEDACCUSTOM_START && eX <= DATA_CHANNEL_RACEDACCUSTOM_END)
+      {
+        const int custom = eX - DATA_CHANNEL_RACEDACCUSTOM_START;
+        sprintf(lpsz,g_rgIOIOCustomData[custom].pDataFormat, flValue);
+      }
       else
       {
         sprintf(lpsz,"%4.1f",flValue);
@@ -435,7 +476,7 @@ void GetChannelString(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LP
 
 void GetChannelValue(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LPSTR lpsz, int cch)
 {
-  CASSERT(DATA_CHANNEL_COUNT == 0x401);
+  CASSERT(DATA_CHANNEL_COUNT == 0x601);
 
   switch(eX)
   {
@@ -524,6 +565,16 @@ void GetChannelValue(DATA_CHANNEL eX, UNIT_PREFERENCE eUnits, float flValue, LPS
       else if(eX >= DATA_CHANNEL_IOIOCUSTOM_START && eX <= DATA_CHANNEL_IOIOCUSTOM_END)
       {
         const int custom = eX - DATA_CHANNEL_IOIOCUSTOM_START;
+        sprintf(lpsz,g_rgIOIOCustomData[custom].pDataFormat, flValue);
+      }
+      else if(eX >= DATA_CHANNEL_RACEDAC_START && eX <= DATA_CHANNEL_RACEDAC_END)
+      {
+        const int pin = eX - DATA_CHANNEL_RACEDAC_START;
+        sprintf(lpsz, "%4.1f", flValue);
+      }
+      else if(eX >= DATA_CHANNEL_RACEDACCUSTOM_START && eX <= DATA_CHANNEL_RACEDACCUSTOM_END)
+      {
+        const int custom = eX - DATA_CHANNEL_RACEDACCUSTOM_START;
         sprintf(lpsz,g_rgIOIOCustomData[custom].pDataFormat, flValue);
       }
       else

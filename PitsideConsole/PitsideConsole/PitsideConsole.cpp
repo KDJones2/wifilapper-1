@@ -3359,7 +3359,9 @@ void UpdateDisplays()
   virtual float GetDataHardcodedMin(DATA_CHANNEL eChannel) const override
   {
     if(eChannel >= DATA_CHANNEL_IOIOPIN_START && eChannel < DATA_CHANNEL_IOIOPIN_END ||
-       eChannel >= DATA_CHANNEL_IOIOCUSTOM_START && eChannel < DATA_CHANNEL_IOIOCUSTOM_END)
+       eChannel >= DATA_CHANNEL_IOIOCUSTOM_START && eChannel < DATA_CHANNEL_IOIOCUSTOM_END ||
+	   eChannel >= DATA_CHANNEL_RACEDAC_START && eChannel < DATA_CHANNEL_RACEDAC_END ||
+       eChannel >= DATA_CHANNEL_RACEDACCUSTOM_START && eChannel < DATA_CHANNEL_RACEDACCUSTOM_END)
     {
       return m_sfLapOpts.fIOIOHardcoded ? 0 : 1e30;
     }
@@ -3368,7 +3370,9 @@ void UpdateDisplays()
   virtual float GetDataHardcodedMax(DATA_CHANNEL eChannel) const override
   {
     if(eChannel >= DATA_CHANNEL_IOIOPIN_START && eChannel < DATA_CHANNEL_IOIOPIN_END ||
-       eChannel >= DATA_CHANNEL_IOIOCUSTOM_START && eChannel < DATA_CHANNEL_IOIOCUSTOM_END)
+       eChannel >= DATA_CHANNEL_IOIOCUSTOM_START && eChannel < DATA_CHANNEL_IOIOCUSTOM_END ||
+	   eChannel >= DATA_CHANNEL_RACEDAC_START && eChannel < DATA_CHANNEL_RACEDAC_END ||
+       eChannel >= DATA_CHANNEL_RACEDACCUSTOM_START && eChannel < DATA_CHANNEL_RACEDACCUSTOM_END)
     {
       return m_sfLapOpts.fIOIOHardcoded ? 5 : -1e30;
     }
@@ -3377,7 +3381,7 @@ void UpdateDisplays()
 
   virtual float GetGuideStartX(DATA_CHANNEL eChannel, float flMin, float flMax) override
   {
-    CASSERT(DATA_CHANNEL_COUNT == 0x401);
+    CASSERT(DATA_CHANNEL_COUNT == 0x601);
 
     switch(eChannel)
     {
@@ -3416,7 +3420,9 @@ void UpdateDisplays()
       case (DATA_CHANNEL_PID_START+0x5c): return -40;
       default: 
         if(eChannel >= DATA_CHANNEL_IOIOPIN_START && eChannel < DATA_CHANNEL_IOIOPIN_END ||
-            eChannel >= DATA_CHANNEL_IOIOCUSTOM_START && eChannel < DATA_CHANNEL_IOIOCUSTOM_END)
+            eChannel >= DATA_CHANNEL_IOIOCUSTOM_START && eChannel < DATA_CHANNEL_IOIOCUSTOM_END ||
+			eChannel >= DATA_CHANNEL_RACEDAC_START && eChannel < DATA_CHANNEL_RACEDAC_END ||
+            eChannel >= DATA_CHANNEL_RACEDACCUSTOM_START && eChannel < DATA_CHANNEL_RACEDACCUSTOM_END)
         {
           return m_sfLapOpts.fIOIOHardcoded ? 0 : 1e30;
         }
@@ -3426,7 +3432,7 @@ void UpdateDisplays()
 
   virtual float GetGuideStart(DATA_CHANNEL eChannel, float flMin, float flMax) override
   {
-    CASSERT(DATA_CHANNEL_COUNT == 0x401);
+    CASSERT(DATA_CHANNEL_COUNT == 0x601);
 
     switch(eChannel)
     {
@@ -3459,7 +3465,9 @@ void UpdateDisplays()
 
 	  default: 
         if(eChannel >= DATA_CHANNEL_IOIOPIN_START && eChannel < DATA_CHANNEL_IOIOPIN_END ||
-            eChannel >= DATA_CHANNEL_IOIOCUSTOM_START && eChannel < DATA_CHANNEL_IOIOCUSTOM_END)
+            eChannel >= DATA_CHANNEL_IOIOCUSTOM_START && eChannel < DATA_CHANNEL_IOIOCUSTOM_END ||
+			eChannel >= DATA_CHANNEL_RACEDAC_START && eChannel < DATA_CHANNEL_RACEDAC_END ||
+            eChannel >= DATA_CHANNEL_RACEDACCUSTOM_START && eChannel < DATA_CHANNEL_RACEDACCUSTOM_END)
         {
           return m_sfLapOpts.fIOIOHardcoded ? 0 : 1e30;
         }
@@ -3475,7 +3483,7 @@ void UpdateDisplays()
   virtual float GetGuideStepX(DATA_CHANNEL eChannel, float flMin, float flMax) override
   {
   // Function sets up the spacing for the vertical guidelines on the data plots
-	  CASSERT(DATA_CHANNEL_COUNT == 0x401);
+	  CASSERT(DATA_CHANNEL_COUNT == 0x601);
     const float flSpread = flMax - flMin;
     switch(eChannel)
     {
@@ -3547,7 +3555,7 @@ void UpdateDisplays()
 
   virtual float GetGuideStep(DATA_CHANNEL eChannel, float flMin, float flMax) override
   {
-    CASSERT(DATA_CHANNEL_COUNT == 0x401);
+    CASSERT(DATA_CHANNEL_COUNT == 0x601);
     const float flSpread = flMax - flMin;
     switch(eChannel)
     {
@@ -3629,7 +3637,9 @@ void UpdateDisplays()
 
 		default: 
 		  if(eChannel >= DATA_CHANNEL_IOIOPIN_START && eChannel < DATA_CHANNEL_IOIOPIN_END ||
-			  eChannel >= DATA_CHANNEL_IOIOCUSTOM_START && eChannel < DATA_CHANNEL_IOIOCUSTOM_END)
+			  eChannel >= DATA_CHANNEL_IOIOCUSTOM_START && eChannel < DATA_CHANNEL_IOIOCUSTOM_END ||
+			  eChannel >= DATA_CHANNEL_RACEDAC_START && eChannel < DATA_CHANNEL_RACEDAC_END ||
+			  eChannel >= DATA_CHANNEL_RACEDACCUSTOM_START && eChannel < DATA_CHANNEL_RACEDACCUSTOM_END)
 		  {
 			if(flSpread < 1) return m_sfLapOpts.fIOIOHardcoded ? 0.1f : 1e30;
 			if(flSpread < 10) return m_sfLapOpts.fIOIOHardcoded ? 1.0f : 1e30;
