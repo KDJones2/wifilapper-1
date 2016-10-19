@@ -2008,7 +2008,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           else
           {
             LoadLaps((ILapReceiver*)lParam);
-//            UpdateUI(UPDATE_LIST | UPDATE_MAP | UPDATE_DASHBOARD | UPDATE_VALUES);
+            UpdateUI(UPDATE_LIST);
           }
 		  //	Just loaded a new lap. Let's reset the timer
 		  tmLast = timeGetTime();	//	Save last time lap was received
