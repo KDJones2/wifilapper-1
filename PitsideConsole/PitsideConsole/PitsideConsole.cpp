@@ -1989,7 +1989,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           if(!fWarnedOnce)
           {
             fWarnedOnce = true;
-            MessageBox(NULL,L"You just received a lap from a car, but you're looking at old data.  Hit data->'new race session' or else Pitside will keep ignoring it",L"Not ready to receive",0);
+            MessageBox(NULL,L"You just received a new lap from a car, but you're looking at old data.\n\nChoose File->'Switch Race Session' to look at the new information",L"Not ready to receive",0);
           }
           return TRUE;
         }

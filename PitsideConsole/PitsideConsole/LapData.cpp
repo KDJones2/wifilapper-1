@@ -287,8 +287,6 @@ void GetDataChannelName(DATA_CHANNEL eDC, LPTSTR lpszName, int cch)
     }
     else if(eDC >= DATA_CHANNEL_RACEDAC_START && eDC <= DATA_CHANNEL_RACEDAC_END)
     {
-//      _snwprintf(lpszName, cch, L"RaceDAC Pin %d",(eDC - DATA_CHANNEL_RACEDAC_START + 1));
-//      return;
       lpszDataName = ::g_rgRaceDACData[eDC - DATA_CHANNEL_RACEDAC_START].pListDesc;
 	}
     else if(eDC >= DATA_CHANNEL_RACEDACCUSTOM_START && eDC <= DATA_CHANNEL_RACEDACCUSTOM_END)
