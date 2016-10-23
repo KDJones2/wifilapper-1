@@ -1957,7 +1957,9 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
   const static DWORD UPDATE_TRACTIONCIRCLE = 0x20;
   const static DWORD UPDATE_ALLDATA = 0x40;
 
-  const static DWORD UPDATE_ALL = 0xffffffff;
+  const static DWORD UPDATE_ALL = 0xffff;
+  const static DWORD UPDATE_ADD2LIST = 0x10000;
+
   //	Pull in PlotPrefs array as well as lines vs. dots and Painting color scheme settings from Settings.txt file
   void SetDisplayOptions(const LAPSUPPLIEROPTIONS& lapOpts)
   {
