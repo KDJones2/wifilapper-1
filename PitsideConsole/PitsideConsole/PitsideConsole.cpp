@@ -84,6 +84,165 @@ bool CLap_SortByTime(const ILap* p1, const ILap* p2)
 {
   return p1->GetStartTime() < p2->GetStartTime();
 }
+
+// this object takes the laps received on the net thread, stores them, and notifies the UI of the new laps
+class CLapReceiver : public ILapReceiver
+{
+public:
+  CLapReceiver(IUI* pUI) : m_pUI(pUI) 
+  { 
+    for(int x = 0; x < NETSTATUS_COUNT; x++)
+    {
+      szLastNetStatus[x][0] = '\0';
+    }
+  }
+  virtual ~CLapReceiver() {};
+
+  void Clear() override
+  {
+    AutoLeaveCS _cs(&m_cs);
+
+    for(int x = 0;x < m_lstLaps.size(); x++)
+    {
+      delete m_lstLaps[x];
+    }
+    m_lstLaps.clear();
+
+    ChannelMap::iterator i = m_mapChannels.begin();
+    while(i != m_mapChannels.end())
+    {
+      map<DATA_CHANNEL,const IDataChannel*>::iterator i2 = i->second.begin();
+      while(i2 != i->second.end())
+      {
+        FreeDataChannel((IDataChannel*)(i2->second));
+        i2++;
+      }
+      i++;
+    }
+    m_mapChannels.clear();
+    m_pUI->NotifyChange(NOTIFY_NEWDATA,(LPARAM)this);
+  }
+
+  void AddLap(const ILap* pLap, int iRaceId) override
+  {
+    {
+      AutoLeaveCS _cs(&m_cs);
+      m_lstLaps.push_back(pLap);
+    }
+  m_pUI->NotifyChange(NOTIFY_NEWLAP,(LPARAM)this);
+  }
+  void AddDataChannel(const IDataChannel* pDataChannel) override
+  {
+    DASSERT(pDataChannel->IsLocked());
+
+    bool fFoundHome = false;
+    {
+      AutoLeaveCS _cs(&m_cs);
+      map<DATA_CHANNEL,const IDataChannel*>& mapChannels = m_mapChannels[pDataChannel->GetLapId()];
+      map<DATA_CHANNEL,const IDataChannel*>::iterator i = mapChannels.find(pDataChannel->GetChannelType());
+      if(i != mapChannels.end())
+      {
+        // we already had one.  The correct thing to do would be to free it.
+        IDataChannel* pChannel = const_cast<IDataChannel*>(i->second);
+      }
+
+      mapChannels[pDataChannel->GetChannelType()] = pDataChannel;
+    }
+
+    m_pUI->NotifyChange(NOTIFY_NEWDATA,(LPARAM)this);
+  }
+	ILap* AllocateLap(bool fMemory) override
+	{
+		return new CMemoryLap();
+	}
+	IDataChannel* AllocateDataChannel() const override
+	{
+		return new CDataChannel();
+	}
+	void FreeDataChannel(IDataChannel* pInput) const override
+	{
+		delete pInput;
+	}
+  void SetNetStatus(NETSTATUSSTRING eString, LPCTSTR sz) override
+  {
+    wcscpy(szLastNetStatus[eString], sz);
+    m_pUI->NotifyChange(NOTIFY_NEWNETSTATUS,(LPARAM)this);
+  }
+  void NotifyDBArrival(LPCTSTR szPath)
+  {
+    wcscpy(szLastNetStatus[NETSTATUS_DB],szPath);
+    m_pUI->NotifyChange(NOTIFY_NEWDATABASE,(LPARAM)szLastNetStatus[NETSTATUS_DB]);
+  }
+  LPCTSTR GetNetStatus(NETSTATUSSTRING eString) const 
+  {
+    return szLastNetStatus[eString];
+  }
+  virtual vector<const ILap*> GetLaps(int iRaceId) override
+  {
+    AutoLeaveCS _cs(&m_cs);
+    vector<const ILap*> ret;
+    for(int x = 0;x < m_lstLaps.size();x++)
+    {
+      ret.push_back(m_lstLaps[x]);
+    }
+    return ret;
+  }
+  virtual const ILap* GetLap(int iLapId) override
+  {
+    AutoLeaveCS _cs(&m_cs);
+    for(int x = 0; x < m_lstLaps.size(); x++)
+    {
+      if(m_lstLaps[x]->GetLapId() == iLapId)
+      {
+        return m_lstLaps[x];
+      }
+    }
+    return NULL;
+  }
+  virtual const IDataChannel* GetDataChannel(int iLapId,DATA_CHANNEL eChannel) const override
+  {
+    AutoLeaveCS _cs(&m_cs);
+    ChannelMap::const_iterator i = m_mapChannels.find(iLapId);
+    if(i != m_mapChannels.end())
+    {
+      // ok, we've got stuff about that lap...
+      map<DATA_CHANNEL,const IDataChannel*>::const_iterator i2 = i->second.find(eChannel);
+      if(i2 != i->second.end())
+      {
+        return i2->second;
+      }
+    }
+    return NULL;
+  }
+  virtual set<DATA_CHANNEL> GetAvailableChannels(int iLapId) const override
+  {
+    AutoLeaveCS _cs(&m_cs);
+    set<DATA_CHANNEL> setRet;
+
+    ChannelMap::const_iterator i = m_mapChannels.find(iLapId);
+    if(i != m_mapChannels.end())
+    {
+      // ok, we've got stuff about that lap...
+      map<DATA_CHANNEL,const IDataChannel*>::const_iterator i2 = i->second.begin();
+      while(i2 != i->second.end())
+      {
+        setRet.insert(i2->first);
+        i2++;
+      }
+    }
+    return setRet;
+  };
+private:
+  vector<const ILap*> m_lstLaps;
+
+  typedef map<int,map<DATA_CHANNEL,const IDataChannel*> > ChannelMap; // for each lapid, defines a map from channeltype to channel
+  mutable ChannelMap m_mapChannels; // maps from a lapid to a list of data channels for that lap
+  
+  IUI* m_pUI;
+  TCHAR szLastNetStatus[NETSTATUS_COUNT][200];
+  mutable ManagedCS m_cs;
+};
+
 IUI* g_pUI = NULL;
 
 INT_PTR CALLBACK DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
