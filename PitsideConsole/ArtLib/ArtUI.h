@@ -77,7 +77,7 @@ public:
       LvCol.mask=LVCF_TEXT|LVCF_WIDTH|LVCF_SUBITEM;
       LvCol.pszText=L"";
       LvCol.cx=RECT_WIDTH(&rc) - 30;
-
+		
       SendMessage(m_hWnd,LVM_INSERTCOLUMN,0,(LPARAM)&LvCol); // Insert/Show the coloum
     }
     else								//	Data to display
@@ -96,6 +96,7 @@ public:
     }
 	ListView_SetExtendedListViewStyleEx(m_hWnd, LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS, LVS_EX_FULLROWSELECT | LVS_SHOWSELALWAYS);
   }
+
   void AddString(LPCTSTR lpszString, int iData)
   {
     TCHAR szString[MAX_PATH];
@@ -112,10 +113,45 @@ public:
 
     VERIFY(ListView_InsertItem(m_hWnd,&lvItem) >= 0);
   }
+
+  int GetCount() 
+  {
+	  return ListView_GetItemCount(m_hWnd);
+  }
+
+  // Insert the table row at the specified row number, iItem
+  void InsertStrings(vector<wstring> lstCols, int iData, int iItem)
+  {
+    DASSERT(lstCols.size() == m_cColumns);
+    
+    TCHAR szString[MAX_PATH];
+    wcsncpy_s(szString,lstCols[0].c_str(),NUMCHARS(szString));
+
+    {
+      LVITEM lvItem = {0};
+      lvItem.mask = LVIF_PARAM | LVIF_TEXT;
+      lvItem.lParam = iData;
+      lvItem.pszText = szString;
+      lvItem.iItem = iItem;
+      lvItem.iSubItem = 0;
+      lvItem.state = 0;
+      lvItem.stateMask = -1;
+      lvItem.cchTextMax = wcslen(szString);
+      VERIFY(ListView_InsertItem(m_hWnd,&lvItem) >= 0);
+    }
+
+    for(unsigned int x = 0;x < lstCols.size(); x++)
+    {
+      TCHAR szString[MAX_PATH];
+      wcsncpy_s(szString,lstCols[x].c_str(),NUMCHARS(szString));
+      ListView_SetItemText(m_hWnd, iItem, x, szString);
+    }
+  }
+
+  // Add the row at the end of the table
   void AddStrings(vector<wstring> lstCols, int iData)
   {
     DASSERT(lstCols.size() == m_cColumns);
-
     const int iItem = ListView_GetItemCount(m_hWnd);
     
     TCHAR szString[MAX_PATH];
@@ -138,17 +174,7 @@ public:
     {
       TCHAR szString[MAX_PATH];
       wcsncpy_s(szString,lstCols[x].c_str(),NUMCHARS(szString));
-
-      LVITEM lvItem = {0};
-      lvItem.mask = LVIF_TEXT;
-      lvItem.pszText = szString;
-      lvItem.iItem = iItem;
-      lvItem.iSubItem = x;
-      lvItem.state = 0;
-      lvItem.stateMask = -1;
-      lvItem.cchTextMax = wcslen(szString);
-
-      VERIFY(ListView_SetItem(m_hWnd,&lvItem));
+      ListView_SetItemText(m_hWnd, iItem, x, szString);
     }
   }
   void Clear()

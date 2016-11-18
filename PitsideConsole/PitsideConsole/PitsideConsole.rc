@@ -189,7 +189,7 @@ CAPTION "About Pitside Console"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "",IDC_SPLASHIMAGE,"Static",SS_BITMAP,25,10,200,200
-	CTEXT			"Pitside Console for SpeedFreq/Wifilapper\n\nVersion 2.004.0016\n\nThis is an Open Source project. If you want to contribute\n\n",IDC_LBLMESSAGE5,5,230,245,40
+	CTEXT			"Pitside Console for SpeedFreq/Wifilapper\n\nVersion 2.004.0017\n\nThis is an Open Source project. If you want to contribute\n\n",IDC_LBLMESSAGE5,5,230,245,40
 	CTEXT			"http://sites.google.com/site/speedfreqapp",IDC_LBLMESSAGE6,5,270,245,20
     PUSHBUTTON      "OK", IDOK, 5,290,240,30
 END
