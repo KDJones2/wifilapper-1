@@ -84,6 +84,7 @@ bool CLap_SortByTime(const ILap* p1, const ILap* p2)
 {
   return p1->GetStartTime() < p2->GetStartTime();
 }
+
 // this object takes the laps received on the net thread, stores them, and notifies the UI of the new laps
 class CLapReceiver : public ILapReceiver
 {
@@ -1989,7 +1990,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           if(!fWarnedOnce)
           {
             fWarnedOnce = true;
-            MessageBox(NULL,L"You just received a new lap from a car, but you're looking at old data.\n\nChoose File->'Switch Race Session' to look at the new information",L"Not ready to receive",0);
+            MessageBox(NULL,L"You just received a lap from a car, but you're looking at old data.  Hit data->'new race session' or else Pitside will keep ignoring it",L"Not ready to receive",0);
           }
           return TRUE;
         }
@@ -2008,7 +2009,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
           else
           {
             LoadLaps((ILapReceiver*)lParam);
-//            UpdateUI(UPDATE_LIST | UPDATE_MAP | UPDATE_DASHBOARD | UPDATE_VALUES);
+			UpdateUI(UPDATE_ADD2LIST);	// Add the recently received lap to the laplist window
           }
 		  //	Just loaded a new lap. Let's reset the timer
 		  tmLast = timeGetTime();	//	Save last time lap was received
@@ -2115,7 +2116,9 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
   const static DWORD UPDATE_TRACTIONCIRCLE = 0x20;
   const static DWORD UPDATE_ALLDATA = 0x40;
 
-  const static DWORD UPDATE_ALL = 0xffffffff;
+  const static DWORD UPDATE_ALL = 0xffff;
+  const static DWORD UPDATE_ADD2LIST = 0x10000;
+
   //	Pull in PlotPrefs array as well as lines vs. dots and Painting color scheme settings from Settings.txt file
   void SetDisplayOptions(const LAPSUPPLIEROPTIONS& lapOpts)
   {
@@ -2131,6 +2134,8 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
     m_fdwUpdateNeeded|= fdwUpdateFlags;
     PostMessage(m_hWnd,WM_UPDATEUI,0,0);
   }
+
+
   void UpdateUI_Internal(DWORD fdwUpdateFlags)
   {
     set<LPARAM> setSelectedData = m_sfLapList.GetSelectedItemsData3();
@@ -2149,26 +2154,52 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 		}
 	}
 
-
-    if(IS_FLAG_SET(fdwUpdateFlags, UPDATE_LIST))
+    if(IS_FLAG_SET(fdwUpdateFlags, UPDATE_LIST))	// rebuild the laplist from scratch
     {
-		int iPosition = m_sfLapList.GetPosition();
 		m_sfLapList.Clear();
-		vector<CExtendedLap*> laps = GetSortedLaps(m_sfLapOpts.eSortPreference); // translates our m_mapLaps into a vector sorted by time
 		for(int x = 0;x < laps.size(); x++)
 		{
 			vector<wstring> lstStrings;
 			laps[x]->GetStrings(lstStrings);
 			m_sfLapList.AddStrings(lstStrings, (LPARAM)laps[x]);
 		}
+
 		m_sfLapList.SetSelectedData(setSelectedData);
 		if(laps.size() > 0)
 		{
 			m_sfLapList.MakeVisible((LPARAM)laps[laps.size()-1]);	//	Always set the last lap as visible in the Lap List
-//			m_sfLapList.MakeVisible( (LPARAM)m_sfLapList.GetSelectedItemsData3() );
 		}
     }
-    if(IS_FLAG_SET(fdwUpdateFlags, UPDATE_VALUES))
+
+	if(IS_FLAG_SET(fdwUpdateFlags, UPDATE_ADD2LIST))
+    {
+		int iLapId;
+		int x;
+		const ILap *iLap;
+
+		// Loop through the list of laps to add, making sure avoid duplicates.  Find the row to add it
+		while( m_sfLapList.GetCount() < laps.size() && (iLap = g_pLapDB->GetLastLap()) != NULL )  {
+			iLapId = iLap->GetLapId();
+
+			// Find which row this lap needs to appear
+			for(x = 0;x < laps.size(); x++) {
+				if( laps[x]->GetLap()->GetLapId() == iLapId ) break;
+			}
+			if(x < laps.size())
+			{
+				// x is the index which matches our most recent lap.  We need to insert this one into m_sfLapList
+				vector<wstring> lstStrings;
+				laps[x]->GetStrings(lstStrings);
+				m_sfLapList.InsertStrings(lstStrings, (LPARAM)laps[x], x);
+				m_sfLapList.MakeVisible((LPARAM)laps[x]);	//	Always set the last lap as visible in the Lap List
+			}
+			else 
+				DASSERT(1);// we didn't find the lap ID from the list of laps to add in the laps vector !!
+		}
+		m_sfLapList.SetSelectedData(setSelectedData);
+    }
+
+	if(IS_FLAG_SET(fdwUpdateFlags, UPDATE_VALUES))
     {
       UpdateValues();
 	  UpdateSectors();

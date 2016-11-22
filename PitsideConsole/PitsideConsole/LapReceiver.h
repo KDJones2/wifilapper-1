@@ -384,6 +384,7 @@ public:
   virtual vector<const ILap*> GetLaps(int iRaceId) = 0;
   virtual vector<const ILap*> GetScoring(int iRaceId) = 0;
   virtual const ILap* GetLap(int iLapId) = 0;
+  virtual const ILap* GetLastLap() = 0;
   virtual const IDataChannel* GetDataChannel(int iLapId, DATA_CHANNEL eChannel) const = 0;
   virtual set<DATA_CHANNEL> GetAvailableChannels(int iLapId) const = 0;
   virtual void GetComments(int iLapId, vector<wstring>& lstComments) const = 0;
