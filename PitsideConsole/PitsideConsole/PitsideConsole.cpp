@@ -2310,7 +2310,7 @@ private:
 	{
 		TCHAR lpOpen[MAX_PATH] = L"open";
 		
-		TCHAR lpFile[MAX_PATH] = L"WifilapperHelp.pdf";
+		TCHAR lpFile[MAX_PATH] = L"SpeedFreqHelp.pdf";
 		TCHAR lpDir[MAX_PATH];
 		if(GetAppFolder(lpDir,NUMCHARS(lpDir)))
 		{
