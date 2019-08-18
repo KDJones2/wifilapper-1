@@ -97,7 +97,7 @@ enum ORIENTATION	//	These are phone orientatino ENUMS, for setting up the Tracti
 struct LAPSUPPLIEROPTIONS
 {
 public:
-  LAPSUPPLIEROPTIONS() : eUnitPreference(UNIT_PREFERENCE_MPH),bXAxis_KM(false),fDrawSplitPoints(false),fDrawGuides(true),fDrawLines(true),fColorScheme(false),fIOIOHardcoded(true),flWindowShiftX(0),flWindowShiftY(0),iZoomLevels(0),bTractionCircle(false),bShowReferenceLap(true),e_Orientation(VERTICAL_LANDSCAPE)
+  LAPSUPPLIEROPTIONS() : eUnitPreference(UNIT_PREFERENCE_MPH),bXAxis_KM(false),fDrawSplitPoints(false),fDrawGuides(true),fDrawLines(true),fColorScheme(false),fIOIOHardcoded(true),flWindowShiftX(0),flWindowShiftY(0),iZoomLevels(0),bTractionCircle(false),bShowReferenceLap(true),e_Orientation(VERTICAL_LANDSCAPE), b_Button_LiveData(true)
   {
   }
   UNIT_PREFERENCE eUnitPreference;
@@ -120,6 +120,7 @@ public:
   bool bSmoothYesNo;	//	Whether or not to smooth the accelerometer graphs
   bool bShowReferenceLap;	//	Whether or not the Reference Lap is displayed
   ORIENTATION e_Orientation;	//	Phone orientation when installed in the car
+  BOOL b_Button_LiveData;		//	Button for choosing to pause live data collection to allow for data processing
   int LapId;
 };
 

@@ -1209,6 +1209,7 @@ void CLapPainter::DrawTractionCircle(const LAPSUPPLIEROPTIONS& sfLapOpts, bool f
 		else
 			iYend = lstPointsY.end();
 
+        dTimeToHighlight = m_pLapSupplier->GetLapHighlightTime(pLap);
 		while(iX != iXend && iY != iYend)
         {
           float dX;
@@ -1246,12 +1247,21 @@ void CLapPainter::DrawTractionCircle(const LAPSUPPLIEROPTIONS& sfLapOpts, bool f
 			  dY = PolynomialFilter(dY, sfLapOpts.m_PlotPrefs[y].fTransAValue, sfLapOpts.m_PlotPrefs[y].fTransBValue, sfLapOpts.m_PlotPrefs[y].fTransCValue);
 		  }
 //////////////////////////////////////////
-          glVertex2f(dX,dY);
+          if (sfLapOpts.bTractionCircle)	//	User wants dynamic traction circle, not full lap to be displayed
+		  {
+			  if (iTimeUsed > (dTimeToHighlight - 1500) && iTimeUsed <= (dTimeToHighlight))	//	Only display traction circle points near the highlighted point
+			  {
+				  glVertex2f(dX,dY);
+			  }
+		  }
+		  else
+		  {
+			  glVertex2f(dX,dY);
+		  }
         }
 		glEnd();
         // for each lap, draw an indicator of the closest thing to the mouse
           // if we're not a source, use the given time to highlight
-          dTimeToHighlight = m_pLapSupplier->GetLapHighlightTime(pLap);
         UpdateHighlightPointList(lstMousePointsToDraw, pLap, rgModelviewMatrix, rgProjMatrix, rgViewport, dTimeToHighlight, pDataX, pDataY);
       }
     } // end lap loop

@@ -42,6 +42,7 @@
 #include <CommCtrl.h>	//	For Listview sorting routines
 #include "DlgSelectSessions.h"
 #include "DlgTimingScoring.h"
+#include "LapReceiver.h"
 
 //#pragma comment(lib,"sdl.lib")
 using namespace std;
@@ -570,6 +571,7 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
 //	HWND sub_hWnd;				//	Handle to the SubWindow, to get to the SubDisplay control
 	BOOL b_GreyColor;			//	Switch for painting listviews with alternating lines of color
 	INT i_SubItemBest, i_SubItemWorst;
+	BOOL b_Button_LiveData;
 
   LRESULT DlgProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
   {
@@ -1932,7 +1934,22 @@ LPDEVMODE GetLandscapeDevMode(HWND hWnd, wchar_t *pDevice, HANDLE hPrinter)
             UpdateUI(UPDATE_MAP | UPDATE_DASHBOARD | UPDATE_VALUES);
             return TRUE;
           }
-          case IDC_SETDRIVER: // they want to set the driver of the selected laps
+           case IDC_LIVEDATA:
+          {
+            // Let's toggle all live data collection threads on/off to allow for lap analysis
+            switch(HIWORD(wParam))
+            {
+            case BN_CLICKED:
+				{
+					b_Button_LiveData = !b_Button_LiveData;
+					m_sfLapOpts.b_Button_LiveData = b_Button_LiveData;
+					UpdateUI(UPDATE_DASHBOARD); // Redraw the laplist and buttons
+	              break;
+				}
+            }
+            return TRUE;
+          }
+         case IDC_SETDRIVER: // they want to set the driver of the selected laps
           {
             switch(HIWORD(wParam))
             {
@@ -3129,10 +3146,10 @@ void UpdateDisplays()
   {
     m_sfLapPainter.Refresh();
 	m_sfSubDisplay.Refresh();
-	if (m_sfLapOpts.bTractionCircle)
-	{
+//	if (m_sfLapOpts.bTractionCircle)
+//	{
 		m_sfTractionDisplay.Refresh();
-	}
+//	}
   }
   void CheckMenuHelper(HMENU hMainMenu, int id, bool fChecked)
   {
@@ -3804,6 +3821,7 @@ private:
 DWORD ReceiveThreadProc(LPVOID param)
 {
   ILapReceiver* pLaps = (ILapReceiver*)param;
+//  bool b_receive_data = pLaps->m_Button_LiveData();
   while(true)
   {
     ReceiveLaps(63939, pLaps);

@@ -70,7 +70,11 @@ void CDataChannel::DoLoad(CSfArtSQLiteDB& db, int _id)
     }
   }
 }
-
+/*
+bool CReceiveLapOpts::m_Button_LiveData()
+{
+}
+*/
 bool CDataChannel::Load(CSfArtSQLiteDB& db, CSfArtSQLiteQuery& dc, bool fLazyLoad)
 {
   m_db = &db;
@@ -575,12 +579,20 @@ public:
 	    char buf[1024];
       bool fConnectionLost = false;
 	    int cbRead = TimeoutRead(sData,buf,sizeof(buf),0,10000, &fConnectionLost);
+//		CReceiveLapOpts::m_pLapSupplier()->GetDisplayOptions().;
+//		bool b_ButtonLiveData = CReceiveLapOpts::m_pLapSupplier->;
 	    if(cbRead <= 0 || fConnectionLost)
 	    {
 		    pLaps->SetNetStatus(NETSTATUS_STATUS, L"Probably lost connection");
         pLaps->SetNetStatus(NETSTATUS_REMOTEIP, L"");
 		    break;
 	    }
+		else if (int b_Button_LiveData =! true)	//	Check if user wants to disable live data collection for lap processing
+		{
+		    pLaps->SetNetStatus(NETSTATUS_STATUS, L"Data reception disabled");
+	        pLaps->SetNetStatus(NETSTATUS_REMOTEIP, L"");
+		    break;
+		}
 	    else
 	    {
 		    for(int x = 0;x < cbRead; x++)
@@ -761,7 +773,7 @@ public:
         {
           Sleep(1); // let's let the buffer fill up
         }
-	    }
+	  }
     }
 
     if(sData != INVALID_SOCKET)
@@ -820,43 +832,43 @@ bool ReceiveLaps(int iPort, ILapReceiver* pLaps)
 			      closesocket(aSocket);
 			      aSocket = INVALID_SOCKET;
 		      }
-          else
-          {
-            sockaddr sfAddr = {0};
-            int cbAddr = sizeof(sfAddr);
-            TCHAR szIPString[512] = {0};
-            pLaps->SetNetStatus(NETSTATUS_STATUS, L"Waiting for incoming connection to accept");
-            sDataSocket = accept(aSocket, &sfAddr, &cbAddr);
-            if(sDataSocket != INVALID_SOCKET)
-            {
-              sockaddr_in* pIn = (sockaddr_in*)&sfAddr;
-              pLaps->SetNetStatus(NETSTATUS_STATUS, L"Connected");
+			  else
+			  {
+				sockaddr sfAddr = {0};
+				int cbAddr = sizeof(sfAddr);
+				TCHAR szIPString[512] = {0};
+				pLaps->SetNetStatus(NETSTATUS_STATUS, L"Waiting for incoming connection to accept");
+				sDataSocket = accept(aSocket, &sfAddr, &cbAddr);
+				if(sDataSocket != INVALID_SOCKET)
+				{
+				  sockaddr_in* pIn = (sockaddr_in*)&sfAddr;
+				  pLaps->SetNetStatus(NETSTATUS_STATUS, L"Connected");
 
-              TCHAR szIPString[512] = L"";
-              GetIPString(pIn->sin_addr.S_un.S_addr, szIPString, NUMCHARS(szIPString));
-              pLaps->SetNetStatus(NETSTATUS_REMOTEIP, szIPString);
+				  TCHAR szIPString[512] = L"";
+				  GetIPString(pIn->sin_addr.S_un.S_addr, szIPString, NUMCHARS(szIPString));
+				  pLaps->SetNetStatus(NETSTATUS_REMOTEIP, szIPString);
 
             
-              new LapSocketReceiver(pLaps, sDataSocket); // creates the guy that will actually receive this data (and close the socket when he's done)
+				  new LapSocketReceiver(pLaps, sDataSocket); // creates the guy that will actually receive this data (and close the socket when he's done)
 
-              {
-                sockaddr sfName = {0};
-                int cbName = sizeof(sfName);
-                getsockname(sDataSocket, &sfName, &cbName);
+				  {
+					sockaddr sfName = {0};
+					int cbName = sizeof(sfName);
+					getsockname(sDataSocket, &sfName, &cbName);
               
-                pIn = (sockaddr_in*)&sfName;
-                GetIPString(pIn->sin_addr.S_un.S_addr, szIPString, NUMCHARS(szIPString));
-                pLaps->SetNetStatus(NETSTATUS_THISIP, szIPString);
-              }
-            }
-            else
-            {
-              sockaddr sfName = {0};
-              TCHAR szIPString[512] = {0};
-              sockaddr_in* pIn = (sockaddr_in*)&sfName;
-              GetIPString(pIn->sin_addr.S_un.S_addr, szIPString, NUMCHARS(szIPString));
-              pLaps->SetNetStatus(NETSTATUS_REMOTEIP, szIPString);
-            }
+					pIn = (sockaddr_in*)&sfName;
+					GetIPString(pIn->sin_addr.S_un.S_addr, szIPString, NUMCHARS(szIPString));
+					pLaps->SetNetStatus(NETSTATUS_THISIP, szIPString);
+				  }
+				}
+				else
+				{
+				  sockaddr sfName = {0};
+				  TCHAR szIPString[512] = {0};
+				  sockaddr_in* pIn = (sockaddr_in*)&sfName;
+				  GetIPString(pIn->sin_addr.S_un.S_addr, szIPString, NUMCHARS(szIPString));
+				  pLaps->SetNetStatus(NETSTATUS_REMOTEIP, szIPString);
+				}
 		      }
 		    }
       }

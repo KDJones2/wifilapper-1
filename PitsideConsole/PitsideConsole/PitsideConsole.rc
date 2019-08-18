@@ -27,11 +27,12 @@ BEGIN
     PUSHBUTTON      "X", IDC_CLEARCOMMENT,		237,13,10,10
     PUSHBUTTON      "Use as reference lap", IDC_SETREFERENCE,	250,14,75,12
     PUSHBUTTON      "Send Message", IDC_SENDMESSAGE,			250,28,75,12
+    PUSHBUTTON      "Live Data", IDC_LIVEDATA,					250,42,75,12
+    LTEXT           "Current Lap: ", IDC_LIVELAPTIME,			255,56,70,10
 
     LTEXT           "", IDC_CURRENTREFERENCE,		  155,26,93,24
     LTEXT           "", IDC_MESSAGESTATUS,			  155,43,93,24
     LTEXT           "Phone: ", IDC_CURRENTREMOTEIP,	  155,55,100,10
-    LTEXT           "Current Lap: ", IDC_LIVELAPTIME, 255,42,70,10
 	CONTROL    "", IDC_DATAVALUES, WC_LISTVIEW, WS_TABSTOP | LVS_REPORT | LVS_SHOWSELALWAYS, 328,0,190,60
 END
 /*
@@ -189,7 +190,7 @@ CAPTION "About Pitside Console"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "",IDC_SPLASHIMAGE,"Static",SS_BITMAP,25,10,200,200
-	CTEXT			"Pitside Console for SpeedFreq/Wifilapper\n\nVersion 2.004.0018\n\nThis is an Open Source project. If you want to contribute\n\n",IDC_LBLMESSAGE5,5,230,245,40
+	CTEXT			"Pitside Console for SpeedFreq/Wifilapper\n\nVersion 2.004.0019\n\nThis is an Open Source project. If you want to contribute\n\n",IDC_LBLMESSAGE5,5,230,245,40
 	CTEXT			"http://sites.google.com/site/speedfreqapp",IDC_LBLMESSAGE6,5,270,245,20
     PUSHBUTTON      "OK", IDOK, 5,290,240,30
 END
@@ -467,7 +468,7 @@ POPUP "&Graphing"
 		MENUITEM "Set Split Points", ID_OPTIONS_SETSPLITS
 		MENUITEM "Cancel Split Points", ID_OPTIONS_CANCELSPLITS
 		MENUITEM SEPARATOR
-		MENUITEM "Show Traction Circle", ID_OPTIONS_TRACTIONCIRCLE
+		MENUITEM "Transient Traction Circle", ID_OPTIONS_TRACTIONCIRCLE
 		MENUITEM SEPARATOR
         MENUITEM "Show all-time bests",ID_OPTIONS_SHOWBESTS
         MENUITEM "Show driver bests",ID_OPTIONS_SHOWDRIVERBESTS
