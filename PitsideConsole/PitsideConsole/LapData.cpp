@@ -208,44 +208,44 @@ PIDDATA g_rgPIDData[] =
 };
 
 PIDDATA g_rgIOIOCustomData[] = {
-  {L"Fuel Level%%","%3.2f"},
-  {L"RPM","%5.1f"},
-  {L"Throttle Pos","%3.2f"},
-  {L"Brake Pos","%3.2f"},
-  {L"Clutch Pos","%3.2f"},
-  {L"LF Wheelspeed","%3.2f"},
-  {L"RF Wheelspeed","%3.2f"},
-  {L"LR Wheelspeed","%3.2f"},
-  {L"RR Wheelspeed","%3.2f"},
-  {L"Exhaust Temp","%3.1f"},
-  {L"LF Tire Temp","%3.1f"},
-  {L"RF Tire Tempe","%3.1f"},
-  {L"LR Tire Tempe","%3.1f"},
-  {L"RR Tire Tempe","%3.1f"},
-  {L"LF Brake Temp","%3.1f"},
-  {L"RF Brake Temp","%3.1f"},
-  {L"LR Brake Temp","%3.1f"},
-  {L"RR Brake Temp","%3.1f"},
-  {L"Oil Pressure","%3.2f"},
-  {L"Oil Temp","%3.1f"},
-  {L"Coolant Temp","%3.1f"},
-  {L"Alt Voltage","%3.2f"},
-  {L"Air Temp (F)","%3.2f"},
-  {L"MAF (V)","%3.2f"},
-  {L"O2 Sensor (V)","%3.2f"},
+  {L"Fuel Level%%","%3.2f"},	//	0x301
+  {L"RPM","%5.1f"},				//	0x302
+  {L"Throttle Pos","%3.2f"},	//	0x303
+  {L"Brake Pos","%3.2f"},		//	0x304
+  {L"Clutch Pos","%3.2f"},		//	0x305
+  {L"LF Wheelspeed","%3.2f"},	//	0x306
+  {L"RF Wheelspeed","%3.2f"},	//	0x307
+  {L"LR Wheelspeed","%3.2f"},	//	0x308
+  {L"RR Wheelspeed","%3.2f"},	//	0x309
+  {L"Exhaust Temp","%3.1f"},	//	0x30A
+  {L"LF Tire Temp","%3.1f"},	//	0x30B
+  {L"RF Tire Tempe","%3.1f"},	//	0x30C
+  {L"LR Tire Tempe","%3.1f"},	//	0x30D
+  {L"RR Tire Tempe","%3.1f"},	//	0x30E
+  {L"LF Brake Temp","%3.1f"},	//	0x30F
+  {L"RF Brake Temp","%3.1f"},	//	0x310
+  {L"LR Brake Temp","%3.1f"},	//	0x311
+  {L"RR Brake Temp","%3.1f"},	//	0x312
+  {L"Oil Pressure","%3.2f"},	//	0x313
+  {L"Oil Temp","%3.1f"},		//	0x314
+  {L"Coolant Temp","%3.1f"},	//	0x315
+  {L"Alt Voltage","%3.2f"},		//	0x316
+  {L"Air Temp (F)","%3.2f"},	//	0x317
+  {L"MAF (V)","%3.2f"},			//	0x318
+  {L"O2 Sensor (V)","%3.2f"},	//	0x319
 };
 
 PIDDATA g_rgRaceDACData[] = {
-  {L"RaceDAC A1","%3.2f"},
-  {L"RaceDAC A2","%3.2f"},
-  {L"RaceDAC A3","%3.2f"},
-  {L"RaceDAC A4","%3.2f"},
-  {L"RaceDAC A5","%3.2f"},
-  {L"RaceDAC A6","%3.2f"},
-  {L"RaceDAC A7","%3.2f"},
-  {L"RaceDAC A8","%3.2f"},
-  {L"RaceDAC D1","%4.1f"},
-  {L"RaceDAC D2","%4.1f"},
+  {L"RaceDAC A1","%3.2f"},		//	0x401
+  {L"RaceDAC A2","%3.2f"},		//	0x402
+  {L"RaceDAC A3","%3.2f"},		//	0x403
+  {L"RaceDAC A4","%3.2f"},		//	0x404
+  {L"RaceDAC A5","%3.2f"},		//	0x405
+  {L"RaceDAC A6","%3.2f"},		//	0x406
+  {L"RaceDAC A7","%3.2f"},		//	0x407
+  {L"RaceDAC A8","%3.2f"},		//	0x408
+  {L"RaceDAC D1","%4.1f"},		//	0x409
+  {L"RaceDAC D2","%4.1f"},		//	0x40A
 };
 
 void GetDataChannelName(DATA_CHANNEL eDC, LPTSTR lpszName, int cch)
